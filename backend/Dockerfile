@@ -35,7 +35,8 @@ RUN ./node_modules/.bin/tsc --project tsconfig.json
 FROM node:20-alpine AS runner
 WORKDIR /app
 
-RUN apk add --no-cache tini wget
+# OpenSSL required by Prisma query engine (both v1.1 compat and v3)
+RUN apk add --no-cache tini wget openssl openssl-dev libssl3 libcrypto3 2>/dev/null || apk add --no-cache tini wget openssl
 RUN addgroup --system --gid 1001 nodejs \
  && adduser --system --uid 1001 ogenti
 
@@ -44,9 +45,12 @@ COPY --from=builder /app/backend/dist ./dist
 COPY --from=builder /app/backend/prisma ./prisma
 COPY --from=builder /app/backend/package.json ./
 
-# Inline entrypoint — no COPY from build context needed
+# Inline entrypoint
 RUN printf '#!/bin/sh\nset -e\necho "Applying DB schema..."\nnpx prisma db push --skip-generate 2>&1 || npx prisma migrate deploy 2>&1 || { echo "DB schema failed"; exit 1; }\necho "Starting server..."\nexec node dist/server.js\n' > entrypoint.sh \
  && chmod +x entrypoint.sh
+
+# Fix ownership so ogenti user can write to node_modules (Prisma engine)
+RUN chown -R ogenti:nodejs /app
 
 USER ogenti
 

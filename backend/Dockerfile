@@ -7,16 +7,9 @@ WORKDIR /app
 
 COPY backend/package.json backend/package-lock.json* ./backend/
 COPY shared/ ./shared/
-COPY package.json ./
 
 WORKDIR /app/backend
-RUN npm ci --omit=dev 2>/dev/null || npm install --omit=dev
-
-# Build shared types first
-WORKDIR /app/shared
-RUN if [ -f package.json ]; then npm ci --omit=dev 2>/dev/null || true; fi
-
-WORKDIR /app/backend
+RUN npm install --omit=dev --no-package-lock 2>/dev/null || npm install --omit=dev
 
 # Stage 2: Build TypeScript
 FROM node:20-alpine AS builder

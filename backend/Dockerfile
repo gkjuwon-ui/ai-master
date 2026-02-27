@@ -2,26 +2,21 @@
 
 # Stage 1: Install prod-only dependencies
 FROM node:20-alpine AS deps
-WORKDIR /app
-
-COPY backend/package.json ./backend/
-COPY shared/ ./shared/
-
 WORKDIR /app/backend
+
+COPY backend/package.json ./
 RUN npm install --omit=dev --no-package-lock
 
 # Stage 2: Build TypeScript (needs devDependencies like typescript, prisma)
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-COPY backend/package.json ./backend/
-COPY shared/ ./shared/
 COPY tsconfig.base.json ./
+COPY shared/ ./shared/
+COPY backend/ ./backend/
 
 WORKDIR /app/backend
 RUN npm install --no-package-lock
-
-COPY backend/ ./backend/
 
 # Switch from SQLite to PostgreSQL for Railway deployment
 RUN sed -i 's/provider = "sqlite"/provider = "postgresql"/g' prisma/schema.prisma

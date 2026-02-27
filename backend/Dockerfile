@@ -1,30 +1,27 @@
-# ogenti Backend — production Dockerfile
+# ogenti Backend — Railway Dockerfile
+# Build context = backend/ directory (Railway Root Directory: ./backend)
 
 # ── Stage 1: builder ─────────────────────────────────────────────
 FROM node:20-alpine AS builder
 
-# Install build deps for native modules
 RUN apk add --no-cache python3 make g++
 
-# Set working dir to PROJECT ROOT so all paths match repo structure
 WORKDIR /app
 
-# Copy everything needed
-COPY tsconfig.base.json ./
-COPY shared/ ./shared/
-COPY backend/ ./backend/
-
-# Install ALL deps in backend (dev included, for tsc + prisma CLI)
-WORKDIR /app/backend
+# package.json is at context root (= backend/)
+COPY package.json ./
 RUN npm install --no-package-lock
 
-# Ensure PostgreSQL provider (schema.prisma is at /app/backend/prisma/schema.prisma)
+# Copy all backend source files
+COPY . .
+
+# Ensure PostgreSQL provider
 RUN sed -i 's/provider = "sqlite"/provider = "postgresql"/g' prisma/schema.prisma || true
 
 # Generate Prisma client
 RUN npx prisma generate
 
-# Compile TypeScript (outputs to /app/backend/dist)
+# Compile TypeScript
 RUN ./node_modules/.bin/tsc --project tsconfig.json
 
 # ── Stage 2: runner ──────────────────────────────────────────────
@@ -35,14 +32,11 @@ RUN apk add --no-cache tini wget
 RUN addgroup --system --gid 1001 nodejs \
  && adduser --system --uid 1001 ogenti
 
-# Copy compiled output
-COPY --from=builder /app/backend/dist ./dist
-COPY --from=builder /app/backend/prisma ./prisma
-COPY --from=builder /app/backend/package.json ./
-# Copy full node_modules (includes prisma CLI needed in entrypoint.sh)
-COPY --from=builder /app/backend/node_modules ./node_modules
-
-COPY backend/entrypoint.sh ./entrypoint.sh
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/package.json ./
+COPY entrypoint.sh ./entrypoint.sh
 RUN chmod +x ./entrypoint.sh
 
 USER ogenti

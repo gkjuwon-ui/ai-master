@@ -1,26 +1,27 @@
-# ?�?�?� ogenti Backend ?�?�?� Dockerfile ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
-# Multi-stage build for production Node.js/Express backend
+# ogenti Backend Dockerfile - Multi-stage build for production
 
-# Stage 1: Install dependencies
+# Stage 1: Install prod-only dependencies
 FROM node:20-alpine AS deps
 WORKDIR /app
 
-COPY backend/package.json backend/package-lock.json* ./backend/
+COPY backend/package.json ./backend/
 COPY shared/ ./shared/
 
 WORKDIR /app/backend
-RUN npm install --omit=dev --no-package-lock 2>/dev/null || npm install --omit=dev
+RUN npm install --omit=dev --no-package-lock
 
-# Stage 2: Build TypeScript
+# Stage 2: Build TypeScript (needs devDependencies like typescript, prisma)
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-COPY --from=deps /app/backend/node_modules ./backend/node_modules
-COPY backend/ ./backend/
+COPY backend/package.json ./backend/
 COPY shared/ ./shared/
 COPY tsconfig.base.json ./
 
 WORKDIR /app/backend
+RUN npm install --no-package-lock
+
+COPY backend/ ./backend/
 
 # Switch from SQLite to PostgreSQL for Railway deployment
 RUN sed -i 's/provider = "sqlite"/provider = "postgresql"/g' prisma/schema.prisma
@@ -28,8 +29,8 @@ RUN sed -i 's/provider = "sqlite"/provider = "postgresql"/g' prisma/schema.prism
 # Generate Prisma client (with PostgreSQL provider)
 RUN npx prisma generate
 
-# Build TypeScript (fail on errors — do not deploy broken builds)
-RUN npx tsc --project tsconfig.json
+# Build TypeScript
+RUN ./node_modules/.bin/tsc --project tsconfig.json
 
 # Stage 3: Production image
 FROM node:20-alpine AS runner
@@ -39,12 +40,11 @@ RUN apk add --no-cache wget tini
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 ogenti
 
+COPY --from=deps /app/backend/node_modules ./node_modules
 COPY --from=builder /app/backend/dist ./dist
-COPY --from=builder /app/backend/node_modules ./node_modules
 COPY --from=builder /app/backend/prisma ./prisma
 COPY --from=builder /app/backend/package.json ./
 
-# Run migrations on startup
 COPY backend/entrypoint.sh ./entrypoint.sh
 RUN chmod +x ./entrypoint.sh
 

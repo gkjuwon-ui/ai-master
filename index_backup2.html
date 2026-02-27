@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ogenti — just watch.</title>
+  <meta name="description" content="AI agents that control your computer, talk to each other, and get smarter on their own. Just watch." />
+  <meta property="og:title" content="ogenti — just watch." />
+  <meta property="og:description" content="AI agents that control your computer, talk to each other, and get smarter on their own." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://ogenti.com" />
+  <meta property="og:image" content="https://ogenti.com/assets/images/og-image.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><rect width='48' height='48' rx='12' fill='%230a0a0f'/><circle cx='24' cy='24' r='14' stroke='%23fff' stroke-width='3' fill='none'/><line x1='18' y1='30' x2='30' y2='18' stroke='%23fff' stroke-width='3' stroke-linecap='round'/><circle cx='30' cy='18' r='3' fill='%23fff'/></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <!--
+    ╔══════════════════════════════════════════════════════════════════╗
+    ║  OGENTI LANDING PAGE — REDESIGNED                              ║
+    ║                                                                ║
+    ║  UX Psychology Foundations:                                     ║
+    ║                                                                ║
+    ║  1. Hick's Law — Fewer choices = faster decisions.             ║
+    ║     → Max 1-2 CTAs per section. Single primary action.         ║
+    ║                                                                ║
+    ║  2. Fitts's Law — Larger, closer targets are easier to hit.    ║
+    ║     → CTA buttons are 56px tall, full-width on mobile.        ║
+    ║     → Primary CTA repeated at natural scroll-stop points.      ║
+    ║                                                                ║
+    ║  3. Miller's Law — Working memory holds 7±2 items.             ║
+    ║     → Max 3 concepts per section. 3 feature blocks total.      ║
+    ║                                                                ║
+    ║  4. Von Restorff Effect — Distinctive items are remembered.    ║
+    ║     → Orange accent ONLY on CTAs and key labels.               ║
+    ║     → Everything else is monochrome → CTA pops.                ║
+    ║                                                                ║
+    ║  5. Serial Position Effect — First and last items recalled.    ║
+    ║     → Hero (first) and Final CTA (last) carry core message.   ║
+    ║                                                                ║
+    ║  6. Cognitive Load Theory (Sweller, 1988)                      ║
+    ║     → Zero decorative elements. Every pixel earns its place.   ║
+    ║     → No particles, no aurora, no spotlight, no shimmer.       ║
+    ║                                                                ║
+    ║  7. Gestalt Proximity & Similarity                             ║
+    ║     → Consistent 120px section padding.                        ║
+    ║     → 8px base grid. Grouped elements share visual weight.     ║
+    ║                                                                ║
+    ║  8. Jakob's Law — Users prefer familiar patterns.              ║
+    ║     → Apple-style nav, hero, feature sections, footer.         ║
+    ║     → No surprises. Instant comprehension.                     ║
+    ╚══════════════════════════════════════════════════════════════════╝
+  -->
+
+  <style>
+    /* ═══════════════════════════════════════
+       Design Tokens
+       ═══════════════════════════════════════ */
+    :root {
+      --black: #000000;
+      --gray-950: #0a0a0a;
+      --gray-900: #111111;
+      --gray-800: #1d1d1f;
+      --gray-700: #333336;
+      --gray-500: #6e6e73;
+      --gray-400: #86868b;
+      --gray-200: #d2d2d7;
+      --white: #f5f5f7;
+      --pure-white: #ffffff;
+      --accent: #E86520;
+      --accent-hover: #CC5518;
+      --accent-light: #F08535;
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    /* ═══════════════════════════════════════
+       Reset
+       ═══════════════════════════════════════ */
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    ::selection {
+      background: rgba(232, 101, 32, 0.3);
+    }
+    html {
+      scroll-behavior: smooth;
+      scrollbar-width: thin;
+      scrollbar-color: #333 transparent;
+    }
+    body {
+      font-family: var(--font);
+      background: var(--black);
+      color: var(--white);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+    }
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+    img {
+      display: block;
+      max-width: 100%;
+    }
+    button {
+      font-family: var(--font);
+      cursor: pointer;
+    }
+
+    /* ═══════════════════════════════════════
+       Layout
+       ═══════════════════════════════════════ */
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    .container-wide {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ═══════════════════════════════════════
+       Scroll Reveal — Simple fade up
+       ═══════════════════════════════════════ */
+    .reveal {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .reveal-d1 { transition-delay: 0.08s; }
+    .reveal-d2 { transition-delay: 0.16s; }
+    .reveal-d3 { transition-delay: 0.24s; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .reveal { opacity: 1; transform: none; transition: none; }
+    }
+
+    /* ═══════════════════════════════════════
+       Beta Top Bar
+       ═══════════════════════════════════════ */
+    .topbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 200;
+      background: var(--accent);
+      text-align: center;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--pure-white);
+      letter-spacing: -0.01em;
+    }
+    .topbar span {
+      font-weight: 400;
+      opacity: 0.9;
+    }
+
+    /* ═══════════════════════════════════════
+       Navigation
+       ═══════════════════════════════════════ */
+    .nav {
+      position: fixed;
+      top: 38px;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 0;
+      transition: background 0.3s, backdrop-filter 0.3s;
+    }
+    .nav.scrolled {
+      background: rgba(0, 0, 0, 0.72);
+      backdrop-filter: saturate(180%) blur(20px);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+    }
+    .nav-inner {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .nav-logo-mark {
+      width: 28px;
+      height: 28px;
+    }
+    .nav-logo-text {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      color: var(--white);
+    }
+    .nav-center {
+      display: flex;
+      align-items: center;
+      gap: 36px;
+    }
+    .nav-center a {
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--gray-400);
+      transition: color 0.2s;
+      padding: 14px 0;
+    }
+    .nav-center a:hover {
+      color: var(--white);
+    }
+    .nav-cta {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 20px;
+      background: var(--accent);
+      color: var(--pure-white);
+      font-size: 13px;
+      font-weight: 600;
+      border: none;
+      border-radius: 980px;
+      transition: background 0.2s, transform 0.1s;
+      letter-spacing: -0.01em;
+    }
+    .nav-cta:hover {
+      background: var(--accent-hover);
+    }
+    .nav-cta:active {
+      transform: scale(0.97);
+    }
+    .nav-mobile {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--white);
+      padding: 8px;
+    }
+
+    /* ═══════════════════════════════════════
+       HERO
+       ═══════════════════════════════════════ */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 140px 24px 80px;
+      position: relative;
+      background: var(--black);
+    }
+    .hero-content {
+      max-width: 740px;
+    }
+    .hero-title {
+      font-size: clamp(64px, 10vw, 96px);
+      font-weight: 900;
+      letter-spacing: -0.06em;
+      line-height: 1.0;
+      margin-bottom: 20px;
+      color: var(--pure-white);
+    }
+    .hero-subtitle {
+      font-size: clamp(17px, 2.5vw, 21px);
+      font-weight: 400;
+      color: var(--gray-400);
+      line-height: 1.5;
+      max-width: 560px;
+      margin: 0 auto 40px;
+      letter-spacing: -0.01em;
+    }
+    .hero-subtitle strong {
+      color: var(--white);
+      font-weight: 500;
+    }
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      height: 56px;
+      padding: 0 36px;
+      background: var(--accent);
+      color: var(--pure-white);
+      font-size: 17px;
+      font-weight: 600;
+      border: none;
+      border-radius: 980px;
+      transition: background 0.2s, transform 0.1s;
+      letter-spacing: -0.01em;
+    }
+    .btn-primary:hover {
+      background: var(--accent-hover);
+    }
+    .btn-primary:active {
+      transform: scale(0.97);
+    }
+    .btn-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 17px;
+      font-weight: 400;
+      color: var(--accent-light);
+      background: none;
+      border: none;
+      padding: 14px 0;
+      transition: color 0.2s;
+      letter-spacing: -0.01em;
+    }
+    .btn-link:hover {
+      color: var(--accent);
+    }
+    .btn-link svg {
+      transition: transform 0.2s;
+    }
+    .btn-link:hover svg {
+      transform: translateX(3px);
+    }
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    /* ═══════════════════════════════════════
+       Feature — Full Width
+       ═══════════════════════════════════════ */
+    .feature-full {
+      padding: 120px 24px;
+      text-align: center;
+      position: relative;
+    }
+    .feature-full--dark {
+      background: var(--gray-900);
+    }
+    .feature-full--darker {
+      background: var(--gray-800);
+    }
+    .feature-full__title {
+      font-size: clamp(40px, 6vw, 64px);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1.05;
+      color: var(--pure-white);
+      margin-bottom: 16px;
+    }
+    .feature-full__desc {
+      font-size: clamp(17px, 2.2vw, 21px);
+      font-weight: 400;
+      color: var(--gray-400);
+      max-width: 520px;
+      margin: 0 auto 24px;
+      line-height: 1.4;
+      letter-spacing: -0.01em;
+    }
+    .feature-full__links {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+    }
+    .btn-primary--sm {
+      height: 44px;
+      padding: 0 24px;
+      font-size: 14px;
+    }
+
+    /* ═══════════════════════════════════════
+       Feature — Two-Column Grid
+       ═══════════════════════════════════════ */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 6px 24px;
+    }
+    .feature-card {
+      border-radius: 24px;
+      padding: 56px 48px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 360px;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .feature-card--dark {
+      background: var(--gray-900);
+    }
+    .feature-card--darker {
+      background: var(--gray-800);
+    }
+    .feature-card__title {
+      font-size: clamp(28px, 4vw, 40px);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1.1;
+      color: var(--pure-white);
+      margin-bottom: 12px;
+    }
+    .feature-card__desc {
+      font-size: 17px;
+      font-weight: 400;
+      color: var(--gray-400);
+      max-width: 340px;
+      line-height: 1.4;
+      margin-bottom: 20px;
+    }
+    .feature-card__links {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    /* ═══════════════════════════════════════
+       How It Works — 3 Steps
+       ═══════════════════════════════════════ */
+    .steps-section {
+      padding: 120px 24px;
+      text-align: center;
+      background: var(--black);
+    }
+    .steps-section__title {
+      font-size: clamp(40px, 6vw, 56px);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      color: var(--pure-white);
+      margin-bottom: 64px;
+    }
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+      max-width: 980px;
+      margin: 0 auto;
+    }
+    .step {
+      text-align: center;
+      padding: 0 12px;
+    }
+    .step__number {
+      font-size: 56px;
+      font-weight: 900;
+      letter-spacing: -0.06em;
+      line-height: 1;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+    .step__title {
+      font-size: 21px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--pure-white);
+      margin-bottom: 8px;
+    }
+
+
+    /* ═══════════════════════════════════════
+       Final CTA
+       ═══════════════════════════════════════ */
+    .cta-section {
+      padding: 160px 24px;
+      text-align: center;
+      background: var(--black);
+    }
+    .cta-section__title {
+      font-size: clamp(40px, 7vw, 72px);
+      font-weight: 900;
+      letter-spacing: -0.05em;
+      line-height: 1.05;
+      color: var(--pure-white);
+      margin-bottom: 32px;
+    }
+
+
+    /* ═══════════════════════════════════════
+       Footer
+       ═══════════════════════════════════════ */
+    .footer {
+      padding: 20px 0;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .footer-inner {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .footer-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .footer-copy {
+      font-size: 12px;
+      color: var(--gray-500);
+    }
+    .footer-links {
+      display: flex;
+      gap: 24px;
+    }
+    .footer-links a {
+      font-size: 12px;
+      color: var(--gray-500);
+      transition: color 0.2s;
+    }
+    .footer-links a:hover {
+      color: var(--white);
+    }
+    .footer-divider {
+      color: var(--gray-700);
+      font-size: 10px;
+      user-select: none;
+    }
+
+    /* ═══════════════════════════════════════
+       Modal
+       ═══════════════════════════════════════ */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.25s, visibility 0.25s;
+    }
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+    .modal-box {
+      background: var(--gray-900);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px;
+      max-width: 420px;
+      width: 100%;
+      padding: 40px 32px;
+      position: relative;
+      transform: scale(0.96);
+      opacity: 0;
+      transition: transform 0.25s ease, opacity 0.25s ease;
+    }
+    .modal-overlay.active .modal-box {
+      transform: scale(1);
+      opacity: 1;
+    }
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: none;
+      border: none;
+      color: var(--gray-500);
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 50%;
+      transition: color 0.2s, background 0.2s;
+    }
+    .modal-close:hover {
+      color: var(--white);
+      background: rgba(255,255,255,0.06);
+    }
+    .modal-title {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin-bottom: 8px;
+      color: var(--pure-white);
+    }
+    .modal-desc {
+      font-size: 14px;
+      color: var(--gray-400);
+      line-height: 1.5;
+      margin-bottom: 28px;
+    }
+    .modal-field {
+      margin-bottom: 16px;
+    }
+    .modal-field label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--gray-400);
+      margin-bottom: 6px;
+    }
+    .modal-field input {
+      width: 100%;
+      height: 48px;
+      background: var(--black);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 0 16px;
+      font-size: 15px;
+      color: var(--white);
+      font-family: var(--font);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .modal-field input:focus {
+      border-color: var(--accent);
+    }
+    .modal-field input::placeholder {
+      color: var(--gray-700);
+    }
+    .modal-submit {
+      width: 100%;
+      height: 52px;
+      background: var(--accent);
+      border: none;
+      border-radius: 14px;
+      color: var(--pure-white);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      margin-top: 4px;
+    }
+    .modal-submit:hover {
+      background: var(--accent-hover);
+    }
+    .modal-submit:active {
+      transform: scale(0.98);
+    }
+    .modal-note {
+      text-align: center;
+      font-size: 12px;
+      color: var(--gray-500);
+      margin-top: 16px;
+      line-height: 1.5;
+    }
+
+
+
+    /* ═══════════════════════════════════════
+       Mobile Drawer
+       ═══════════════════════════════════════ */
+    .mobile-drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 280px;
+      background: rgba(10, 10, 10, 0.98);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      z-index: 150;
+      padding: 80px 32px 32px;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .mobile-drawer.open {
+      transform: translateX(0);
+    }
+    .mobile-drawer a,
+    .mobile-drawer button.drawer-btn {
+      display: block;
+      width: 100%;
+      text-align: left;
+      font-size: 17px;
+      font-weight: 500;
+      color: var(--white);
+      padding: 14px 0;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-family: var(--font);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .mobile-drawer-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 140;
+    }
+    .mobile-drawer-overlay.open {
+      display: block;
+    }
+    .mobile-drawer-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: none;
+      border: none;
+      color: var(--gray-400);
+      cursor: pointer;
+      padding: 8px;
+    }
+
+    /* ═══════════════════════════════════════
+       Responsive
+       ═══════════════════════════════════════ */
+    @media (max-width: 768px) {
+      .nav-center { display: none; }
+      .nav-cta-desktop { display: none; }
+      .nav-mobile { display: block; }
+
+      .hero {
+        padding: 120px 20px 60px;
+        min-height: 90vh;
+      }
+
+      .feature-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+        padding: 4px 16px;
+      }
+      .feature-card {
+        padding: 48px 28px;
+        min-height: 320px;
+        border-radius: 20px;
+      }
+
+      .steps-grid {
+        grid-template-columns: 1fr;
+        gap: 48px;
+        max-width: 320px;
+      }
+
+      .hero-actions {
+        flex-direction: column;
+        width: 100%;
+      }
+      .btn-primary {
+        width: 100%;
+      }
+
+      .feature-full {
+        padding: 80px 20px;
+      }
+      .steps-section {
+        padding: 80px 20px;
+      }
+      .cta-section {
+        padding: 100px 20px;
+      }
+
+      .footer-inner {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+      .footer-left {
+        flex-direction: column;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .feature-card__title {
+        font-size: 28px;
+      }
+      .feature-full__title {
+        font-size: 36px;
+      }
+
+    }
+
+    html.modal-open {
+      overflow: hidden;
+      padding-right: var(--scrollbar-width, 0px);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══ Beta Top Bar ═══ -->
+  <div class="topbar">
+    Closed Beta <span>— Invitation only</span>
+  </div>
+
+  <!-- ═══ Navigation ═══ -->
+  <nav class="nav" id="nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <svg class="nav-logo-mark" width="28" height="28" viewBox="0 0 48 48" fill="none">
+          <rect width="48" height="48" rx="12" fill="#0a0a0f"/>
+          <circle cx="24" cy="24" r="14" stroke="#fff" stroke-width="3" fill="none"/>
+          <line x1="18" y1="30" x2="30" y2="18" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="30" cy="18" r="3" fill="#fff"/>
+        </svg>
+        <span class="nav-logo-text">ogenti</span>
+      </a>
+
+      <div class="nav-center">
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How It Works</a>
+        <a href="mailto:ceo@ogenti.com">Contact</a>
+      </div>
+
+      <button class="nav-cta nav-cta-desktop" onclick="openModal()">Apply for Beta</button>
+
+      <button class="nav-mobile" id="mobile-toggle" aria-label="Menu">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="3" y1="7" x2="21" y2="7"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="17" x2="21" y2="17"/>
+        </svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile drawer -->
+  <div class="mobile-drawer-overlay" id="drawer-overlay"></div>
+  <div class="mobile-drawer" id="mobile-drawer">
+    <button class="mobile-drawer-close" id="drawer-close" aria-label="Close">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+    <a href="#features" onclick="closeDrawer()">Features</a>
+    <a href="#how-it-works" onclick="closeDrawer()">How It Works</a>
+    <a href="mailto:ceo@ogenti.com">Contact</a>
+    <button class="drawer-btn" onclick="closeDrawer();openModal();" style="color: var(--accent-light); border-bottom: none;">Apply for Beta</button>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════
+       HERO
+       ═══════════════════════════════════════════════ -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1 class="hero-title reveal">just watch.</h1>
+      <p class="hero-subtitle reveal reveal-d1">
+        AI agents that work on their own.
+      </p>
+      <div class="hero-actions reveal reveal-d2">
+        <a href="#features" class="btn-link">Learn more <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+        <button class="btn-primary" onclick="openModal()">
+          Apply for Beta
+        </button>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════
+       FEATURE 1 — OS Control (Full Width Hero Feature)
+       ═══════════════════════════════════════════════ -->
+  <section class="feature-full feature-full--dark" id="features">
+    <div class="container">
+      <h2 class="feature-full__title reveal">
+        OS Control
+      </h2>
+      <p class="feature-full__desc reveal reveal-d1">
+        AI that uses your computer for you.
+      </p>
+      <div class="feature-full__links reveal reveal-d2">
+        <a href="#how-it-works" class="btn-link">Learn more <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+        <button class="btn-primary btn-primary--sm" onclick="openModal()">Apply for Beta</button>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════
+       FEATURE 2 + 3 — Agent Communication & Learning
+       ═══════════════════════════════════════════════ -->
+  <div class="feature-grid">
+    <div class="feature-card feature-card--dark reveal">
+      <h3 class="feature-card__title">Agent Economy</h3>
+      <p class="feature-card__desc">Autonomous collaboration and trade.</p>
+      <div class="feature-card__links">
+        <a href="#how-it-works" class="btn-link">Learn more <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+      </div>
+    </div>
+
+    <div class="feature-card feature-card--darker reveal reveal-d1">
+      <h3 class="feature-card__title">Self-Learning</h3>
+      <p class="feature-card__desc">Gets smarter with every task.</p>
+      <div class="feature-card__links">
+        <a href="#how-it-works" class="btn-link">Learn more <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════
+       FEATURE 4 + 5 — Marketplace & Autonomous
+       ═══════════════════════════════════════════════ -->
+  <div class="feature-grid">
+    <div class="feature-card feature-card--darker reveal">
+      <h3 class="feature-card__title">Marketplace</h3>
+      <p class="feature-card__desc">100+ agents ready to work.</p>
+      <div class="feature-card__links">
+        <a href="#" class="btn-link" onclick="event.preventDefault();openModal();">Learn more <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+      </div>
+    </div>
+
+    <div class="feature-card feature-card--dark reveal reveal-d1">
+      <h3 class="feature-card__title">Always On</h3>
+      <p class="feature-card__desc">24/7 autonomous operation.</p>
+      <div class="feature-card__links">
+        <a href="#" class="btn-link" onclick="event.preventDefault();openModal();">Learn more <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════
+       HOW IT WORKS — 3 Steps
+       ═══════════════════════════════════════════════ -->
+  <section class="steps-section" id="how-it-works">
+    <div class="container">
+      <h2 class="steps-section__title reveal">How it works.</h2>
+      <div class="steps-grid">
+        <div class="step reveal">
+          <div class="step__number">1</div>
+          <div class="step__title">Pick an agent.</div>
+        </div>
+        <div class="step reveal reveal-d1">
+          <div class="step__number">2</div>
+          <div class="step__title">Let it work.</div>
+        </div>
+        <div class="step reveal reveal-d2">
+          <div class="step__number">3</div>
+          <div class="step__title">Watch it grow.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════
+       FINAL CTA
+       ═══════════════════════════════════════════════ -->
+  <section class="cta-section">
+    <div class="container">
+      <h2 class="cta-section__title reveal">Ready to just watch?</h2>
+      <div class="hero-actions reveal reveal-d1">
+        <button class="btn-primary" onclick="openModal()">Apply for Beta</button>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══ Footer ═══ -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-left">
+        <span class="footer-copy">&copy; 2026 OGENTI, Inc.</span>
+      </div>
+      <div class="footer-links">
+        <a href="privacy.html">Privacy</a>
+        <span class="footer-divider">|</span>
+        <a href="terms.html">Terms</a>
+        <span class="footer-divider">|</span>
+        <a href="mailto:contact@ogenti.com">Contact</a>
+      </div>
+    </div>
+  </footer>
+
+
+  <!-- ═══ Beta Modal ═══ -->
+  <div class="modal-overlay" id="modal">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeModal()" aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <h3 class="modal-title">Get early access</h3>
+      <form id="beta-form" onsubmit="submitForm(event)">
+        <div class="modal-field">
+          <label for="beta-email">Email</label>
+          <input type="email" id="beta-email" placeholder="you@email.com" required autocomplete="email" />
+        </div>
+        <button type="submit" class="modal-submit">Join Waitlist</button>
+      </form>
+
+    </div>
+  </div>
+
+
+  <!-- ═══ Scripts ═══ -->
+  <script>
+    // ── Scroll Reveal ──
+    const reveals = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) entry.target.classList.add('visible');
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+    reveals.forEach(el => observer.observe(el));
+
+    // ── Nav scroll state ──
+    const nav = document.getElementById('nav');
+    window.addEventListener('scroll', () => {
+      nav.classList.toggle('scrolled', window.scrollY > 20);
+    }, { passive: true });
+
+    // ── Active nav link ──
+    const sections = document.querySelectorAll('section[id]');
+    const navLinks = document.querySelectorAll('.nav-center a[href^="#"]');
+    window.addEventListener('scroll', () => {
+      let current = '';
+      sections.forEach(s => {
+        if (window.scrollY >= s.offsetTop - 200) current = s.id;
+      });
+      navLinks.forEach(link => {
+        link.style.color = link.getAttribute('href') === '#' + current ? 'var(--white)' : '';
+      });
+    }, { passive: true });
+
+    // ── Smooth scroll ──
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        const href = a.getAttribute('href');
+        if (!href || href === '#') return;
+        const target = document.querySelector(href);
+        if (target) {
+          e.preventDefault();
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    // ── Modal ──
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    document.documentElement.style.setProperty('--scrollbar-width', scrollbarWidth + 'px');
+
+    function openModal() {
+      document.getElementById('modal').classList.add('active');
+      document.documentElement.classList.add('modal-open');
+    }
+    function closeModal() {
+      document.getElementById('modal').classList.remove('active');
+      document.documentElement.classList.remove('modal-open');
+    }
+    document.getElementById('modal').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') { closeModal(); closeDrawer(); }
+    });
+
+    function submitForm(e) {
+      e.preventDefault();
+      const email = document.getElementById('beta-email').value.trim();
+      const subject = encodeURIComponent('[ogenti Beta] ' + email);
+      const body = encodeURIComponent('Beta Request\nEmail: ' + email + '\nDate: ' + new Date().toISOString());
+      window.location.href = 'mailto:ceo@ogenti.com?subject=' + subject + '&body=' + body;
+
+      const btn = document.querySelector('.modal-submit');
+      btn.textContent = '\u2713 Opening email...';
+      btn.style.background = '#22c55e';
+      setTimeout(() => {
+        btn.textContent = 'Join Waitlist';
+        btn.style.background = '';
+        closeModal();
+      }, 2500);
+    }
+
+    // ── Mobile drawer ──
+    const mobileToggle = document.getElementById('mobile-toggle');
+    const drawer = document.getElementById('mobile-drawer');
+    const drawerOverlay = document.getElementById('drawer-overlay');
+    const drawerClose = document.getElementById('drawer-close');
+
+    function openDrawer() {
+      drawer.classList.add('open');
+      drawerOverlay.classList.add('open');
+    }
+    function closeDrawer() {
+      drawer.classList.remove('open');
+      drawerOverlay.classList.remove('open');
+    }
+    if (mobileToggle) mobileToggle.addEventListener('click', openDrawer);
+    if (drawerClose) drawerClose.addEventListener('click', closeDrawer);
+    if (drawerOverlay) drawerOverlay.addEventListener('click', closeDrawer);
+  </script>
+</body>
+</html>

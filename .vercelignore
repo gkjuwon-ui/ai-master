@@ -1,0 +1,61 @@
+# Large model files
+*.safetensors
+model.safetensors.index.json
+tokenizer.json
+tokenizer_config.json
+preprocessor_config.json
+processor_config.json
+special_tokens_map.json
+generation_config.json
+chat_template.json
+osen_expert_config.json
+osen_expert_config_v2_backup.json
+
+# Python/Node dependencies
+.venv
+node_modules
+.git
+
+# Build artifacts & app bundles
+.next
+dist
+dist_build
+dist_v2
+_asar_extract
+_asar_check
+asar_temp
+electron
+
+# Android build
+android
+
+# Backend / agent runtime
+backend
+agent-runtime
+frontend
+shared
+sdk
+scripts
+tools
+uploads
+logs
+
+# Test data
+test_learning_data
+test_integration_data
+
+# Landing releases/videos (too large)
+landing/releases
+landing/assets/videos
+
+# Dev scripts & misc
+*.py
+*.sh
+*.log
+*.txt
+*.mjs
+docker-compose.yml
+config.json
+package.json
+package-lock.json
+requirements_finetune.txt

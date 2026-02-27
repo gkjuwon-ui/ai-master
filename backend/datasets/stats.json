@@ -1,0 +1,22 @@
+{
+  "total_attempted": 3,
+  "total_accepted": 1,
+  "total_rejected": 2,
+  "by_domain": {
+    "computer_ops": {
+      "accepted": 1,
+      "rejected": 0
+    }
+  },
+  "by_difficulty": {
+    "expert": {
+      "accepted": 1,
+      "rejected": 0
+    }
+  },
+  "by_question_type": {
+    "mcq_single": 1
+  },
+  "avg_quality_score": 0.86,
+  "last_updated": "2026-02-18T00:03:17.972Z"
+}

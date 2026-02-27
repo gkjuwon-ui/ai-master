@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  /* ── Card dimensions: 1050×600 = 3.5"×2" at 300dpi ── */
+  body {
+    width: 1050px;
+    height: 600px;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: #000;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .card {
+    position: relative;
+    width: 1050px;
+    height: 600px;
+    background: #000000;
+    overflow: hidden;
+  }
+
+  /* ── Subtle grid texture ── */
+  .card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 30px 30px;
+    z-index: 0;
+  }
+
+  /* ── Ambient glow (top-right) ── */
+  .glow-1 {
+    position: absolute;
+    top: -120px;
+    right: -80px;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(232,101,32,0.12) 0%, rgba(232,101,32,0.04) 40%, transparent 70%);
+    border-radius: 50%;
+    z-index: 1;
+    filter: blur(40px);
+  }
+
+  /* ── Ambient glow (bottom-left) ── */
+  .glow-2 {
+    position: absolute;
+    bottom: -100px;
+    left: -60px;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(232,101,32,0.06) 0%, transparent 60%);
+    border-radius: 50%;
+    z-index: 1;
+    filter: blur(30px);
+  }
+
+  /* ── Diagonal accent line ── */
+  .accent-line {
+    position: absolute;
+    top: 0;
+    right: 280px;
+    width: 2px;
+    height: 600px;
+    background: linear-gradient(180deg, transparent 0%, rgba(232,101,32,0.3) 30%, rgba(232,101,32,0.6) 50%, rgba(232,101,32,0.3) 70%, transparent 100%);
+    transform: rotate(12deg);
+    transform-origin: top center;
+    z-index: 2;
+  }
+
+  .accent-line-2 {
+    position: absolute;
+    top: 0;
+    right: 270px;
+    width: 1px;
+    height: 600px;
+    background: linear-gradient(180deg, transparent 0%, rgba(232,101,32,0.1) 30%, rgba(232,101,32,0.2) 50%, rgba(232,101,32,0.1) 70%, transparent 100%);
+    transform: rotate(12deg);
+    transform-origin: top center;
+    z-index: 2;
+  }
+
+  /* ── Content container ── */
+  .content {
+    position: relative;
+    z-index: 5;
+    width: 100%;
+    height: 100%;
+    padding: 52px 56px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  /* ── Top section: logo + title ── */
+  .top {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .logo-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .logo-mark {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+  }
+
+  .logo-text {
+    font-family: 'Inter', sans-serif;
+    font-weight: 800;
+    font-size: 32px;
+    letter-spacing: -0.5px;
+    color: #fff;
+  }
+
+  .logo-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: #E86520;
+    border-radius: 50%;
+    margin-left: 2px;
+    vertical-align: baseline;
+    position: relative;
+    top: -2px;
+  }
+
+  /* ── Name & title ── */
+  .name-block {
+    margin-top: 6px;
+  }
+
+  .name {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 28px;
+    letter-spacing: -0.3px;
+    color: #fff;
+    line-height: 1.2;
+  }
+
+  .title-role {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #E86520;
+    margin-top: 6px;
+  }
+
+  /* ── Tagline ── */
+  .tagline {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 0.5px;
+    margin-top: 4px;
+  }
+
+  /* ── Bottom section: contact info ── */
+  .bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+
+  .contact {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .contact-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.6);
+    letter-spacing: 0.3px;
+  }
+
+  .contact-icon {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    opacity: 0.5;
+  }
+
+  .contact-label {
+    color: rgba(255,255,255,0.3);
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    min-width: 44px;
+  }
+
+  .contact-value {
+    color: rgba(255,255,255,0.7);
+  }
+
+  /* ── QR-area / branding badge ── */
+  .badge {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+  }
+
+  .badge-url {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 0.5px;
+  }
+
+  .badge-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    color: rgba(255,255,255,0.2);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* ── Border accent (top + bottom edge) ── */
+  .edge-top {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #E86520 0%, #F08535 30%, transparent 70%);
+    z-index: 10;
+  }
+
+  .edge-bottom {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 200px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent 0%, rgba(232,101,32,0.3) 100%);
+    z-index: 10;
+  }
+
+  /* ── Corner accents ── */
+  .corner-tl, .corner-br {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    z-index: 10;
+  }
+  .corner-tl {
+    top: 16px;
+    left: 16px;
+    border-top: 1px solid rgba(232,101,32,0.3);
+    border-left: 1px solid rgba(232,101,32,0.3);
+  }
+  .corner-br {
+    bottom: 16px;
+    right: 16px;
+    border-bottom: 1px solid rgba(232,101,32,0.3);
+    border-right: 1px solid rgba(232,101,32,0.3);
+  }
+
+  /* ── Separator ── */
+  .sep {
+    width: 40px;
+    height: 1px;
+    background: linear-gradient(90deg, #E86520, transparent);
+    margin-top: 10px;
+    margin-bottom: 2px;
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <!-- Decorative elements -->
+  <div class="glow-1"></div>
+  <div class="glow-2"></div>
+  <div class="accent-line"></div>
+  <div class="accent-line-2"></div>
+  <div class="edge-top"></div>
+  <div class="edge-bottom"></div>
+  <div class="corner-tl"></div>
+  <div class="corner-br"></div>
+
+  <div class="content">
+    <!-- Top: Logo + Identity -->
+    <div class="top">
+      <div class="logo-row">
+        <svg class="logo-mark" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="24" cy="24" r="14" stroke="#fff" stroke-width="2.5" fill="none"/>
+          <line x1="18" y1="30" x2="30" y2="18" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="30" cy="18" r="2.5" fill="#E86520"/>
+        </svg>
+        <span class="logo-text">ogenti<span class="logo-dot"></span></span>
+      </div>
+
+      <div class="name-block">
+        <div class="name">Juwon Ha</div>
+        <div class="title-role">Founder & CEO</div>
+        <div class="sep"></div>
+        <div class="tagline">Autonomous AI Agent Platform</div>
+      </div>
+    </div>
+
+    <!-- Bottom: Contact -->
+    <div class="bottom">
+      <div class="contact">
+        <div class="contact-item">
+          <svg class="contact-icon" viewBox="0 0 24 24" fill="none" stroke="rgba(232,101,32,0.7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 4L12 13L2 4"/></svg>
+          <span class="contact-value">ceo@ogenti.com</span>
+        </div>
+        <div class="contact-item">
+          <svg class="contact-icon" viewBox="0 0 24 24" fill="none" stroke="rgba(232,101,32,0.7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+          <span class="contact-value">ogenti.com</span>
+        </div>
+      </div>
+
+      <div class="badge">
+        <div class="badge-url">just watch.</div>
+        <div class="badge-sub">Your agents work for you</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

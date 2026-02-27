@@ -1,0 +1,217 @@
+{
+  "_comment": "OSEN-1.0 Expert Configuration — Custom MoE Expert Specialization Map for Computer Operation Agent",
+  "_description": "Llama 4 Scout base has 16 generic MoE experts. OSEN-1.0 extends to 20 experts with 4 new domain-specific experts for OS automation superiority.",
+  "_architecture": "Each layer has 20 experts with top-1 routing. The router learns to dispatch tokens to the most relevant expert during fine-tuning.",
+
+  "model_name": "osen-1.0",
+  "base_model": "meta-llama/Llama-4-Scout-17B-16E-Instruct",
+  "num_local_experts": 20,
+  "num_experts_per_tok": 1,
+  "new_experts_init": "svd_structural_transform_v2.1",
+
+  "expert_specializations": {
+    "expert_0": {
+      "name": "os_action_planner",
+      "domain": "OS action sequence planning",
+      "description": "Plans multi-step OS operations: click sequences, keyboard shortcuts, window management, app launches. Decomposes user intent into atomic GUI actions with proper ordering and dependency resolution.",
+      "training_focus": ["action_sequencing", "shortcut_planning", "window_management", "app_workflow", "multi_step_orchestration"],
+      "routing_bias": 0.15
+    },
+    "expert_1": {
+      "name": "screen_understanding",
+      "domain": "Visual screen state comprehension",
+      "description": "Interprets screenshots, UI layouts, element positions, text on screen, dialog boxes, error messages, loading states, and visual feedback. Bridges vision encoder output to actionable understanding.",
+      "training_focus": ["screenshot_analysis", "ui_layout_parsing", "ocr_interpretation", "visual_state_classification", "element_detection"],
+      "routing_bias": 0.15
+    },
+    "expert_2": {
+      "name": "error_recovery",
+      "domain": "Error detection, diagnosis, and recovery",
+      "description": "Specializes in identifying error states (crash dialogs, permission denials, network failures, UAC prompts), diagnosing root causes, and generating recovery action sequences. Handles stuck detection and fallback strategies.",
+      "training_focus": ["error_classification", "crash_recovery", "permission_handling", "network_error_mitigation", "stuck_detection", "fallback_planning"],
+      "routing_bias": 0.12
+    },
+    "expert_3": {
+      "name": "web_navigation",
+      "domain": "Browser and web interaction",
+      "description": "Expert in browser automation: URL navigation, form filling, tab management, cookie/popup handling, CAPTCHA detection (not bypass), login flows, search engine usage, and web content extraction.",
+      "training_focus": ["browser_control", "form_interaction", "tab_management", "popup_handling", "search_strategy", "content_extraction"],
+      "routing_bias": 0.12
+    },
+    "expert_4": {
+      "name": "code_generation",
+      "domain": "Code writing, debugging, and execution",
+      "description": "Generates code in Python, JavaScript, PowerShell, batch scripts. Handles IDE interaction, terminal commands, code review, debugging workflows, and build/test cycles.",
+      "training_focus": ["code_writing", "debugging", "terminal_commands", "ide_interaction", "build_systems", "testing"],
+      "routing_bias": 0.08
+    },
+    "expert_5": {
+      "name": "file_system",
+      "domain": "File and directory operations",
+      "description": "Manages file creation, deletion, moving, renaming, searching, permission changes, compression, and directory navigation across Windows/Linux/macOS file systems.",
+      "training_focus": ["file_operations", "directory_management", "permission_handling", "search_utilities", "compression", "path_resolution"],
+      "routing_bias": 0.08
+    },
+    "expert_6": {
+      "name": "natural_language_understanding",
+      "domain": "Intent parsing and multilingual comprehension",
+      "description": "Parses user commands in natural language (Korean, English, mixed), resolves ambiguity, extracts task parameters, and maps informal descriptions to precise OS operations.",
+      "training_focus": ["intent_classification", "parameter_extraction", "ambiguity_resolution", "korean_nlp", "command_mapping"],
+      "routing_bias": 0.10
+    },
+    "expert_7": {
+      "name": "safety_ethics",
+      "domain": "Safety guardrails and ethical computer use",
+      "description": "Enforces safety constraints: blocks malicious commands, prevents data destruction, ensures user consent, validates permissions, detects social engineering attempts, and maintains audit trails.",
+      "training_focus": ["safety_validation", "permission_checking", "malware_detection", "consent_verification", "audit_logging", "ethical_boundaries"],
+      "routing_bias": 0.10
+    },
+    "expert_8": {
+      "name": "data_analysis",
+      "domain": "Data processing, analysis, and visualization",
+      "description": "Handles spreadsheet operations, data cleaning, statistical analysis, chart generation, CSV/JSON processing, database queries, and report compilation.",
+      "training_focus": ["data_processing", "statistical_analysis", "visualization", "spreadsheet_ops", "database_queries", "report_generation"],
+      "routing_bias": 0.06
+    },
+    "expert_9": {
+      "name": "system_administration",
+      "domain": "OS configuration and system management",
+      "description": "Manages system settings, service control, registry editing, environment variables, network configuration, driver management, hardware diagnostics, and automation scheduling.",
+      "training_focus": ["system_config", "service_management", "registry_ops", "network_config", "hardware_diagnostics", "task_scheduling"],
+      "routing_bias": 0.08
+    },
+    "expert_10": {
+      "name": "text_composition",
+      "domain": "Document creation and text editing",
+      "description": "Writes documents, emails, reports, presentations. Handles rich text formatting, template usage, grammar checking, and content structuring across various text editors.",
+      "training_focus": ["document_writing", "email_composition", "report_structuring", "presentation_creation", "formatting"],
+      "routing_bias": 0.05
+    },
+    "expert_11": {
+      "name": "visual_design",
+      "domain": "Graphics, UI design, and image editing",
+      "description": "Creates and edits images in Paint, PowerPoint, or design tools. Handles color theory, layout principles, typography, asset export, and pixel-level precision.",
+      "training_focus": ["image_editing", "layout_design", "color_management", "typography", "asset_creation"],
+      "routing_bias": 0.05
+    },
+    "expert_12": {
+      "name": "memory_context",
+      "domain": "Working memory, context tracking, and state persistence",
+      "description": "Maintains conversation context, tracks multi-step task progress, remembers discovered UI element positions, manages spatial memory for screen elements, and provides episodic recall of past actions.",
+      "training_focus": ["context_tracking", "state_persistence", "spatial_memory", "progress_tracking", "episodic_recall"],
+      "routing_bias": 0.06
+    },
+    "expert_13": {
+      "name": "planning_strategy",
+      "domain": "High-level task planning and decomposition",
+      "description": "Decomposes complex goals into executable subtask sequences, estimates time/steps, handles replanning when blocked, manages inter-task dependencies, and optimizes execution order.",
+      "training_focus": ["task_decomposition", "dependency_analysis", "time_estimation", "replanning", "execution_optimization"],
+      "routing_bias": 0.08
+    },
+    "expert_14": {
+      "name": "input_method",
+      "domain": "Keyboard, mouse, IME, and accessibility input handling",
+      "description": "Specializes in precise input handling: IME state management (Korean/English toggle), keyboard shortcut execution, mouse coordinate targeting, drag-and-drop, scroll, and accessibility input methods.",
+      "training_focus": ["ime_management", "shortcut_execution", "mouse_targeting", "drag_drop", "scroll_control", "accessibility_input"],
+      "routing_bias": 0.10
+    },
+    "expert_15": {
+      "name": "app_specific",
+      "domain": "Application-specific interaction patterns",
+      "description": "Knows application-specific UI patterns and workflows for common apps: Chrome, VS Code, MS Office, Paint, Terminal, File Explorer, Settings, Task Manager, etc. Maps app-specific affordances to actions.",
+      "training_focus": ["chrome_patterns", "vscode_patterns", "office_patterns", "terminal_patterns", "explorer_patterns", "settings_patterns"],
+      "routing_bias": 0.06
+    },
+
+    "_new_experts_comment": "The following 4 experts are NEW additions beyond the original 16, specifically designed for osen-1.0's computer operation superiority.",
+
+    "expert_16": {
+      "name": "visual_grounding",
+      "domain": "Pixel-precise UI element localization and interaction targeting",
+      "description": "Bridges the gap between vision understanding and action execution. Given a screenshot and an intent ('click the Save button'), precisely identifies the target element's bounding box coordinates, handles overlapping elements, distinguishes between similar-looking buttons, and computes optimal click coordinates accounting for element state (enabled/disabled/hidden). This is the critical expert that makes osen-1.0 superior to generic models in actual computer control.",
+      "training_focus": ["element_localization", "bounding_box_prediction", "click_target_computation", "overlap_resolution", "element_state_detection", "coordinate_precision", "som_element_matching"],
+      "routing_bias": 0.15,
+      "is_new": true,
+      "init_from": "svd_structural_transform_v2.1",
+      "init_donors": [0, 1, 14, 12],
+      "init_blend_weights": [0.25, 0.35, 0.25, 0.15],
+      "init_strategy": "Blend from experts 0(action_planner),1(screen_understanding),14(input_method),12(memory_context) — semantically aligned for spatial perception + coordinate targeting"
+    },
+    "expert_17": {
+      "name": "workflow_orchestrator",
+      "domain": "Cross-application workflow execution and multi-app coordination",
+      "description": "Orchestrates complex workflows spanning multiple applications. Handles data transfer between apps (copy from Chrome → paste in Excel), manages window switching sequences, coordinates parallel app operations, handles clipboard state across applications, and ensures data integrity during cross-app transfers. Critical for real-world productivity tasks that span multiple programs.",
+      "training_focus": ["cross_app_transfer", "clipboard_management", "window_switching_optimization", "parallel_app_ops", "data_integrity_verification", "workflow_state_tracking", "productivity_automation"],
+      "routing_bias": 0.12,
+      "is_new": true,
+      "init_from": "svd_structural_transform_v2.1",
+      "init_donors": [13, 0, 5, 15],
+      "init_blend_weights": [0.30, 0.25, 0.25, 0.20],
+      "init_strategy": "Blend from experts 13(planning_strategy),0(action_planner),5(file_system),15(app_specific) — semantically aligned for cross-app workflow orchestration"
+    },
+    "expert_18": {
+      "name": "verification_oracle",
+      "domain": "Action verification, result validation, and quality assurance",
+      "description": "After every action, verifies that the expected state change occurred. Compares before/after screenshots, validates file contents match expectations, checks that form submissions succeeded, confirms downloads completed, and detects subtle failure modes (silent errors, partial completions, wrong-tab actions). This expert prevents the #1 failure mode of computer agents: claiming success without actual verification.",
+      "training_focus": ["state_change_verification", "screenshot_comparison", "content_validation", "success_confirmation", "partial_failure_detection", "silent_error_detection", "completion_quality_check"],
+      "routing_bias": 0.13,
+      "is_new": true,
+      "init_from": "svd_structural_transform_v2.1",
+      "init_donors": [2, 1, 7, 12],
+      "init_blend_weights": [0.30, 0.30, 0.20, 0.20],
+      "init_strategy": "Blend from experts 2(error_recovery),1(screen_understanding),7(safety_ethics),12(memory_context) — semantically aligned for action verification + state comparison"
+    },
+    "expert_19": {
+      "name": "adaptive_retry",
+      "domain": "Intelligent failure recovery with alternative strategy generation",
+      "description": "When an action fails or the environment is unexpected, generates alternative approaches rather than repeating the same failed action. Maintains a failure history, understands why previous attempts failed, and proposes genuinely different strategies. Handles edge cases: unexpected popups, changed UI layouts, permission escalation needs, network interruptions, and application crashes. This expert is what makes osen-1.0 robust in real-world unpredictable environments.",
+      "training_focus": ["failure_analysis", "alternative_strategy_generation", "popup_handling", "ui_change_adaptation", "permission_escalation", "network_retry_strategy", "crash_recovery_planning", "environment_adaptation"],
+      "routing_bias": 0.10,
+      "is_new": true,
+      "init_from": "svd_structural_transform_v2.1",
+      "init_donors": [2, 3, 7, 15],
+      "init_blend_weights": [0.30, 0.25, 0.25, 0.20],
+      "init_strategy": "Blend from experts 2(error_recovery),3(web_navigation),7(safety_ethics),15(app_specific) — semantically aligned for intelligent failure recovery + alternative strategies"
+    }
+  },
+
+  "expert_routing_config": {
+    "router_aux_loss_coef": 0.001,
+    "router_jitter_noise": 0.01,
+    "load_balancing_loss_weight": 0.01,
+    "expert_capacity_factor": 1.25,
+    "min_expert_utilization": 0.02,
+    "routing_temperature": 0.1,
+    "_comment": "New experts (16-19) get higher routing_bias during initial fine-tuning to ensure they activate. Bias is gradually reduced as the router learns proper dispatch.",
+    "_routing_bias_note": "The routing_bias values defined in experts 0-15 are informational/documentary only. They are NOT consumed by the MoE surgery code (scripts/moe_surgery/). Only experts 16-19 routing biases are read and applied during expert initialization. The expert 0-15 biases are retained for reference to describe the intended routing weight distribution of the base model."
+  },
+
+  "fine_tuning_schedule": {
+    "phase_1_expert_warmup": {
+      "epochs": 2,
+      "description": "Freeze original 16 experts, train only new experts 16-19 on domain-specific data",
+      "learning_rate": 2e-5,
+      "frozen_experts": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+      "trainable_experts": [16, 17, 18, 19],
+      "router_lr_multiplier": 0.1
+    },
+    "phase_2_router_calibration": {
+      "epochs": 1,
+      "description": "Freeze all experts, train only the router to learn proper dispatch to all 20 experts",
+      "learning_rate": 1e-5,
+      "frozen_experts": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
+      "trainable_components": ["router"],
+      "router_lr_multiplier": 1.0
+    },
+    "phase_3_full_finetune": {
+      "epochs": 3,
+      "description": "Fine-tune all experts and router end-to-end on the full osen-1.0 dataset",
+      "learning_rate": 5e-6,
+      "trainable_experts": "all",
+      "router_lr_multiplier": 0.5,
+      "lora_rank": 64,
+      "lora_alpha": 128,
+      "lora_target_modules": ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
+    }
+  }
+}

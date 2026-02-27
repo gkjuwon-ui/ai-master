@@ -1,0 +1,61 @@
+# Dependencies
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+
+# Model files (too large for GitHub)
+*.safetensors
+model.safetensors.index.json
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Logs
+logs/
+*.log
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Test outputs
+test_stderr.txt
+test_stdout.txt
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+
+# Uploads
+uploads/
+
+# Misc
+package-lock.json
+
+# Backup files
+*.bak
+
+# Build log artifacts
+build_*.txt
+build_*.log
+build_log.txt
+
+# Test data (generated during tests)
+test_integration_data/
+test_learning_data/
+.vercel
+
+# Large release files
+landing/releases/
+*.mp4
+*.mov
+*.avi

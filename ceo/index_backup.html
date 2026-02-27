@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<base href="/ceo/"/>
+<title>Juwon Ha — ogenti</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'JetBrains Mono',monospace;user-select:none}
+
+/* ── Particle Canvas ── */
+#pc{position:fixed;inset:0;z-index:0}
+
+/* ── Background Glows — INTENSE ── */
+.g{position:fixed;border-radius:50%;pointer-events:none;z-index:0}
+.g1{width:1000px;height:1000px;top:-300px;right:-250px;background:radial-gradient(circle,rgba(232,101,32,.18) 0%,rgba(232,101,32,.06) 35%,transparent 65%);filter:blur(50px)}
+.g2{width:800px;height:800px;bottom:-300px;left:-200px;background:radial-gradient(circle,rgba(232,101,32,.14) 0%,transparent 60%);filter:blur(70px)}
+.g3{width:600px;height:600px;top:30%;left:42%;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(232,101,32,.10) 0%,transparent 50%);filter:blur(50px);animation:gp 4s ease-in-out infinite alternate}
+.g4{width:700px;height:500px;top:8%;left:18%;background:radial-gradient(ellipse,rgba(255,140,50,.08) 0%,transparent 55%);filter:blur(60px);animation:gp 6s ease-in-out 1s infinite alternate}
+.g5{width:500px;height:700px;bottom:5%;right:12%;background:radial-gradient(ellipse,rgba(232,101,32,.09) 0%,transparent 50%);filter:blur(70px);animation:gp 5s ease-in-out 2s infinite alternate}
+@keyframes gp{0%{opacity:.65}100%{opacity:1}}
+
+/* ── Light Rays ── */
+.rays{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.45;background:
+  linear-gradient(120deg,transparent 28%,rgba(232,101,32,.035) 42%,transparent 56%),
+  linear-gradient(200deg,transparent 35%,rgba(232,101,32,.02) 48%,transparent 62%)}
+
+/* ── Floating Orbs ── */
+.orb{position:fixed;border-radius:50%;z-index:0;pointer-events:none}
+.o1{width:11px;height:11px;top:16%;left:10%;background:rgba(232,101,32,.55);box-shadow:0 0 22px rgba(232,101,32,.5),0 0 70px rgba(232,101,32,.2);animation:of 6s ease-in-out infinite alternate}
+.o2{width:7px;height:7px;top:62%;right:13%;background:rgba(232,101,32,.4);box-shadow:0 0 18px rgba(232,101,32,.35);animation:of 8s ease-in-out 1s infinite alternate}
+.o3{width:9px;height:9px;top:28%;right:7%;background:rgba(232,101,32,.45);box-shadow:0 0 20px rgba(232,101,32,.4);animation:of 7s ease-in-out 2s infinite alternate}
+.o4{width:5px;height:5px;bottom:28%;left:20%;background:rgba(255,180,80,.35);box-shadow:0 0 14px rgba(232,101,32,.3);animation:of 5s ease-in-out .5s infinite alternate}
+.o5{width:8px;height:8px;top:48%;left:5%;background:rgba(232,101,32,.35);box-shadow:0 0 18px rgba(232,101,32,.3);animation:of 9s ease-in-out 3s infinite alternate}
+.o6{width:4px;height:4px;top:10%;right:28%;background:rgba(255,160,60,.4);box-shadow:0 0 12px rgba(232,101,32,.25);animation:of 6s ease-in-out 1.5s infinite alternate}
+.o7{width:6px;height:6px;bottom:15%;right:8%;background:rgba(232,101,32,.3);box-shadow:0 0 14px rgba(232,101,32,.2);animation:of 7s ease-in-out 2.5s infinite alternate}
+@keyframes of{0%{transform:translateY(0) scale(1)}100%{transform:translateY(-28px) scale(1.18)}}
+
+/* ── Vignette ── */
+.vignette{position:fixed;inset:0;z-index:10;pointer-events:none;background:radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,.65) 100%)}
+
+/* ── Floor ── */
+.floor{position:fixed;bottom:0;left:-15%;right:-15%;height:35%;pointer-events:none;z-index:1;
+  background:linear-gradient(180deg,transparent 0%,rgba(8,8,8,.7) 40%,rgba(12,12,12,.9) 100%)}
+.floor-grid{position:absolute;inset:0;
+  background-image:linear-gradient(rgba(232,101,32,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(232,101,32,.035) 1px,transparent 1px);
+  background-size:70px 70px;
+  -webkit-mask-image:linear-gradient(180deg,transparent 0%,rgba(0,0,0,.12) 25%,rgba(0,0,0,.25) 55%,transparent 95%);
+  mask-image:linear-gradient(180deg,transparent 0%,rgba(0,0,0,.12) 25%,rgba(0,0,0,.25) 55%,transparent 95%);
+  transform:perspective(500px) rotateX(35deg);transform-origin:center bottom}
+
+/* ── Stage ── */
+.stage{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;z-index:2;pointer-events:none;
+  padding:20px}
+
+/* ═══════════ 3D CARD ═══════════ */
+
+/* Scene — responsive width via min() */
+.scene{
+  width: min(580px, calc(100vw - 40px));
+  height: calc(min(580px, calc(100vw - 40px)) * 0.5724);
+  perspective:1400px;z-index:5;cursor:grab;
+  flex-shrink:0;position:relative;pointer-events:auto}
+.scene:active{cursor:grabbing}
+
+/* Float animation wrapper — MUST have preserve-3d, MUST NOT have filter/opacity */
+@keyframes cardFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.card-float{width:100%;height:100%;position:relative;
+  transform-style:preserve-3d;-webkit-transform-style:preserve-3d;
+  animation:cardFloat 4s ease-in-out infinite}
+
+/* Card 3D container */
+.card-3d{width:100%;height:100%;position:absolute;inset:0;
+  transform-style:preserve-3d;-webkit-transform-style:preserve-3d;
+  transform:rotateX(8deg) rotateY(-18deg);will-change:transform;
+  border-radius:14px;
+  box-shadow:0 30px 90px rgba(0,0,0,.75),0 10px 30px rgba(0,0,0,.5),0 0 50px rgba(232,101,32,.1)}
+
+/* ── Card Faces ── */
+.card-front,.card-back{position:absolute;inset:0;
+  -webkit-backface-visibility:hidden;backface-visibility:hidden;border-radius:14px;}
+.card-front{transform:translateZ(4px)}
+.card-back{transform:rotateY(180deg) translateZ(4px)}
+
+.card-front img,.card-back img{position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;border-radius:14px;display:block;pointer-events:none;
+  -webkit-backface-visibility:hidden;backface-visibility:hidden}
+
+/* Gloss */
+.face-gloss{position:absolute;inset:0;border-radius:14px;pointer-events:none;z-index:2;
+  -webkit-backface-visibility:hidden;backface-visibility:hidden;
+  background:linear-gradient(135deg,rgba(255,255,255,.14) 0%,rgba(255,255,255,.05) 24%,transparent 48%,rgba(255,255,255,.02) 74%,rgba(255,255,255,.07) 100%)}
+
+/* Specular sweep */
+.face-spec{position:absolute;inset:0;border-radius:14px;pointer-events:none;z-index:3;
+  -webkit-backface-visibility:hidden;backface-visibility:hidden;
+  background:linear-gradient(105deg,transparent 18%,rgba(255,255,255,.05) 32%,rgba(255,255,255,.22) 46%,rgba(255,255,255,.3) 50%,rgba(255,255,255,.22) 54%,rgba(255,255,255,.05) 68%,transparent 82%);
+  background-size:300% 100%;background-position:120% 0;transition:background-position .12s linear}
+
+/* Glass border */
+.face-border{position:absolute;inset:0;border-radius:14px;pointer-events:none;z-index:4;
+  border:1px solid rgba(255,255,255,.09);
+  -webkit-backface-visibility:hidden;backface-visibility:hidden}
+
+/* ── Card Edge Layers ──
+   Stack of thin full-size layers between Z-3 and Z+3.
+   Each has border-radius:14px identical to front/back faces,
+   so corners curve smoothly with no gaps. */
+.edge-layer{position:absolute;inset:0;border-radius:14px;background:#1a1a1a}
+
+/* ── Edge glow: applied as box-shadow on .card-3d (safe — no flattening unlike filter) ── */
+
+/* ── Hint ── */
+.hint{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);
+  font-size:10px;color:rgba(255,255,255,.22);letter-spacing:2.5px;text-transform:uppercase;
+  z-index:20;pointer-events:none;transition:opacity .8s}
+
+/* ── Mobile ── */
+@media(max-width:600px){
+  .g1,.g2{width:320px;height:320px}
+  .o1,.o3,.o5{display:none}
+  .rays{opacity:.25}
+  .hint{font-size:9px;letter-spacing:1.5px}
+}
+</style>
+</head>
+<body>
+
+<canvas id="pc"></canvas>
+
+<!-- Glows -->
+<div class="g g1"></div><div class="g g2"></div><div class="g g3"></div><div class="g g4"></div><div class="g g5"></div>
+<div class="rays"></div>
+
+<!-- Orbs -->
+<div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div>
+<div class="orb o4"></div><div class="orb o5"></div><div class="orb o6"></div><div class="orb o7"></div>
+
+<!-- Floor -->
+<div class="floor"><div class="floor-grid"></div></div>
+
+<!-- Stage -->
+<div class="stage">
+
+<!-- 3D Card -->
+<div class="scene" id="scene">
+  <div class="card-float">
+    <div class="card-3d" id="card3d">
+      <div class="card-front">
+        <img src="front.png" alt="front"/>
+        <div class="face-gloss"></div>
+        <div class="face-spec" id="sf"></div>
+        <div class="face-border"></div>
+      </div>
+      <div class="card-back">
+        <img src="back.png" alt="back"/>
+        <div class="face-gloss"></div>
+        <div class="face-spec" id="sb"></div>
+        <div class="face-border"></div>
+      </div>
+      <div class="edge-layer" style="transform:translateZ(3px)"></div>
+      <div class="edge-layer" style="transform:translateZ(2px)"></div>
+      <div class="edge-layer" style="transform:translateZ(1px)"></div>
+      <div class="edge-layer" style="transform:translateZ(0)"></div>
+      <div class="edge-layer" style="transform:translateZ(-1px)"></div>
+      <div class="edge-layer" style="transform:translateZ(-2px)"></div>
+      <div class="edge-layer" style="transform:translateZ(-3px)"></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /stage -->
+
+<div class="vignette"></div>
+<div class="hint" id="hint">Drag to rotate &nbsp;·&nbsp; Double-click to flip</div>
+
+<script>
+/* ═══════ Particles ═══════ */
+(function(){
+  const cv=document.getElementById('pc'),cx=cv.getContext('2d');
+  let W,H,pts=[];
+  function resize(){W=cv.width=innerWidth;H=cv.height=innerHeight}
+  function init(){
+    pts=[];
+    const n=Math.min(Math.floor(W*H/8000),320);
+    for(let i=0;i<n;i++){
+      const spark=Math.random()<.09,orange=spark||Math.random()<.45;
+      pts.push({x:Math.random()*W,y:Math.random()*H,
+        r:spark?Math.random()*2.2+1.6:Math.random()*1.8+.3,
+        vx:(Math.random()-.5)*.38,vy:(Math.random()-.5)*.38,
+        a:spark?Math.random()*.55+.45:Math.random()*.38+.06,
+        o:orange,s:spark});
+    }
+  }
+  function draw(){
+    cx.clearRect(0,0,W,H);
+    for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){
+      const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.hypot(dx,dy);
+      if(d<155){const a=(1-d/155)*.075;
+        cx.strokeStyle=(pts[i].o||pts[j].o)?`rgba(232,101,32,${a})`:`rgba(255,255,255,${a*.35})`;
+        cx.lineWidth=.6;cx.beginPath();cx.moveTo(pts[i].x,pts[i].y);cx.lineTo(pts[j].x,pts[j].y);cx.stroke()}
+    }
+    for(const p of pts){
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;
+      cx.beginPath();cx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      if(p.s){cx.fillStyle=`rgba(255,165,50,${p.a})`;cx.shadowBlur=14;cx.shadowColor='rgba(232,101,32,.55)'}
+      else if(p.o){cx.fillStyle=`rgba(232,101,32,${p.a})`;cx.shadowBlur=6;cx.shadowColor='rgba(232,101,32,.25)'}
+      else{cx.fillStyle=`rgba(255,255,255,${p.a*.5})`;cx.shadowBlur=0}
+      cx.fill();cx.shadowBlur=0;
+    }
+    requestAnimationFrame(draw);
+  }
+  resize();init();draw();
+  addEventListener('resize',()=>{resize();init()});
+})();
+
+/* ═══════ 3D Card ═══════ */
+(function(){
+  const card=document.getElementById('card3d');
+  const scene=document.getElementById('scene');
+  const hint=document.getElementById('hint');
+  const sf=document.getElementById('sf');
+  const sb=document.getElementById('sb');
+
+  let rx=8,ry=-18,drag=false,lx=0,ly=0,vx=0,vy=0;
+  let auto=true,coast=false,hintOn=true;
+
+  function apply(){
+    card.style.transform=`rotateX(${rx}deg) rotateY(${ry}deg)`;
+    /* Specular position */
+    const n=((ry%360)+360)%360,p=(n/360)*280;
+    sf.style.backgroundPosition=`${p}% 0`;
+    sb.style.backgroundPosition=`${280-p}% 0`;
+    /* Edge glow on the card itself — box-shadow is safe on preserve-3d, follows rotation */
+    const spd=Math.abs(vx)+Math.abs(vy);
+    const eg=Math.min(spd/5,.7);
+    const base='0 30px 90px rgba(0,0,0,.75),0 10px 30px rgba(0,0,0,.5),0 0 50px rgba(232,101,32,.1)';
+    card.style.boxShadow=eg>0.04
+      ? `${base},
+         0 0 0 1.5px rgba(232,101,32,${eg*.9}),
+         0 0 0 3px rgba(232,101,32,${eg*.35}),
+         0 0 ${eg*18}px ${eg*4}px rgba(232,101,32,${eg*.7}),
+         0 0 ${eg*55}px ${eg*6}px rgba(232,101,32,${eg*.3}),
+         0 0 ${eg*120}px ${eg*8}px rgba(232,101,32,${eg*.12})`
+      : base;
+  }
+
+  function dn(cx2,cy2){drag=true;auto=false;coast=false;lx=cx2;ly=cy2;vx=0;vy=0;
+    if(hintOn){hint.style.opacity='0';hintOn=false}}
+  function mv(cx2,cy2){if(!drag)return;const dx=cx2-lx,dy=cy2-ly;
+    ry+=dx*.55;rx-=dy*.55;rx=Math.max(-80,Math.min(80,rx));
+    vx=dx*.55;vy=-dy*.55;lx=cx2;ly=cy2;apply()}
+  function up(){drag=false;coast=true}
+
+  scene.addEventListener('mousedown',e=>dn(e.clientX,e.clientY));
+  addEventListener('mousemove',e=>mv(e.clientX,e.clientY));
+  addEventListener('mouseup',up);
+  scene.addEventListener('touchstart',e=>dn(e.touches[0].clientX,e.touches[0].clientY),{passive:true});
+  addEventListener('touchmove',e=>mv(e.touches[0].clientX,e.touches[0].clientY),{passive:true});
+  addEventListener('touchend',up);
+  scene.addEventListener('dblclick',()=>{auto=false;coast=false;ry+=180;vx=0;apply()});
+
+  function tick(){
+    if(!drag){
+      if(auto){ry+=.16;apply()}
+      else if(coast){ry+=vx;rx+=vy;rx=Math.max(-80,Math.min(80,rx));
+        vx*=.955;vy*=.955;
+        if(Math.abs(vx)<.01&&Math.abs(vy)<.01){coast=false;vx=0;vy=0}
+        apply()}
+    }
+    requestAnimationFrame(tick);
+  }
+  apply();tick();
+})();
+</script>
+</body>
+</html>

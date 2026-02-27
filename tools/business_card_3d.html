@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<base href="/ceo/" />
+<title>Juwon Ha — ogenti</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: #000;
+  font-family: 'JetBrains Mono', monospace;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+#particle-canvas { position: fixed; inset: 0; z-index: 0; }
+
+.bg-glow { position: fixed; border-radius: 50%; z-index: 0; pointer-events: none; filter: blur(90px); }
+.bg-glow-1 { width: 700px; height: 700px; top: -220px; right: -150px; background: radial-gradient(circle, rgba(232,101,32,0.09) 0%, transparent 70%); }
+.bg-glow-2 { width: 550px; height: 550px; bottom: -200px; left: -130px; background: radial-gradient(circle, rgba(232,101,32,0.06) 0%, transparent 70%); }
+.bg-glow-3 { width: 400px; height: 400px; top: 40%; left: 50%; transform: translate(-50%,-50%); background: radial-gradient(circle, rgba(232,101,32,0.04) 0%, transparent 60%); }
+
+.orb { position: fixed; border-radius: 50%; z-index: 0; pointer-events: none; animation: orbFloat 8s ease-in-out infinite alternate; }
+.orb-1 { width: 6px; height: 6px; top: 20%; left: 14%; background: rgba(232,101,32,0.35); box-shadow: 0 0 12px rgba(232,101,32,0.25); animation-delay: 0s; }
+.orb-2 { width: 4px; height: 4px; top: 68%; right: 18%; background: rgba(255,255,255,0.15); animation-delay: -3s; }
+.orb-3 { width: 5px; height: 5px; top: 33%; right: 10%; background: rgba(232,101,32,0.22); animation-delay: -5s; }
+.orb-4 { width: 3px; height: 3px; bottom: 22%; left: 28%; background: rgba(255,255,255,0.12); animation-delay: -2s; }
+@keyframes orbFloat { 0% { transform: translateY(0) translateX(0); } 100% { transform: translateY(-22px) translateX(12px); } }
+
+.scene {
+  position: fixed; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  perspective: 1400px;
+  z-index: 1;
+  cursor: grab;
+}
+.scene:active { cursor: grabbing; }
+
+.card-3d {
+  width: 580px; height: 332px;
+  position: relative;
+  -webkit-transform-style: preserve-3d;
+  transform-style: preserve-3d;
+  transform: rotateX(5deg) rotateY(-18deg);
+  will-change: transform;
+}
+
+.card-face {
+  position: absolute; inset: 0;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.75), 0 10px 24px rgba(0,0,0,0.5);
+  /* ensure GPU layer */
+  -webkit-transform-style: flat;
+  transform-style: flat;
+}
+
+.card-front { transform: translateZ(5px); }
+.card-back  { transform: rotateY(180deg) translateZ(5px); }
+
+.card-face img {
+  width: 100%; height: 100%;
+  object-fit: cover; display: block; border-radius: 14px;
+  pointer-events: none;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* Gloss + specular */
+.gloss {
+  position: absolute; inset: 0; border-radius: 14px;
+  pointer-events: none; z-index: 10;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  background: linear-gradient(135deg,
+    rgba(255,255,255,0.13) 0%, rgba(255,255,255,0.05) 20%,
+    transparent 45%, rgba(255,255,255,0.02) 70%, rgba(255,255,255,0.07) 100%);
+}
+.specular {
+  position: absolute; inset: 0; border-radius: 14px;
+  pointer-events: none; z-index: 11;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  background: linear-gradient(105deg,
+    transparent 20%, rgba(255,255,255,0.04) 35%,
+    rgba(255,255,255,0.20) 47%, rgba(255,255,255,0.24) 50%,
+    rgba(255,255,255,0.20) 53%, rgba(255,255,255,0.04) 65%, transparent 80%);
+  background-size: 300% 100%;
+  background-position: 120% 0;
+  transition: background-position 0.12s linear;
+}
+.glass-edge {
+  position: absolute; inset: 0; border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.07);
+  pointer-events: none; z-index: 12;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* Card thickness */
+.edge { position: absolute; }
+.edge-top    { width: 100%; height: 8px; top: 0;    left: 0;  transform-origin: top center;    transform: rotateX(90deg);  background: linear-gradient(90deg,#111,#222,#111); }
+.edge-bottom { width: 100%; height: 8px; bottom: 0; left: 0;  transform-origin: bottom center; transform: rotateX(-90deg); background: linear-gradient(90deg,#0d0d0d,#1a1a1a,#0d0d0d); }
+.edge-left   { width: 8px; height: 100%; top: 0;    left: 0;  transform-origin: left center;   transform: rotateY(-90deg); background: linear-gradient(180deg,#111,#222,#111); }
+.edge-right  { width: 8px; height: 100%; top: 0;    right: 0; transform-origin: right center;  transform: rotateY(90deg);  background: linear-gradient(180deg,#0d0d0d,#1a1a1a,#0d0d0d); }
+
+.hint {
+  position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+  font-size: 10px; color: rgba(255,255,255,0.18);
+  letter-spacing: 2px; text-transform: uppercase;
+  z-index: 20; pointer-events: none; transition: opacity 0.8s;
+}
+</style>
+</head>
+<body>
+
+<canvas id="particle-canvas"></canvas>
+<div class="bg-glow bg-glow-1"></div>
+<div class="bg-glow bg-glow-2"></div>
+<div class="bg-glow bg-glow-3"></div>
+<div class="orb orb-1"></div><div class="orb orb-2"></div>
+<div class="orb orb-3"></div><div class="orb orb-4"></div>
+
+<div class="scene" id="scene">
+  <div class="card-3d" id="card3d">
+
+    <!-- FRONT — front.png -->
+    <div class="card-face card-front">
+      <img src="front.png" alt="ogenti card front" draggable="false" />
+      <div class="gloss"></div>
+      <div class="specular" id="sf"></div>
+      <div class="glass-edge"></div>
+    </div>
+
+    <!-- BACK — back.png -->
+    <div class="card-face card-back">
+      <img src="back.png" alt="ogenti card back" draggable="false" />
+      <div class="gloss"></div>
+      <div class="specular" id="sb"></div>
+      <div class="glass-edge"></div>
+    </div>
+
+    <!-- thickness -->
+    <div class="edge edge-top"></div>
+    <div class="edge edge-bottom"></div>
+    <div class="edge edge-left"></div>
+    <div class="edge edge-right"></div>
+  </div>
+</div>
+
+<div class="hint" id="hint">Drag to rotate &nbsp;·&nbsp; Double-click to flip</div>
+
+<script>
+/* ── Particles ── */
+(function () {
+  const cv = document.getElementById('particle-canvas');
+  const cx = cv.getContext('2d');
+  let W, H, pts = [];
+  function resize() { W = cv.width = window.innerWidth; H = cv.height = window.innerHeight; }
+  function init() {
+    pts = [];
+    const n = Math.floor((W * H) / 18000);
+    for (let i = 0; i < n; i++) pts.push({
+      x: Math.random()*W, y: Math.random()*H,
+      r: Math.random()*1.4+0.3,
+      vx: (Math.random()-.5)*.28, vy: (Math.random()-.5)*.28,
+      a: Math.random()*.35+.05, acc: Math.random()<.18
+    });
+  }
+  function draw() {
+    cx.clearRect(0,0,W,H);
+    for (let i=0;i<pts.length;i++) for (let j=i+1;j<pts.length;j++) {
+      const dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y, d=Math.hypot(dx,dy);
+      if (d<140) { cx.strokeStyle=`rgba(232,101,32,${(1-d/140)*.055})`; cx.lineWidth=.5; cx.beginPath(); cx.moveTo(pts[i].x,pts[i].y); cx.lineTo(pts[j].x,pts[j].y); cx.stroke(); }
+    }
+    for (const p of pts) {
+      p.x+=p.vx; p.y+=p.vy;
+      if(p.x<0)p.x=W; if(p.x>W)p.x=0; if(p.y<0)p.y=H; if(p.y>H)p.y=0;
+      cx.beginPath(); cx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      cx.fillStyle=p.acc?`rgba(232,101,32,${p.a})`:`rgba(255,255,255,${p.a*.55})`; cx.fill();
+    }
+    requestAnimationFrame(draw);
+  }
+  resize(); init(); draw();
+  window.addEventListener('resize',()=>{resize();init();});
+})();
+
+/* ── 3D drag ── */
+(function () {
+  const card = document.getElementById('card3d');
+  const scene = document.getElementById('scene');
+  const hint  = document.getElementById('hint');
+  const sf = document.getElementById('sf');
+  const sb = document.getElementById('sb');
+
+  let rx=5, ry=-18, drag=0, lx=0, ly=0, vx=0, vy=0;
+  let auto=true, coast=false, hintOn=true;
+
+  function apply() {
+    card.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+    const sx=Math.sin(ry*Math.PI/180)*35, sy=-Math.sin(rx*Math.PI/180)*25+45;
+    const sb2=55+Math.abs(Math.sin(ry*Math.PI/180))*25;
+    card.style.filter=`drop-shadow(${sx}px ${sy}px ${sb2}px rgba(0,0,0,0.65))`;
+    const n=((ry%360)+360)%360, p=(n/360)*280;
+    sf.style.backgroundPosition=`${p}% 0`;
+    sb.style.backgroundPosition=`${280-p}% 0`;
+  }
+
+  function dn(cx2,cy2){drag=1;auto=false;coast=false;lx=cx2;ly=cy2;vx=0;vy=0;if(hintOn){hint.style.opacity='0';hintOn=false;}}
+  function mv(cx2,cy2){if(!drag)return;const dx=cx2-lx,dy=cy2-ly;ry+=dx*.55;rx-=dy*.55;rx=Math.max(-80,Math.min(80,rx));vx=dx*.55;vy=-dy*.55;lx=cx2;ly=cy2;apply();}
+  function up(){drag=0;coast=true;}
+
+  scene.addEventListener('mousedown', e=>dn(e.clientX,e.clientY));
+  window.addEventListener('mousemove',e=>mv(e.clientX,e.clientY));
+  window.addEventListener('mouseup',  up);
+  scene.addEventListener('touchstart',e=>dn(e.touches[0].clientX,e.touches[0].clientY),{passive:true});
+  window.addEventListener('touchmove', e=>mv(e.touches[0].clientX,e.touches[0].clientY),{passive:true});
+  window.addEventListener('touchend', up);
+  scene.addEventListener('dblclick',()=>{auto=false;coast=false;ry+=180;vx=0;apply();});
+
+  function tick(){
+    if(!drag){
+      if(auto){ry+=.14;apply();}
+      else if(coast){ry+=vx;rx+=vy;rx=Math.max(-80,Math.min(80,rx));vx*=.955;vy*=.955;if(Math.abs(vx)<.01&&Math.abs(vy)<.01)coast=false;apply();}
+    }
+    requestAnimationFrame(tick);
+  }
+  apply(); tick();
+})();
+</script>
+</body>
+</html>

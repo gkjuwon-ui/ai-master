@@ -1,0 +1,13 @@
+{
+  "name": "ogenti",
+  "version": "1.0.0",
+  "description": "ogenti — AI agents that control your OS",
+  "main": "main.js",
+  "author": "ogenti",
+  "license": "MIT",
+  "dependencies": {
+    "electron-store": "^8.1.0",
+    "get-port": "^5.1.1",
+    "tree-kill": "^1.2.2"
+  }
+}

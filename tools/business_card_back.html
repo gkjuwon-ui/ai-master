@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 1050px;
+    height: 600px;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: #000;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .card {
+    position: relative;
+    width: 1050px;
+    height: 600px;
+    background: #000000;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ── Grid texture ── */
+  .card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 30px 30px;
+    z-index: 0;
+  }
+
+  /* ── Centered glow ── */
+  .glow {
+    position: absolute;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(232,101,32,0.08) 0%, rgba(232,101,32,0.03) 35%, transparent 65%);
+    border-radius: 50%;
+    z-index: 1;
+    filter: blur(50px);
+  }
+
+  /* ── Center content ── */
+  .center {
+    position: relative;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+  }
+
+  .logo-mark {
+    width: 80px;
+    height: 80px;
+  }
+
+  .logo-text {
+    font-family: 'Inter', sans-serif;
+    font-weight: 800;
+    font-size: 48px;
+    letter-spacing: -1px;
+    color: #fff;
+  }
+
+  .logo-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    background: #E86520;
+    border-radius: 50%;
+    margin-left: 2px;
+    vertical-align: baseline;
+    position: relative;
+    top: -3px;
+  }
+
+  .slogan {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+  }
+
+  /* ── Border accents ── */
+  .edge-top {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent 30%, #E86520 50%, transparent 70%);
+    z-index: 10;
+  }
+
+  .edge-bottom {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent 30%, rgba(232,101,32,0.3) 50%, transparent 70%);
+    z-index: 10;
+  }
+
+  .corner-tl, .corner-tr, .corner-bl, .corner-br {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    z-index: 10;
+  }
+  .corner-tl { top: 16px; left: 16px; border-top: 1px solid rgba(232,101,32,0.25); border-left: 1px solid rgba(232,101,32,0.25); }
+  .corner-tr { top: 16px; right: 16px; border-top: 1px solid rgba(232,101,32,0.25); border-right: 1px solid rgba(232,101,32,0.25); }
+  .corner-bl { bottom: 16px; left: 16px; border-bottom: 1px solid rgba(232,101,32,0.25); border-left: 1px solid rgba(232,101,32,0.25); }
+  .corner-br { bottom: 16px; right: 16px; border-bottom: 1px solid rgba(232,101,32,0.25); border-right: 1px solid rgba(232,101,32,0.25); }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="glow"></div>
+  <div class="edge-top"></div>
+  <div class="edge-bottom"></div>
+  <div class="corner-tl"></div>
+  <div class="corner-tr"></div>
+  <div class="corner-bl"></div>
+  <div class="corner-br"></div>
+
+  <div class="center">
+    <svg class="logo-mark" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="24" cy="24" r="14" stroke="#fff" stroke-width="2.2" fill="none"/>
+      <line x1="18" y1="30" x2="30" y2="18" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+      <circle cx="30" cy="18" r="2.8" fill="#E86520"/>
+    </svg>
+    <span class="logo-text">ogenti<span class="logo-dot"></span></span>
+    <div class="slogan">Autonomous AI Agents</div>
+  </div>
+</div>
+</body>
+</html>

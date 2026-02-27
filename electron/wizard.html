@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ogenti — Setup Wizard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --black: #000000;
+    --bg-card: #080808;
+    --bg-elevated: #0e0e0e;
+    --bg-input: #0a0a0a;
+    --border: #161616;
+    --border-light: #1e1e1e;
+    --border-focus: #333333;
+    --text-primary: #e8e8e8;
+    --text-secondary: #707070;
+    --text-muted: #454545;
+    --green: #3b3;
+    --red: #c44;
+    --amber: #b93;
+    --radius: 10px;
+  }
+
+  body {
+    background: var(--black);
+    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    -webkit-app-region: drag;
+    line-height: 1.6;
+  }
+
+  ::selection { background: rgba(255,255,255,0.08); color: #fff; }
+  button, input, select, a, label { -webkit-app-region: no-drag; }
+
+  /* ─── TITLEBAR ─── */
+  .titlebar {
+    display: flex; align-items: center; justify-content: space-between;
+    height: 44px; padding: 0 20px;
+    background: var(--black); border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .titlebar-left {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .titlebar-logo {
+    width: 18px; height: 18px; border-radius: 5px;
+    background: var(--text-primary);
+    display: flex; align-items: center; justify-content: center;
+    color: #000; font-size: 8px; font-weight: 800;
+  }
+  .titlebar-title {
+    font-size: 12px; color: var(--text-muted); font-weight: 400;
+    letter-spacing: 0.02em;
+  }
+  .titlebar-controls { display: flex; gap: 8px; }
+  .titlebar-btn {
+    width: 12px; height: 12px; border-radius: 50%; border: none;
+    cursor: pointer; transition: opacity 0.2s; opacity: 0.7;
+  }
+  .titlebar-btn:hover { opacity: 1; }
+  .titlebar-btn.minimize { background: var(--amber); }
+  .titlebar-btn.close { background: var(--red); }
+
+  /* ─── CONTAINER ─── */
+  .container {
+    flex: 1; display: flex; flex-direction: column;
+    padding: 36px 40px 28px;
+    overflow-y: auto;
+  }
+  .container::-webkit-scrollbar { width: 4px; }
+  .container::-webkit-scrollbar-track { background: transparent; }
+  .container::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 4px; }
+
+  /* ─── PROGRESS ─── */
+  .progress {
+    display: flex; align-items: center; gap: 0;
+    margin-bottom: 40px; justify-content: center;
+  }
+  .step-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--border-light);
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+  }
+  .step-dot.active {
+    background: var(--text-primary);
+    box-shadow: 0 0 12px rgba(255,255,255,0.15);
+  }
+  .step-dot.done { background: var(--green); }
+  .step-line {
+    width: 40px; height: 1px; background: var(--border);
+    transition: background 0.4s;
+  }
+  .step-line.done { background: var(--green); }
+
+  /* ─── STEP ─── */
+  .step {
+    display: none; flex-direction: column; gap: 24px; flex: 1;
+    animation: stepIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .step.active { display: flex; }
+  @keyframes stepIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .step-header { margin-bottom: 4px; }
+  .step-label {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.15em;
+    text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;
+  }
+  .step-title {
+    font-size: 22px; font-weight: 700; letter-spacing: -0.03em;
+    line-height: 1.2;
+  }
+  .step-desc {
+    font-size: 13px; color: var(--text-secondary); line-height: 1.7;
+    font-weight: 300;
+  }
+
+  /* ─── FORM ─── */
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label {
+    font-size: 11px; font-weight: 500; color: var(--text-muted);
+    letter-spacing: 0.04em; text-transform: uppercase;
+  }
+  .field input, .field select {
+    background: var(--bg-input); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 11px 14px;
+    color: var(--text-primary); font-size: 13px; font-family: inherit;
+    outline: none; transition: border-color 0.2s;
+  }
+  .field input:focus, .field select:focus { border-color: var(--border-focus); }
+  .field input::placeholder { color: var(--text-muted); }
+  .field select { cursor: pointer; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23454545' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 14px center;
+    padding-right: 36px;
+  }
+  .field .hint {
+    font-size: 11px; color: var(--text-muted); font-weight: 300;
+  }
+  .row { display: flex; gap: 12px; }
+  .row .field { flex: 1; }
+
+  /* ─── BUTTONS ─── */
+  .actions {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: auto; padding-top: 28px;
+  }
+  .btn {
+    padding: 10px 24px; border-radius: 8px; font-size: 13px; font-weight: 500;
+    cursor: pointer; border: none; transition: all 0.2s;
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: inherit; letter-spacing: -0.01em;
+  }
+  .btn-primary {
+    background: var(--text-primary); color: #000;
+  }
+  .btn-primary:hover {
+    background: #ccc; transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+  .btn-primary:disabled { opacity: 0.3; cursor: not-allowed; transform: none; box-shadow: none; }
+  .btn-secondary {
+    background: transparent; color: var(--text-secondary);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { color: var(--text-primary); border-color: var(--border-light); }
+  .btn-test {
+    background: transparent; color: var(--text-secondary);
+    border: 1px solid var(--border); padding: 8px 18px; font-size: 12px;
+  }
+  .btn-test:hover { border-color: var(--border-focus); color: var(--text-primary); }
+  .btn-test.success { border-color: var(--green); color: var(--green); }
+  .btn-test.error { border-color: var(--red); color: var(--red); }
+
+  /* ─── PROVIDER GRID ─── */
+  .provider-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 1px; background: var(--border); border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden;
+  }
+  .provider-card {
+    background: var(--bg-card); padding: 18px 14px; text-align: center;
+    cursor: pointer; transition: all 0.2s; position: relative;
+  }
+  .provider-card:hover { background: var(--bg-elevated); }
+  .provider-card.selected {
+    background: var(--bg-elevated);
+  }
+  .provider-card.selected::after {
+    content: ''; position: absolute; bottom: 0; left: 20%; right: 20%;
+    height: 2px; background: var(--text-primary); border-radius: 1px;
+  }
+  .provider-card .name {
+    font-size: 13px; font-weight: 600; letter-spacing: -0.01em;
+  }
+  .provider-card .desc {
+    font-size: 10px; color: var(--text-muted); margin-top: 4px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ─── CONFIG LIST ─── */
+  .config-list {
+    display: flex; flex-direction: column; gap: 2px;
+    border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+  }
+  .config-item {
+    display: flex; align-items: center; gap: 16px;
+    padding: 16px 20px; background: var(--bg-card);
+    transition: background 0.2s;
+  }
+  .config-item:hover { background: var(--bg-elevated); }
+  .config-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--bg-elevated); border: 1px solid var(--border-light);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .config-icon svg {
+    width: 14px; height: 14px; stroke: var(--text-secondary);
+    fill: none; stroke-width: 1.5;
+  }
+  .config-text .label {
+    font-size: 13px; font-weight: 500; letter-spacing: -0.01em;
+  }
+  .config-text .detail {
+    font-size: 11px; color: var(--text-muted); margin-top: 2px; font-weight: 300;
+  }
+
+  /* ─── STATUS LIST ─── */
+  .status-list { display: flex; flex-direction: column; gap: 2px;
+    border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+  }
+  .status-item {
+    display: flex; align-items: center; gap: 16px;
+    padding: 16px 20px; background: var(--bg-card);
+  }
+  .status-icon {
+    width: 28px; height: 28px; border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; flex-shrink: 0;
+    background: var(--bg-elevated); color: var(--text-muted);
+    border: 1px solid var(--border);
+    transition: all 0.3s;
+  }
+  .status-icon.loading {
+    background: rgba(255,255,255,0.03); border-color: var(--border-light);
+    color: var(--text-secondary);
+  }
+  .status-icon.done {
+    background: rgba(51,187,51,0.08); border-color: rgba(51,187,51,0.2);
+    color: var(--green);
+  }
+  .status-icon.error {
+    background: rgba(204,68,68,0.08); border-color: rgba(204,68,68,0.2);
+    color: var(--red);
+  }
+  .status-text .label { font-size: 13px; font-weight: 500; }
+  .status-text .detail { font-size: 11px; color: var(--text-muted); margin-top: 1px; font-weight: 300; }
+
+  /* ─── CHECKBOX ─── */
+  .checkbox {
+    display: flex; align-items: center; gap: 12px; cursor: pointer;
+    padding: 12px 16px; background: var(--bg-card);
+    border: 1px solid var(--border); border-radius: var(--radius);
+    transition: background 0.2s;
+  }
+  .checkbox:hover { background: var(--bg-elevated); }
+  .checkbox input[type="checkbox"] {
+    width: 16px; height: 16px; accent-color: var(--text-primary);
+    cursor: pointer;
+  }
+  .checkbox span { font-size: 13px; color: var(--text-secondary); font-weight: 400; }
+
+  /* ─── SPINNER ─── */
+  .spinner {
+    display: inline-block; width: 14px; height: 14px;
+    border: 1.5px solid transparent; border-top-color: currentColor;
+    border-radius: 50%; animation: spin 0.6s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ─── ERROR ─── */
+  .error-box {
+    padding: 14px 18px; background: rgba(204,68,68,0.06);
+    border: 1px solid rgba(204,68,68,0.15); border-radius: var(--radius);
+    color: var(--red); font-size: 12px; line-height: 1.6;
+  }
+
+  /* ─── TEST ROW ─── */
+  .test-row {
+    display: flex; gap: 12px; align-items: center;
+  }
+  .test-result { font-size: 12px; font-weight: 400; }
+</style>
+</head>
+<body>
+
+<!-- Titlebar -->
+<div class="titlebar">
+  <div class="titlebar-left">
+    <div class="titlebar-logo">O</div>
+    <span class="titlebar-title">Setup</span>
+  </div>
+  <div class="titlebar-controls">
+    <button class="titlebar-btn minimize" onclick="window.electronAPI?.minimize()"></button>
+    <button class="titlebar-btn close" onclick="window.electronAPI?.quit()"></button>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Progress -->
+  <div class="progress" id="progressBar"></div>
+
+  <!-- Step 1: Welcome -->
+  <div class="step active" id="step-0">
+    <div class="step-header">
+      <div class="step-label">Welcome</div>
+      <div class="step-title">Set up ogenti</div>
+    </div>
+    <div class="step-desc">
+      AI agents that see your screen, click, type, and navigate applications.
+      This wizard configures your environment in under a minute.
+    </div>
+
+    <div class="config-list">
+      <div class="config-item">
+        <div class="config-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        </div>
+        <div class="config-text">
+          <div class="label">LLM Provider</div>
+          <div class="detail">Connect OpenAI, Anthropic, Google, or local models</div>
+        </div>
+      </div>
+      <div class="config-item">
+        <div class="config-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        </div>
+        <div class="config-text">
+          <div class="label">Service Configuration</div>
+          <div class="detail">Backend, runtime, and database ports</div>
+        </div>
+      </div>
+      <div class="config-item">
+        <div class="config-icon">
+          <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        </div>
+        <div class="config-text">
+          <div class="label">Marketplace (Optional)</div>
+          <div class="detail">Stripe integration for agent payments</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <div></div>
+      <button class="btn btn-primary" onclick="nextStep()">Get Started &rarr;</button>
+    </div>
+  </div>
+
+  <!-- Step 2: LLM Configuration -->
+  <div class="step" id="step-1">
+    <div class="step-header">
+      <div class="step-label">Step 1 of 3</div>
+      <div class="step-title">LLM Provider</div>
+    </div>
+    <div class="step-desc">Choose the AI model that agents will use to reason and decide actions.</div>
+
+    <div class="provider-grid" id="providerGrid">
+      <div class="provider-card" data-provider="OPENAI" onclick="selectProvider('OPENAI')">
+        <div class="name">OpenAI</div>
+        <div class="desc">GPT-4o</div>
+      </div>
+      <div class="provider-card" data-provider="ANTHROPIC" onclick="selectProvider('ANTHROPIC')">
+        <div class="name">Anthropic</div>
+        <div class="desc">Claude Sonnet 4</div>
+      </div>
+      <div class="provider-card" data-provider="GOOGLE" onclick="selectProvider('GOOGLE')">
+        <div class="name">Google AI</div>
+        <div class="desc">Gemini 2.0</div>
+      </div>
+      <div class="provider-card" data-provider="MISTRAL" onclick="selectProvider('MISTRAL')">
+        <div class="name">Mistral</div>
+        <div class="desc">Large</div>
+      </div>
+      <div class="provider-card" data-provider="LOCAL" onclick="selectProvider('LOCAL')">
+        <div class="name">Local</div>
+        <div class="desc">Ollama</div>
+      </div>
+      <div class="provider-card" data-provider="CUSTOM" onclick="selectProvider('CUSTOM')">
+        <div class="name">Custom</div>
+        <div class="desc">OpenAI API</div>
+      </div>
+    </div>
+
+    <div class="field" id="fieldModel">
+      <label>Model</label>
+      <select id="llmModel">
+        <option value="">Select a provider first</option>
+      </select>
+    </div>
+
+    <div class="field" id="fieldApiKey" style="display:none">
+      <label>API Key</label>
+      <input type="password" id="llmApiKey" placeholder="sk-...">
+      <div class="hint" id="apiKeyHint"></div>
+    </div>
+
+    <div class="field" id="fieldBaseUrl" style="display:none">
+      <label>Base URL</label>
+      <input type="text" id="llmBaseUrl" placeholder="http://localhost:11434">
+      <div class="hint">Endpoint URL for local or custom providers</div>
+    </div>
+
+    <div class="test-row">
+      <button class="btn btn-test" id="testBtn" onclick="testLLM()">Test Connection</button>
+      <span id="testResult" class="test-result"></span>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-secondary" onclick="prevStep()">&larr; Back</button>
+      <button class="btn btn-primary" onclick="nextStep()">Continue &rarr;</button>
+    </div>
+  </div>
+
+  <!-- Step 3: Service Settings -->
+  <div class="step" id="step-2">
+    <div class="step-header">
+      <div class="step-label">Step 2 of 3</div>
+      <div class="step-title">Services</div>
+    </div>
+    <div class="step-desc">Configure ports and optional integrations. Defaults work for most setups.</div>
+
+    <div class="row">
+      <div class="field">
+        <label>Backend</label>
+        <input type="number" id="backendPort" value="4000">
+        <div class="hint">API server</div>
+      </div>
+      <div class="field">
+        <label>Frontend</label>
+        <input type="number" id="frontendPort" value="3000">
+        <div class="hint">UI server</div>
+      </div>
+      <div class="field">
+        <label>Runtime</label>
+        <input type="number" id="runtimePort" value="5000">
+        <div class="hint">Agent engine</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Stripe Secret Key</label>
+      <input type="password" id="stripeSecret" placeholder="sk_...">
+      <div class="hint">Optional &mdash; only for marketplace payments</div>
+    </div>
+
+    <div class="field">
+      <label>Stripe Publishable Key</label>
+      <input type="text" id="stripePub" placeholder="pk_...">
+    </div>
+
+    <label class="checkbox">
+      <input type="checkbox" id="autoLaunch" checked>
+      <span>Launch on system startup</span>
+    </label>
+
+    <label class="checkbox">
+      <input type="checkbox" id="minimizeToTray" checked>
+      <span>Minimize to system tray</span>
+    </label>
+
+    <div class="actions">
+      <button class="btn btn-secondary" onclick="prevStep()">&larr; Back</button>
+      <button class="btn btn-primary" onclick="nextStep()">Launch &rarr;</button>
+    </div>
+  </div>
+
+  <!-- Step 4: Launching -->
+  <div class="step" id="step-3">
+    <div class="step-header">
+      <div class="step-label">Finalizing</div>
+      <div class="step-title">Launching ogenti</div>
+    </div>
+    <div class="step-desc">Saving configuration and starting services&hellip;</div>
+
+    <div class="status-list" id="launchStatus">
+      <div class="status-item" id="launch-save">
+        <div class="status-icon loading"><span class="spinner"></span></div>
+        <div class="status-text"><div class="label">Saving configuration</div><div class="detail">Storing settings securely</div></div>
+      </div>
+      <div class="status-item" id="launch-db">
+        <div class="status-icon"><svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="1.5"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></div>
+        <div class="status-text"><div class="label">Initializing database</div><div class="detail">SQLite setup</div></div>
+      </div>
+      <div class="status-item" id="launch-backend">
+        <div class="status-icon"><svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="1.5"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><circle cx="6" cy="6" r="1" fill="currentColor"/><circle cx="6" cy="18" r="1" fill="currentColor"/></svg></div>
+        <div class="status-text"><div class="label">Starting backend</div><div class="detail">API + WebSocket server</div></div>
+      </div>
+      <div class="status-item" id="launch-runtime">
+        <div class="status-icon"><svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="1.5"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+        <div class="status-text"><div class="label">Starting runtime</div><div class="detail">Python execution engine</div></div>
+      </div>
+      <div class="status-item" id="launch-ready">
+        <div class="status-icon"><svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="1.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="status-text"><div class="label">Opening control panel</div><div class="detail">Main interface</div></div>
+      </div>
+    </div>
+
+    <div id="launchError" class="error-box" style="display:none"></div>
+
+    <div class="actions">
+      <button class="btn btn-secondary" id="backFromLaunch" onclick="prevStep()" style="display:none">&larr; Back</button>
+      <div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const MODELS = {
+  OPENAI: [
+    { id: 'gpt-4o', name: 'GPT-4o (Recommended)' },
+    { id: 'gpt-4o-mini', name: 'GPT-4o Mini (Faster)' },
+    { id: 'gpt-4-turbo', name: 'GPT-4 Turbo' },
+    { id: 'o1-preview', name: 'o1 Preview' },
+  ],
+  ANTHROPIC: [
+    { id: 'claude-sonnet-4-20250514', name: 'Claude Sonnet 4 (Recommended)' },
+    { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet' },
+    { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus' },
+  ],
+  GOOGLE: [
+    { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash (Recommended)' },
+    { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro' },
+    { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash' },
+  ],
+  MISTRAL: [
+    { id: 'mistral-large-latest', name: 'Mistral Large' },
+    { id: 'codestral-latest', name: 'Codestral' },
+  ],
+  LOCAL: [
+    { id: 'llama3.1', name: 'Llama 3.1' },
+    { id: 'codellama', name: 'Code Llama' },
+    { id: 'mixtral', name: 'Mixtral 8x7B' },
+  ],
+  CUSTOM: [
+    { id: 'custom', name: 'Custom Model' },
+  ],
+};
+
+const API_KEY_HINTS = {
+  OPENAI: 'platform.openai.com',
+  ANTHROPIC: 'console.anthropic.com',
+  GOOGLE: 'aistudio.google.com',
+  MISTRAL: 'console.mistral.ai',
+  LOCAL: 'No API key needed',
+  CUSTOM: 'Enter your provider API key',
+};
+
+let currentStep = 0;
+const totalSteps = 4;
+let selectedProvider = '';
+
+function renderProgress() {
+  const bar = document.getElementById('progressBar');
+  bar.innerHTML = '';
+  for (let i = 0; i < totalSteps; i++) {
+    if (i > 0) {
+      const line = document.createElement('div');
+      line.className = 'step-line' + (i <= currentStep ? ' done' : '');
+      bar.appendChild(line);
+    }
+    const dot = document.createElement('div');
+    dot.className = 'step-dot' + (i === currentStep ? ' active' : i < currentStep ? ' done' : '');
+    bar.appendChild(dot);
+  }
+}
+
+function showStep(n) {
+  document.querySelectorAll('.step').forEach((el, i) => {
+    el.classList.toggle('active', i === n);
+  });
+  currentStep = n;
+  renderProgress();
+}
+
+function nextStep() {
+  if (currentStep < totalSteps - 1) {
+    if (currentStep === totalSteps - 2) {
+      showStep(currentStep + 1);
+      performLaunch();
+    } else {
+      showStep(currentStep + 1);
+    }
+  }
+}
+
+function prevStep() {
+  if (currentStep > 0) showStep(currentStep - 1);
+}
+
+function selectProvider(provider) {
+  selectedProvider = provider;
+  document.querySelectorAll('.provider-card').forEach(card => {
+    card.classList.toggle('selected', card.dataset.provider === provider);
+  });
+
+  const select = document.getElementById('llmModel');
+  select.innerHTML = '';
+  (MODELS[provider] || []).forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m.id;
+    opt.textContent = m.name;
+    select.appendChild(opt);
+  });
+
+  const needsKey = provider !== 'LOCAL';
+  document.getElementById('fieldApiKey').style.display = needsKey ? 'flex' : 'none';
+  document.getElementById('apiKeyHint').textContent = API_KEY_HINTS[provider] || '';
+
+  const needsUrl = provider === 'LOCAL' || provider === 'CUSTOM';
+  document.getElementById('fieldBaseUrl').style.display = needsUrl ? 'flex' : 'none';
+  if (provider === 'LOCAL') {
+    document.getElementById('llmBaseUrl').value = 'http://localhost:11434';
+  }
+
+  document.getElementById('testResult').textContent = '';
+  document.getElementById('testBtn').className = 'btn btn-test';
+}
+
+async function testLLM() {
+  const btn = document.getElementById('testBtn');
+  const result = document.getElementById('testResult');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Testing';
+  result.textContent = '';
+
+  try {
+    const res = await window.electronAPI.testLLM({
+      provider: selectedProvider,
+      apiKey: document.getElementById('llmApiKey').value,
+      baseUrl: document.getElementById('llmBaseUrl').value,
+      model: document.getElementById('llmModel').value,
+    });
+
+    if (res.success) {
+      btn.className = 'btn btn-test success';
+      btn.textContent = 'Connected';
+      result.textContent = 'Connection verified';
+      result.style.color = 'var(--green)';
+    } else {
+      btn.className = 'btn btn-test error';
+      btn.textContent = 'Failed';
+      result.textContent = res.error || 'HTTP ' + res.status;
+      result.style.color = 'var(--red)';
+    }
+  } catch (e) {
+    btn.className = 'btn btn-test error';
+    btn.textContent = 'Failed';
+    result.textContent = e.message;
+    result.style.color = 'var(--red)';
+  }
+
+  btn.disabled = false;
+}
+
+function updateLaunchStep(id, status) {
+  const item = document.getElementById(id);
+  if (!item) return;
+  const icon = item.querySelector('.status-icon');
+  icon.className = 'status-icon ' + status;
+  if (status === 'loading') {
+    icon.innerHTML = '<span class="spinner"></span>';
+  } else if (status === 'done') {
+    icon.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>';
+  } else if (status === 'error') {
+    icon.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+  }
+}
+
+async function performLaunch() {
+  const errorDiv = document.getElementById('launchError');
+  errorDiv.style.display = 'none';
+
+  try {
+    updateLaunchStep('launch-save', 'loading');
+    await window.electronAPI.saveConfig({
+      llmProvider: selectedProvider,
+      llmModel: document.getElementById('llmModel').value,
+      llmApiKey: document.getElementById('llmApiKey').value,
+      llmBaseUrl: document.getElementById('llmBaseUrl').value,
+      backendPort: parseInt(document.getElementById('backendPort').value) || 4000,
+      frontendPort: parseInt(document.getElementById('frontendPort').value) || 3000,
+      runtimePort: parseInt(document.getElementById('runtimePort').value) || 5000,
+      stripeSecretKey: document.getElementById('stripeSecret').value,
+      stripePublishableKey: document.getElementById('stripePub').value,
+      autoLaunch: document.getElementById('autoLaunch').checked,
+      minimizeToTray: document.getElementById('minimizeToTray').checked,
+    });
+    updateLaunchStep('launch-save', 'done');
+
+    updateLaunchStep('launch-db', 'loading');
+    await new Promise(r => setTimeout(r, 800));
+    updateLaunchStep('launch-db', 'done');
+
+    updateLaunchStep('launch-backend', 'loading');
+    await new Promise(r => setTimeout(r, 600));
+    updateLaunchStep('launch-backend', 'done');
+
+    updateLaunchStep('launch-runtime', 'loading');
+    await new Promise(r => setTimeout(r, 600));
+    updateLaunchStep('launch-runtime', 'done');
+
+    updateLaunchStep('launch-ready', 'loading');
+    const result = await window.electronAPI.completeSetup();
+
+    if (result.success) {
+      updateLaunchStep('launch-ready', 'done');
+    } else {
+      throw new Error(result.error || 'Failed to start services');
+    }
+  } catch (e) {
+    updateLaunchStep('launch-ready', 'error');
+    errorDiv.textContent = 'Error: ' + e.message + '. Check that Node.js is installed and ports are available.';
+    errorDiv.style.display = 'block';
+    document.getElementById('backFromLaunch').style.display = 'block';
+  }
+}
+
+async function init() {
+  renderProgress();
+  try {
+    const config = await window.electronAPI.getConfig();
+    if (config.llmProvider) {
+      selectProvider(config.llmProvider);
+      document.getElementById('llmModel').value = config.llmModel || '';
+      document.getElementById('llmApiKey').value = config.llmApiKey || '';
+      document.getElementById('llmBaseUrl').value = config.llmBaseUrl || '';
+    }
+    if (config.backendPort) document.getElementById('backendPort').value = config.backendPort;
+    if (config.frontendPort) document.getElementById('frontendPort').value = config.frontendPort;
+    if (config.runtimePort) document.getElementById('runtimePort').value = config.runtimePort;
+    if (config.stripeSecretKey) document.getElementById('stripeSecret').value = config.stripeSecretKey;
+    if (config.stripePublishableKey) document.getElementById('stripePub').value = config.stripePublishableKey;
+    document.getElementById('autoLaunch').checked = config.autoLaunch !== false;
+    document.getElementById('minimizeToTray').checked = config.minimizeToTray !== false;
+  } catch (e) {
+    console.error('Failed to load config:', e);
+  }
+}
+
+init();
+</script>
+</body>
+</html>

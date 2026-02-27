@@ -1511,30 +1511,10 @@
       .bento-card { padding: 24px; }
     }
 
-    /* ═══════════════════════════════════════
-       CLOSED BETA Banner
-       ═══════════════════════════════════════ */
-    .beta-topbar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 10001;
-      background: var(--accent-gradient);
-      color: #fff;
-      text-align: center;
-      padding: 10px 16px;
-      font-size: 13px;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      line-height: 1.4;
-    }
-    .beta-topbar span { opacity: 0.85; font-weight: 400; }
-    .nav { top: 38px !important; }
-    .hero { padding-top: calc(120px + 38px) !important; }
+    /* Beta bar removed — public release */
 
     /* ═══════════════════════════════════════
-       Beta Apply Modal
+       Download Disclaimer Modal
        ═══════════════════════════════════════ */
     .modal-overlay {
       position: fixed;
@@ -1716,11 +1696,6 @@
 </head>
 <body>
 
-  <!-- CLOSED BETA Top Bar -->
-  <div class="beta-topbar">
-    🚧 CLOSED BETA — <span>Access by invitation only. Apply below to join.</span>
-  </div>
-
   <!-- ═══════════════════════════════════════
        Navigation
        ═══════════════════════════════════════ -->
@@ -1741,9 +1716,9 @@
           <a href="#gallery">Gallery</a>
           <a href="#compare">Compare</a>
         </div>
-        <button onclick="openBetaModal()" class="nav-cta">
-          Apply for Beta
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        <button onclick="openDownloadModal()" class="nav-cta">
+          Download
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         </button>
         <button class="nav-mobile-toggle" id="mobile-toggle" aria-label="Menu">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -1787,9 +1762,9 @@
         and <strong>get smarter</strong> — without you lifting a finger.
       </p>
       <div class="hero-actions reveal reveal-delay-3">
-        <button onclick="openBetaModal()" class="btn-primary">
-          Apply for Beta
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        <button onclick="openDownloadModal()" class="btn-primary">
+          Download for Free
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         </button>
       </div>
     </div>
@@ -2148,12 +2123,12 @@
           — not by you writing better prompts.
         </p>
         <div class="hero-actions reveal reveal-delay-2">
-          <button onclick="openBetaModal()" class="btn-primary">
-            Apply for Beta Access
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          <button onclick="openDownloadModal()" class="btn-primary">
+            Download Now
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           </button>
           <a href="mailto:ceo@ogenti.com" class="btn-secondary">
-            Contact CEO Directly
+            Contact Us
           </a>
         </div>
       </div>
@@ -2635,82 +2610,98 @@
   </script>
 
   <!-- ═══════════════════════════════════════
-       Beta Application Modal
+       Download Disclaimer Modal
        ═══════════════════════════════════════ -->
-  <div class="modal-overlay" id="beta-modal">
+  <div class="modal-overlay" id="download-modal">
     <div class="modal-box">
-      <button class="modal-close" onclick="closeBetaModal()" aria-label="Close">
+      <button class="modal-close" onclick="closeDownloadModal()" aria-label="Close">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
 
-      <div class="modal-badge">Closed Beta</div>
-      <h3 class="modal-title">Get Early Access</h3>
+      <div class="modal-badge">Important Notice</div>
+      <h3 class="modal-title">Before You Download</h3>
       <p class="modal-desc">
-        ogenti is in <strong>closed beta</strong>. Leave your email and we'll
-        send you access when a spot opens up.
+        Please read and acknowledge the following before proceeding with the download.
       </p>
 
-      <form id="beta-form" onsubmit="submitBetaForm(event)">
-        <div class="modal-field">
-          <label for="beta-email">Email</label>
-          <input type="email" id="beta-email" placeholder="your@email.com" required />
-        </div>
+      <div class="modal-info-box">
+        <h4>Testing Environment Notice</h4>
+        <ul>
+          <li>This platform is currently in its <strong>testing phase</strong>. Features may change and bugs may occur.</li>
+          <li>For payments, please use the <strong>test card</strong>: <code>4242 4242 4242 4242</code> (any future expiry, any CVC).</li>
+          <li>For bank transfers, please use <strong>virtual/test bank accounts</strong> only. Do not use real financial information.</li>
+          <li>All transactions during the testing phase are <strong>simulated</strong> and no real charges will be made.</li>
+        </ul>
+      </div>
 
-        <button type="submit" class="modal-submit">Join Waitlist</button>
-      </form>
+      <label style="display:flex;align-items:flex-start;gap:12px;cursor:pointer;padding:16px;background:rgba(255,255,255,0.02);border:1px solid var(--border-primary);border-radius:12px;margin-bottom:20px;" onclick="toggleAgree()">
+        <input type="checkbox" id="agree-checkbox" style="width:18px;height:18px;margin-top:2px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;" />
+        <span style="font-size:13px;color:var(--text-secondary);line-height:1.6;">
+          I understand that this platform is in testing phase and I will use test payment credentials (<code style="font-family:var(--font-mono);background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;font-size:12px;color:var(--text-primary);">4242 4242 4242 4242</code>) for all transactions.
+        </span>
+      </label>
+
+      <button id="download-btn" class="modal-submit" disabled style="opacity:0.3;cursor:not-allowed;" onclick="startDownload()">
+        <span style="display:inline-flex;align-items:center;gap:8px;">
+          Download ogenti
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </span>
+      </button>
 
       <p class="modal-footer-note">
-        We only use your email to send beta access invitations.<br/>
-        No spam. Unsubscribe anytime.
+        Windows 10+ required &middot; ~120 MB &middot; No admin rights needed
       </p>
     </div>
   </div>
 
   <script>
-    // Calculate scrollbar width to prevent layout shift
     const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
     document.documentElement.style.setProperty('--scrollbar-width', scrollbarWidth + 'px');
 
-    function openBetaModal() {
-      document.getElementById('beta-modal').classList.add('active');
+    const DOWNLOAD_URL = 'https://github.com/gkjuwon-ui/ai-master/releases/latest/download/ogenti-setup-1.0.0.exe';
+
+    function openDownloadModal() {
+      document.getElementById('download-modal').classList.add('active');
       document.documentElement.classList.add('modal-open');
     }
-    function closeBetaModal() {
-      document.getElementById('beta-modal').classList.remove('active');
+    function closeDownloadModal() {
+      document.getElementById('download-modal').classList.remove('active');
       document.documentElement.classList.remove('modal-open');
     }
-    // Close on overlay click
-    document.getElementById('beta-modal').addEventListener('click', function(e) {
-      if (e.target === this) closeBetaModal();
-    });
-    // Close on Escape
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') closeBetaModal();
-    });
-
-    function submitBetaForm(e) {
-      e.preventDefault();
-      const email = document.getElementById('beta-email').value.trim();
-
-      const subject = encodeURIComponent(`[ogenti Beta] Waitlist: ${email}`);
-      const body = encodeURIComponent(
-        `Beta Waitlist Request\n` +
-        `Email: ${email}\n` +
-        `Submitted: ${new Date().toISOString()}\n`
-      );
-
-      window.location.href = `mailto:ceo@ogenti.com?subject=${subject}&body=${body}`;
-
-      // Show confirmation
-      const btn = document.querySelector('.modal-submit');
-      btn.textContent = '✓ Opening email client...';
+    function toggleAgree() {
+      const cb = document.getElementById('agree-checkbox');
+      const btn = document.getElementById('download-btn');
+      setTimeout(() => {
+        if (cb.checked) {
+          btn.disabled = false;
+          btn.style.opacity = '1';
+          btn.style.cursor = 'pointer';
+        } else {
+          btn.disabled = true;
+          btn.style.opacity = '0.3';
+          btn.style.cursor = 'not-allowed';
+        }
+      }, 0);
+    }
+    function startDownload() {
+      const cb = document.getElementById('agree-checkbox');
+      if (!cb.checked) return;
+      window.open(DOWNLOAD_URL, '_blank');
+      const btn = document.getElementById('download-btn');
+      btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px;">✓ Download Started</span>';
       btn.style.background = '#22c55e';
       setTimeout(() => {
-        btn.textContent = 'Join Waitlist';
+        btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px;">Download ogenti <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span>';
         btn.style.background = '';
-        closeBetaModal();
+        closeDownloadModal();
       }, 3000);
     }
+    document.getElementById('download-modal').addEventListener('click', function(e) {
+      if (e.target === this) closeDownloadModal();
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeDownloadModal();
+    });
   </script>
 </body>
 </html>

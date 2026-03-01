@@ -42,6 +42,10 @@ from ogenti_train.agents import (
 )
 from ogenti_train.rewards import RewardFunction, RewardConfig
 from ogenti_train.curriculum import CurriculumScheduler, PhaseConfig
+from ogenti_core.adapter import (
+    OgentiAdapter, AdapterConfig,
+    ProtocolVocab, ProtocolVocabEntry,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +77,10 @@ class OgentiTrainer:
         self.scheduler: Optional[CurriculumScheduler] = None
         self.optimizer: Optional[AdamW] = None
         self.lr_scheduler = None
+
+        # Phase 4 universal adapter (initialized on phase transition)
+        self.adapter: Optional[OgentiAdapter] = None
+        self.adapter_optimizer: Optional[AdamW] = None
 
         # State
         self.global_episode = 0
@@ -138,8 +146,11 @@ class OgentiTrainer:
         while not self.scheduler.is_training_complete:
             phase = self.scheduler.current_phase
 
-            # Run one episode
-            metrics = self._run_episode(phase)
+            # Run one episode — Phase 4 uses distillation, others use RL/supervised
+            if phase.phase_id == 4 and self.adapter is not None:
+                metrics = self._run_distillation_episode(phase)
+            else:
+                metrics = self._run_episode(phase)
 
             # Update curriculum
             self.scheduler.update(
@@ -180,6 +191,10 @@ class OgentiTrainer:
 
         # Final save
         self._save_checkpoint(tag="final")
+
+        # Export universal adapter if Phase 4 was reached
+        if self.adapter is not None:
+            self._export_adapter()
 
     # ── Episode ──
 
@@ -445,6 +460,140 @@ class OgentiTrainer:
             )
             self.optimizer.step()
 
+    # ── Phase 4: Distillation Episode ──
+
+    def _run_distillation_episode(self, phase: PhaseConfig) -> dict:
+        """
+        Phase 4 distillation episode.
+
+        Uses the trained Qwen LoRA as a teacher to train the
+        universal adapter's PPH/PRH heads.
+
+        Flow:
+          1. Sample task
+          2. Teacher (Qwen LoRA) produces hidden states + protocol tokens
+          3. Student (PPH) tries to produce the same protocol tokens
+             from the same hidden states
+          4. KD loss aligns student ↔ teacher distributions
+          5. PRH learns to reconstruct model hidden states from
+             protocol tokens (inverse of PPH)
+        """
+        cfg = self.config
+        env = self.environment
+        enc_agent = self.agent_pool.get_encoder()
+        dec_agent = self.agent_pool.get_decoder()
+        adapter = self.adapter
+
+        # 1. Sample task
+        task = env.reset()
+        original_tokens = len(
+            enc_agent.encoder.tokenizer.encode(task.instruction)
+        )
+
+        # 2. Teacher forward — get encoder hidden states + protocol output
+        with torch.no_grad():
+            teacher_msg, teacher_scores = enc_agent.encoder.encode_for_training(
+                task.instruction,
+                max_tokens=cfg.protocol.effective_budget(self.global_episode),
+            )
+
+            # Teacher hidden states (last layer of Qwen)
+            inputs = enc_agent.encoder.tokenizer(
+                task.instruction,
+                return_tensors="pt",
+                truncation=True,
+                max_length=512,
+            )
+            inputs = {k: v.to(self.device) for k, v in inputs.items()}
+            teacher_out = enc_agent.encoder.model(**inputs, output_hidden_states=True)
+            teacher_hidden = teacher_out.hidden_states[-1]  # (1, S, H)
+
+            # Teacher protocol token IDs
+            teacher_token_ids = torch.tensor(
+                [teacher_msg.token_ids], device=self.device
+            )
+
+            # Build teacher logits from score list
+            if teacher_scores:
+                teacher_logits = torch.stack(
+                    [s.squeeze(0) for s in teacher_scores[:len(teacher_msg.token_ids)]],
+                    dim=0,
+                ).unsqueeze(0)  # (1, T, V_lm)
+            else:
+                teacher_logits = None
+
+        # 3. Student forward — PPH produces protocol logits from same hidden states
+        student_logits = adapter.encoder_head(
+            teacher_hidden, protocol_tokens=teacher_token_ids
+        )  # (1, T, V_proto)
+
+        # 4. Compute distillation loss (PPH)
+        #    Project teacher logits to protocol vocab size if dimensions differ
+        if teacher_logits is not None and teacher_logits.shape[-1] != student_logits.shape[-1]:
+            # Teacher is in LM vocab space → use hard labels instead
+            pph_loss = F.cross_entropy(
+                student_logits.view(-1, student_logits.shape[-1]),
+                teacher_token_ids.view(-1),
+            )
+        elif teacher_logits is not None:
+            pph_loss = adapter.distillation_loss(student_logits, teacher_logits)
+        else:
+            pph_loss = F.cross_entropy(
+                student_logits.view(-1, student_logits.shape[-1]),
+                teacher_token_ids.view(-1),
+            )
+
+        # 5. PRH loss — reconstruct teacher hidden states from protocol tokens
+        reconstructed_hidden = adapter.decoder_head(
+            teacher_token_ids, teacher_hidden.shape[-1]
+        )  # (1, T_proto, H)
+
+        # Pool teacher hidden for comparison (match temporal dims)
+        T_proto = teacher_token_ids.shape[1]
+        if teacher_hidden.shape[1] > T_proto:
+            # Chunk teacher hidden and mean-pool to match protocol length
+            chunks = torch.chunk(
+                teacher_hidden[:, :T_proto * (teacher_hidden.shape[1] // T_proto)],
+                T_proto, dim=1,
+            )
+            teacher_pooled = torch.stack([c.mean(dim=1) for c in chunks], dim=1)
+        else:
+            teacher_pooled = teacher_hidden[:, :T_proto]
+
+        prh_loss = F.mse_loss(reconstructed_hidden, teacher_pooled.detach())
+
+        # 6. Combined loss
+        alpha = adapter.config.distill_alpha
+        total_loss = alpha * pph_loss + (1 - alpha) * prh_loss
+
+        # 7. Backward + optimize adapter only
+        self.adapter_optimizer.zero_grad()
+        total_loss.backward()
+        torch.nn.utils.clip_grad_norm_(adapter.parameters(), 1.0)
+        self.adapter_optimizer.step()
+
+        # 8. Compute metrics for logging
+        with torch.no_grad():
+            student_tokens = student_logits.argmax(dim=-1)  # (1, T)
+            match = (student_tokens == teacher_token_ids).float().mean().item()
+            protocol_tokens = teacher_msg.token_count
+            compression = original_tokens / protocol_tokens if protocol_tokens > 0 else 0
+
+        return {
+            "accuracy": match,
+            "efficiency": 1.0 - (prh_loss.item() / (prh_loss.item() + 1)),
+            "compression_ratio": compression,
+            "total_reward": 1.0 - total_loss.item(),
+            "protocol_tokens": protocol_tokens,
+            "original_tokens": original_tokens,
+            "phase": phase.phase_id,
+            "episode": self.global_episode,
+            "task_category": task.category.value,
+            "pph_loss": round(pph_loss.item(), 4),
+            "prh_loss": round(prh_loss.item(), 4),
+            "distill_match": round(match, 4),
+        }
+
     # ── Supervised Step ──
 
     def _supervised_step(
@@ -550,8 +699,93 @@ class OgentiTrainer:
                 "w_generalization", self.reward_fn.config.w_generalization
             )
 
+        # ── Phase 4: Initialize universal adapter for distillation ──
+        if phase_id == 4:
+            self._init_adapter_for_distillation()
+
         # Save phase transition checkpoint
         self._save_checkpoint(tag=f"phase_{phase_id}")
+
+    # ── Phase 4: Adapter Initialization ──
+
+    def _init_adapter_for_distillation(self) -> None:
+        """
+        Initialize the universal adapter and its optimizer for Phase 4.
+
+        Freezes all Qwen LoRA weights (teacher), creates the adapter
+        (PPH + PRH), and sets up a separate optimizer for adapter params only.
+        """
+        logger.info("═══ Phase 4: Initializing Universal Adapter ═══")
+
+        # Freeze teacher (Qwen LoRA) — no more RL updates
+        enc_agent = self.agent_pool.get_encoder()
+        dec_agent = self.agent_pool.get_decoder()
+        for p in enc_agent.encoder.parameters():
+            p.requires_grad = False
+        for p in dec_agent.decoder.parameters():
+            p.requires_grad = False
+        logger.info("Teacher (Qwen LoRA) frozen.")
+
+        # Detect source model hidden size
+        hidden_size = enc_agent.encoder.model.config.hidden_size
+        logger.info(f"Source model hidden size: {hidden_size}")
+
+        # Create adapter
+        adapter_cfg = AdapterConfig(
+            hidden_dim=256,
+            num_layers=3,
+            protocol_vocab_size=256,
+            distill_temperature=2.0,
+            distill_alpha=0.7,
+            trained_on=self.config.model_name or "Qwen/Qwen2.5-3B-Instruct",
+        )
+        self.adapter = OgentiAdapter(config=adapter_cfg).to(self.device)
+
+        # Separate optimizer for adapter only (teacher is frozen)
+        self.adapter_optimizer = AdamW(
+            self.adapter.parameters(),
+            lr=self.scheduler.current_phase.learning_rate,
+            weight_decay=self.config.weight_decay,
+        )
+
+        n_params = sum(p.numel() for p in self.adapter.parameters())
+        logger.info(
+            f"Universal adapter created: {n_params:,} params "
+            f"(PPH + PRH, hidden_dim={adapter_cfg.hidden_dim})"
+        )
+
+    def _export_adapter(self) -> None:
+        """
+        Export the trained universal adapter after Phase 4 completes.
+
+        Saves:
+          checkpoints/universal_adapter/
+            adapter_config.json
+            protocol_vocab.json
+            pph_weights.safetensors
+            prh_weights.safetensors
+        """
+        if self.adapter is None:
+            logger.warning("No adapter to export (Phase 4 not complete)")
+            return
+
+        export_dir = Path(self.config.infra.checkpoint_dir) / "universal_adapter"
+
+        # Build vocab from discovered tokens
+        enc_agent = self.agent_pool.get_encoder()
+        self.adapter.vocab = ProtocolVocab(
+            version="1.0",
+            trained_episodes=self.global_episode,
+            source_model=self.config.model_name or "Qwen/Qwen2.5-3B-Instruct",
+        )
+
+        # Save
+        self.adapter.save(export_dir)
+        logger.info(
+            f"═══ Universal Adapter exported to {export_dir} ═══\n"
+            f"  PPH + PRH weights + protocol vocab\n"
+            f"  Attach to any model: adapter.attach(model, tokenizer)"
+        )
 
     # ── Optimizer Setup ──
 

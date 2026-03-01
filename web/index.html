@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OGENTI — Protocol Monitor</title>
+    <meta name="description" content="Real-time monitoring dashboard for Ogenti's AI-to-AI communication protocol. Watch agents develop their own compressed language.">
+    <meta property="og:title" content="OGENTI — AI-to-AI Communication Protocol">
+    <meta property="og:description" content="Watch AI agents develop their own compressed language through multi-agent reinforcement learning.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://ogenti.com">
+    <meta name="twitter:card" content="summary">
+    <meta name="theme-color" content="#000000">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='13' fill='none' stroke='%2300f0ff' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%2300f0ff'/%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Loading Screen -->
+    <div id="loader" class="loader">
+        <svg class="loader-logo" viewBox="0 0 48 48" width="48" height="48">
+            <circle cx="24" cy="24" r="20" fill="none" stroke="#00f0ff" stroke-width="1.5" opacity="0.6"/>
+            <circle cx="24" cy="24" r="4" fill="#00f0ff"/>
+            <path d="M9 15 Q3 24 9 33" fill="none" stroke="#00f0ff" stroke-width="1.2" opacity="0.3"/>
+            <path d="M39 15 Q45 24 39 33" fill="none" stroke="#00f0ff" stroke-width="1.2" opacity="0.3"/>
+        </svg>
+        <span class="loader-text">OGENTI</span>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="nav" id="nav">
+        <div class="nav-left">
+            <svg class="nav-logo" viewBox="0 0 48 48" width="28" height="28">
+                <circle cx="24" cy="24" r="20" fill="none" stroke="#00f0ff" stroke-width="1.5"/>
+                <circle cx="24" cy="24" r="4" fill="#00f0ff"/>
+                <path d="M9 15 Q3 24 9 33" fill="none" stroke="#00f0ff" stroke-width="1.2" opacity="0.3">
+                    <animate attributeName="opacity" values="0.3;0.6;0.3" dur="3s" repeatCount="indefinite"/>
+                </path>
+                <path d="M39 15 Q45 24 39 33" fill="none" stroke="#00f0ff" stroke-width="1.2" opacity="0.3">
+                    <animate attributeName="opacity" values="0.3;0.6;0.3" dur="3s" repeatCount="indefinite" begin="1.5s"/>
+                </path>
+            </svg>
+            <span class="nav-brand">OGENTI</span>
+            <span class="nav-divider"></span>
+            <span class="nav-subtitle">Protocol Monitor</span>
+        </div>
+        <div class="nav-right">
+            <div class="status-indicator">
+                <span class="status-dot"></span>
+                <span class="status-text" id="statusText">Training Active</span>
+            </div>
+            <a href="https://github.com/gkjuwon-ui/ai-master" class="nav-link" target="_blank" rel="noopener">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                </svg>
+                <span>GitHub</span>
+            </a>
+        </div>
+    </nav>
+
+    <main class="main">
+
+        <!-- Metrics Row -->
+        <section class="metrics">
+            <div class="metric-card">
+                <span class="metric-label">PHASE</span>
+                <div class="metric-value-row">
+                    <span class="metric-value" id="metricPhase">0</span>
+                </div>
+                <span class="metric-sub" id="metricPhaseName">Warmup</span>
+            </div>
+            <div class="metric-card">
+                <span class="metric-label">COMPRESSION</span>
+                <div class="metric-value-row">
+                    <span class="metric-value" id="metricCompression">1.0</span>
+                    <span class="metric-unit">x</span>
+                </div>
+                <span class="metric-sub">NL / protocol tokens</span>
+            </div>
+            <div class="metric-card">
+                <span class="metric-label">FIDELITY</span>
+                <div class="metric-value-row">
+                    <span class="metric-value" id="metricFidelity">0.0</span>
+                    <span class="metric-unit">%</span>
+                </div>
+                <span class="metric-sub">semantic accuracy</span>
+            </div>
+            <div class="metric-card">
+                <span class="metric-label">EPISODES</span>
+                <div class="metric-value-row">
+                    <span class="metric-value" id="metricEpisodes">0</span>
+                </div>
+                <span class="metric-sub" id="metricRate">— ep/s</span>
+            </div>
+        </section>
+
+        <!-- Agent Communication Visualizer -->
+        <section class="viz-section">
+            <div class="viz-container">
+                <canvas id="agentCanvas"></canvas>
+            </div>
+            <div class="viz-labels">
+                <div class="viz-label">
+                    <span class="agent-name">Encoder α</span>
+                    <span class="agent-role">NL → Protocol</span>
+                </div>
+                <div class="viz-label viz-label-center">
+                    <span class="viz-token-count" id="vizTokenCount">30 tokens</span>
+                </div>
+                <div class="viz-label">
+                    <span class="agent-name">Decoder β</span>
+                    <span class="agent-role">Protocol → Action</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Phase Timeline -->
+        <section class="phase-section">
+            <div class="phase-timeline">
+                <div class="phase-item active current" data-phase="0">
+                    <div class="phase-dot"></div>
+                    <div class="phase-info">
+                        <span class="phase-name">Phase 0</span>
+                        <span class="phase-desc">Warmup</span>
+                    </div>
+                </div>
+                <div class="phase-connector"></div>
+                <div class="phase-item" data-phase="1">
+                    <div class="phase-dot"></div>
+                    <div class="phase-info">
+                        <span class="phase-name">Phase 1</span>
+                        <span class="phase-desc">Simple</span>
+                    </div>
+                </div>
+                <div class="phase-connector"></div>
+                <div class="phase-item" data-phase="2">
+                    <div class="phase-dot"></div>
+                    <div class="phase-info">
+                        <span class="phase-name">Phase 2</span>
+                        <span class="phase-desc">Complex</span>
+                    </div>
+                </div>
+                <div class="phase-connector"></div>
+                <div class="phase-item" data-phase="3">
+                    <div class="phase-dot"></div>
+                    <div class="phase-info">
+                        <span class="phase-name">Phase 3</span>
+                        <span class="phase-desc">Generalize</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dashboard: Chart + Feed -->
+        <section class="dashboard">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Training Progress</h2>
+                    <div class="card-legend">
+                        <span class="legend-item"><span class="legend-dot" style="background:#00f0ff"></span>Compression</span>
+                        <span class="legend-item"><span class="legend-dot" style="background:#00ff88"></span>Fidelity</span>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="trainingChart"></canvas>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Protocol Feed</h2>
+                    <span class="feed-indicator">
+                        <span class="feed-dot"></span>live
+                    </span>
+                </div>
+                <div class="feed-container" id="protocolFeed"></div>
+            </div>
+        </section>
+
+        <!-- Bottom: Budget + Vocabulary -->
+        <section class="dashboard">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Token Budget Decay</h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="budgetChart"></canvas>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Emergent Vocabulary</h2>
+                    <span class="vocab-count" id="vocabCount">0 tokens</span>
+                </div>
+                <div class="vocab-container" id="vocabGrid"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-inner">
+            <span>OGENTI v0.1</span>
+            <span class="footer-dot">·</span>
+            <span>AI-to-AI Communication Protocol</span>
+            <span class="footer-dot">·</span>
+            <span>MARL + Qwen2.5-3B + LoRA</span>
+        </div>
+        <div class="footer-sub">
+            <span>Press <kbd>Space</kbd> to pause</span>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>

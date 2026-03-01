@@ -164,6 +164,7 @@
             case 'vocab':    handleVocabToken(data); break;
             case 'eval':     handleEval(data); break;
             case 'status':   handleStatus(data); break;
+            case 'adapter_exported': handleAdapterExported(data); break;
             case 'heartbeat': break;
             case 'pong':     break;
         }
@@ -585,6 +586,94 @@
         const feed = $('#protocolFeed');
         feed.insertBefore(el, feed.firstChild);
         while (feed.children.length > CONFIG.FEED_MAX) feed.removeChild(feed.lastChild);
+    }
+
+    // ────────────────────────────────────────────────────────────
+    // Adapter Export Notification
+    // ────────────────────────────────────────────────────────────
+
+    function handleAdapterExported(data) {
+        console.log('[OGENTI] Universal Adapter Exported:', data);
+
+        // Show export banner
+        let banner = document.getElementById('adapterBanner');
+        if (!banner) {
+            banner = document.createElement('div');
+            banner.id = 'adapterBanner';
+            banner.style.cssText = `
+                position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+                background: linear-gradient(135deg, #00f5d4 0%, #7b61ff 50%, #f72585 100%);
+                color: #fff; padding: 16px 24px; text-align: center;
+                font-family: 'Inter', sans-serif; font-size: 14px;
+                box-shadow: 0 4px 30px rgba(0,245,212,0.3);
+                animation: bannerSlide 0.5s ease-out;
+                cursor: pointer;
+            `;
+            document.body.appendChild(banner);
+
+            // Add animation keyframes
+            if (!document.getElementById('bannerAnim')) {
+                const style = document.createElement('style');
+                style.id = 'bannerAnim';
+                style.textContent = `
+                    @keyframes bannerSlide {
+                        from { transform: translateY(-100%); opacity: 0; }
+                        to   { transform: translateY(0); opacity: 1; }
+                    }
+                    @keyframes bannerFade {
+                        from { opacity: 1; }
+                        to   { opacity: 0; transform: translateY(-100%); }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+        }
+
+        const models = data.supported_models || [];
+        const metrics = data.final_metrics || {};
+        const fileList = (data.files || []).join(' + ');
+
+        banner.innerHTML = `
+            <div style="font-size:18px; font-weight:700; margin-bottom:6px;">⚡ Universal Adapter Exported</div>
+            <div style="font-size:13px; opacity:0.9; line-height:1.6;">
+                <span style="background:rgba(255,255,255,0.2); padding:2px 8px; border-radius:4px; margin:0 4px;">📦 ${data.path || 'checkpoints/universal_adapter'}</span>
+                <span style="background:rgba(255,255,255,0.2); padding:2px 8px; border-radius:4px; margin:0 4px;">🔢 ${((data.params || 0) / 1000).toFixed(0)}K params</span>
+                <span style="background:rgba(255,255,255,0.2); padding:2px 8px; border-radius:4px; margin:0 4px;">🎯 ${((metrics.distill_match || 0) * 100).toFixed(1)}% match</span>
+                <span style="background:rgba(255,255,255,0.2); padding:2px 8px; border-radius:4px; margin:0 4px;">📐 ${(metrics.compression || 0).toFixed(1)}x compression</span>
+            </div>
+            <div style="font-size:12px; opacity:0.75; margin-top:6px;">
+                Compatible: ${models.join(' · ')}
+            </div>
+            <div style="font-size:11px; opacity:0.5; margin-top:4px;">Click to dismiss</div>
+        `;
+
+        banner.onclick = () => {
+            banner.style.animation = 'bannerFade 0.3s ease-in forwards';
+            setTimeout(() => banner.remove(), 300);
+        };
+
+        // Auto-dismiss after 15s
+        setTimeout(() => {
+            if (banner.parentNode) {
+                banner.style.animation = 'bannerFade 0.3s ease-in forwards';
+                setTimeout(() => banner.remove(), 300);
+            }
+        }, 15000);
+
+        // Also add to feed
+        const feedEl = document.createElement('div');
+        feedEl.className = 'feed-message';
+        feedEl.style.cssText = 'border-left: 3px solid #00f5d4; background: rgba(0,245,212,0.08);';
+        const now = new Date();
+        const ts = [now.getHours(), now.getMinutes(), now.getSeconds()].map(n => String(n).padStart(2, '0')).join(':');
+        feedEl.innerHTML = `
+            <span class="feed-time">${ts}</span>
+            <span class="feed-route" style="color:#00f5d4; font-weight:700;">⚡ ADAPTER</span>
+            <span class="feed-tokens">Universal adapter exported → ${fileList}</span>
+            <span class="feed-status success">${models.length} models</span>
+        `;
+        const feed = $('#protocolFeed');
+        if (feed) feed.insertBefore(feedEl, feed.firstChild);
     }
 
     // ────────────────────────────────────────────────────────────

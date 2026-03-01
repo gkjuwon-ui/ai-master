@@ -276,6 +276,30 @@ def _feeder_loop(bridge: TrainerBridge) -> None:
         
         # ── Loop reset ─────────────────────────────────────
         if episode >= total_episodes:
+            # ── Phase 4 complete: export universal adapter ──
+            bridge.on_adapter_exported({
+                "path": "checkpoints/universal_adapter",
+                "files": [
+                    "adapter_config.json",
+                    "protocol_vocab.json",
+                    "pph_weights.safetensors",
+                    "prh_weights.safetensors",
+                ],
+                "params": 524_288,
+                "vocab_size": len(VOCAB_POOL),
+                "hidden_dim": 256,
+                "supported_models": [
+                    "GPT-2", "Phi-2", "Phi-3", "Qwen2.5-3B", "Qwen2.5-7B",
+                    "LLaMA-7B", "LLaMA-13B", "Mistral-7B",
+                ],
+                "final_metrics": {
+                    "compression": round(compression, 2),
+                    "fidelity": round(fidelity, 4),
+                    "tokens": avg_tokens,
+                    "distill_match": round(0.94 + random.uniform(0, 0.05), 4),
+                },
+            })
+
             bridge.on_training_end({"total_episodes": episode, "final_compression": compression})
             # Reset for continuous demo
             episode = 0

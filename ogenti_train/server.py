@@ -254,6 +254,11 @@ class TrainerBridge:
                 "status": "completed",
                 "summary": summary or {},
             })
+
+    def on_adapter_exported(self, export_info: dict) -> None:
+        """Called when Phase 4 completes and the universal adapter is exported."""
+        with self._lock:
+            self._push_event("adapter_exported", export_info)
     
     def pause(self) -> None:
         with self._lock:
@@ -391,8 +396,10 @@ def create_app(bridge: TrainerBridge | None = None) -> FastAPI:
                     
                     if cmd == "pause":
                         bridge.pause()
+                        await websocket.send_json({"type": "status", "data": {"status": bridge.status}})
                     elif cmd == "resume":
                         bridge.resume()
+                        await websocket.send_json({"type": "status", "data": {"status": bridge.status}})
                     elif cmd == "ping":
                         await websocket.send_json({"type": "pong", "data": {"ts": time.time()}})
                     elif cmd == "snapshot":

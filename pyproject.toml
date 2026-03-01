@@ -1,0 +1,67 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ogenti"
+version = "0.1.0"
+description = "AI-to-AI Communication Protocol — MARL-trained compressed messaging between LLM agents"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [
+    {name = "Ogenti Team"},
+]
+
+dependencies = [
+    "torch>=2.1.0",
+    "transformers>=4.36.0",
+    "peft>=0.7.0",
+    "trl>=0.7.0",
+    "accelerate>=0.25.0",
+    "datasets>=2.16.0",
+    "sentencepiece>=0.1.99",
+    "numpy>=1.24.0",
+]
+
+[project.optional-dependencies]
+train = [
+    "deepspeed>=0.12.0",
+    "wandb>=0.16.0",
+]
+bench = [
+    "matplotlib>=3.7.0",
+    "sentence-transformers>=2.2.0",
+]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "ruff>=0.1.0",
+    "mypy>=1.7.0",
+]
+all = ["ogenti[train,bench,dev]"]
+
+[project.scripts]
+ogenti-train = "ogenti_train.train:main"
+ogenti-bench = "ogenti_bench.benchmark:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ogenti_core*", "ogenti_train*", "ogenti_bench*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]

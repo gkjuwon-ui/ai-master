@@ -99,21 +99,33 @@ def _clamp(v: float, lo: float, hi: float) -> float:
 
 
 def _feeder_loop(bridge: TrainerBridge) -> None:
-    """Main demo feeder loop — runs until thread is killed."""
+    """Main demo feeder loop — runs until thread is killed.
+    
+    Designed to show the FULL training progression in ~2 minutes,
+    not 3 hours. The dashboard should feel alive immediately.
+    """
     
     # Notify training start
     bridge.on_training_start({"phases": PHASES})
     
-    total_episodes = 50000
-    tick_interval = 0.20  # seconds between episodes
+    total_episodes = 5000
+    tick_interval = 0.25      # seconds between ticks
+    ep_per_tick = 12           # episodes per tick → ~48 ep/sec
     vocab_idx = 0
     msg_count = 0
     
     phase = 0
     phase_start_ep = 0
-    phase_ep_limits = [5000, 15000, 20000, 10000]
+    # Fast phase limits — full cycle in ~2 min
+    phase_ep_limits = [500, 1500, 2000, 1000]
     
     episode = 0
+    
+    # Smoothing state (exponential moving average)
+    ema_compression = 1.0
+    ema_fidelity = 0.0
+    ema_budget = 30.0
+    ema_alpha = 0.15  # smoothing factor
     
     while True:
         time.sleep(tick_interval)
@@ -121,7 +133,9 @@ def _feeder_loop(bridge: TrainerBridge) -> None:
         if bridge.status == "paused":
             continue
         
-        episode += 1
+        # Advance by multiple episodes per tick
+        ep_step = ep_per_tick + random.randint(-2, 3)
+        episode += max(1, ep_step)
         
         # ── Phase progression ──────────────────────────────
         phase_ep = episode - phase_start_ep
@@ -145,19 +159,43 @@ def _feeder_loop(bridge: TrainerBridge) -> None:
             })
         
         # ── Compute interpolated metrics ───────────────────
-        progress = _clamp(phase_ep / phase_max, 0, 1)
-        t = _smoothstep(progress)
+        # Global progress across ALL phases for smooth curves
+        global_progress = _clamp(episode / total_episodes, 0, 1)
+        # Local progress within current phase for phase-specific effects
+        local_progress = _clamp(phase_ep / phase_max, 0, 1)
+        t_global = _smoothstep(global_progress)
+        t_local = _smoothstep(local_progress)
         
-        src = TARGETS[phase]
+        # Blend: 70% global curve + 30% phase-local detail
+        t = 0.7 * t_global + 0.3 * t_local * ((phase + 1) / 4)
+        
+        src = TARGETS[0]          # always interpolate from the ground floor
         dst = TARGETS[min(phase + 1, len(TARGETS) - 1)]
         
-        noise_s = (random.random() - 0.5) * 0.06
-        noise_l = (random.random() - 0.5) * 0.1
+        # Raw targets with very small noise
+        raw_compression = max(1.0, _lerp(src["compression"], dst["compression"], t))
+        raw_fidelity = _clamp(_lerp(src["fidelity"], dst["fidelity"], t), 0, 1)
+        raw_tokens = max(3, round(_lerp(src["tokens"], dst["tokens"], t)))
+        raw_budget = max(5.0, _lerp(src["budget"], dst["budget"], t))
         
-        compression = max(1.0, _lerp(src["compression"], dst["compression"], t) * (1 + noise_s))
-        fidelity = _clamp(_lerp(src["fidelity"], dst["fidelity"], t) + noise_l * 0.15, 0, 1)
-        avg_tokens = max(3, round(_lerp(src["tokens"], dst["tokens"], t) + (random.random() - 0.5) * 2))
-        budget = max(5.0, _lerp(src["budget"], dst["budget"], t) + (random.random() - 0.5) * 0.5)
+        # Add realistic noise — small during warmup, more during complex phases
+        phase_noise = 0.02 + phase * 0.015  # 2% → 6.5%
+        raw_compression *= (1 + (random.random() - 0.5) * phase_noise * 2)
+        raw_compression = max(1.0, raw_compression)
+        raw_fidelity += (random.random() - 0.5) * phase_noise * 0.5
+        raw_fidelity = _clamp(raw_fidelity, 0, 1)
+        raw_budget += (random.random() - 0.5) * 0.8
+        raw_budget = max(5.0, raw_budget)
+        
+        # Smooth with EMA to avoid spiky charts
+        ema_compression = ema_compression + ema_alpha * (raw_compression - ema_compression)
+        ema_fidelity = ema_fidelity + ema_alpha * (raw_fidelity - ema_fidelity)
+        ema_budget = ema_budget + ema_alpha * (raw_budget - ema_budget)
+        
+        compression = round(ema_compression, 2)
+        fidelity = round(ema_fidelity, 4)
+        avg_tokens = max(3, round(_lerp(src["tokens"], dst["tokens"], t) + (random.random() - 0.5) * 1.5))
+        budget = round(ema_budget, 1)
         
         efficiency = _clamp(1.0 / (1.0 + math.exp(-5.0 * (compression / 15.0 - 0.5))), 0, 1)
         reward = 0.4 * fidelity + 0.3 * efficiency + 0.2 * random.uniform(0.5, 1.0) + 0.1 * random.uniform(0.3, 0.9)
@@ -233,6 +271,10 @@ def _feeder_loop(bridge: TrainerBridge) -> None:
             phase_start_ep = 0
             vocab_idx = 0
             msg_count = 0
+            ema_compression = 1.0
+            ema_fidelity = 0.0
+            ema_budget = 30.0
+            time.sleep(3)  # brief pause between cycles
             bridge.on_training_start({"phases": PHASES})
 
 

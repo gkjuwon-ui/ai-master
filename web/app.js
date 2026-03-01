@@ -207,9 +207,9 @@
         state.phase = data.phase ?? state.phase;
         state.metrics.compression = data.compression || state.metrics.compression;
 
-        // Fidelity normalized to 0–1
+        // Fidelity: server sends as percentage (0-100), normalize to 0-1
         if (typeof data.fidelity === 'number') {
-            state.metrics.fidelity = data.fidelity > 1 ? data.fidelity / 100 : data.fidelity;
+            state.metrics.fidelity = data.fidelity > 1.01 ? data.fidelity / 100 : data.fidelity;
         }
 
         state.metrics.avgTokens = data.tokens || state.metrics.avgTokens;
@@ -462,7 +462,9 @@
                     x: { display: true, grid: { color: gridColor }, ticks: { color: tickColor, font: fontMono, maxTicksLimit: 6 } },
                     y: {
                         display: true, position: 'left', grid: { color: gridColor },
-                        ticks: { color: tickColor, font: fontMono }, min: 0, max: 20,
+                        ticks: { color: tickColor, font: fontMono },
+                        min: 0,
+                        suggestedMax: 4,
                         title: { display: true, text: 'Compression (x)', color: '#444', font: { size: 10 } },
                     },
                     yFidelity: {
@@ -500,7 +502,9 @@
                     x: { display: true, grid: { color: gridColor }, ticks: { color: tickColor, font: fontMono, maxTicksLimit: 6 } },
                     y: {
                         display: true, grid: { color: gridColor },
-                        ticks: { color: tickColor, font: fontMono }, min: 0, max: 35,
+                        ticks: { color: tickColor, font: fontMono },
+                        min: 0,
+                        suggestedMax: 35,
                         title: { display: true, text: 'Max Tokens', color: '#444', font: { size: 10 } },
                     },
                 },
@@ -617,7 +621,7 @@
 
         updatePhaseTimeline();
 
-        const totalEp = 50000;
+        const totalEp = 5000;
         const progress = Math.min((state.episode / totalEp) * 100, 100);
         $('#nav').style.setProperty('--progress', `${progress}%`);
 
@@ -725,16 +729,29 @@
 
         if (state.episode >= DEMO.TOTAL) { resetDemo(); return; }
 
-        const phase = DEMO.PHASES[state.phase];
-        const progress = clamp((state.episode - phase.start) / (phase.end - phase.start), 0, 1);
-        const t = smoothstep(progress);
-        const from = DEMO.TARGETS[state.phase];
-        const to = DEMO.TARGETS[state.phase + 1];
+        // Global progress across all phases for smooth learning curve
+        const globalProgress = clamp(state.episode / DEMO.TOTAL, 0, 1);
+        const tGlobal = smoothstep(globalProgress);
 
-        state.metrics.compression = Math.max(1, lerp(from.compression, to.compression, t) * (1 + (Math.random() - 0.5) * 0.06));
-        state.metrics.fidelity = clamp(lerp(from.fidelity, to.fidelity, t) + (Math.random() - 0.5) * 0.015, 0, 1);
-        state.metrics.avgTokens = Math.max(3, Math.round(lerp(from.tokens, to.tokens, t) + (Math.random() - 0.5) * 2));
-        state.metrics.budget = Math.max(5, lerp(from.budget, to.budget, t) + (Math.random() - 0.5) * 0.5);
+        // Final targets (end of training)
+        const finalTarget = DEMO.TARGETS[DEMO.TARGETS.length - 1];
+        const startTarget = DEMO.TARGETS[0];
+
+        // Phase-local detail
+        const phase = DEMO.PHASES[state.phase];
+        const localProgress = clamp((state.episode - phase.start) / (phase.end - phase.start), 0, 1);
+        const tLocal = smoothstep(localProgress);
+
+        // Blend global + local for natural curve
+        const phaseTarget = DEMO.TARGETS[Math.min(state.phase + 1, DEMO.TARGETS.length - 1)];
+        const t = 0.7 * tGlobal + 0.3 * tLocal * ((state.phase + 1) / 4);
+
+        const noiseScale = 0.02 + state.phase * 0.015;
+
+        state.metrics.compression = Math.max(1, lerp(startTarget.compression, phaseTarget.compression, t) * (1 + (Math.random() - 0.5) * noiseScale * 2));
+        state.metrics.fidelity = clamp(lerp(startTarget.fidelity, phaseTarget.fidelity, t) + (Math.random() - 0.5) * noiseScale * 0.5, 0, 1);
+        state.metrics.avgTokens = Math.max(3, Math.round(lerp(startTarget.tokens, phaseTarget.tokens, t) + (Math.random() - 0.5) * 1.5));
+        state.metrics.budget = Math.max(5, lerp(startTarget.budget, phaseTarget.budget, t) + (Math.random() - 0.5) * 0.8);
 
         const elapsed = (Date.now() - state.startTime) / 1000;
         state.epRate = elapsed > 0 ? state.episode / elapsed : 0;

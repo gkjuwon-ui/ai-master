@@ -47,6 +47,11 @@ from ogenti_core.adapter import (
     ProtocolVocab, ProtocolVocabEntry,
 )
 
+# Type-only import to avoid circular dependency
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from ogenti_train.server import TrainerBridge
+
 logger = logging.getLogger(__name__)
 
 
@@ -65,8 +70,13 @@ class OgentiTrainer:
       trainer.save()
     """
 
-    def __init__(self, config: Optional[TrainConfig] = None):
+    def __init__(
+        self,
+        config: Optional[TrainConfig] = None,
+        bridge: Optional["TrainerBridge"] = None,
+    ):
         self.config = config or TrainConfig()
+        self.bridge = bridge
         self.device = self._resolve_device()
 
         # Components (initialized in setup())
@@ -143,6 +153,10 @@ class OgentiTrainer:
         logger.info("═══ Training started ═══")
         start_time = time.time()
 
+        # Notify dashboard
+        if self.bridge:
+            self.bridge.on_training_start(cfg._to_serializable())
+
         while not self.scheduler.is_training_complete:
             phase = self.scheduler.current_phase
 
@@ -163,13 +177,24 @@ class OgentiTrainer:
             if self.scheduler.should_advance():
                 self.scheduler.advance()
 
+            # ── Stream metrics to dashboard ──
+            if self.bridge:
+                metrics["budget"] = cfg.protocol.effective_budget(self.global_episode)
+                self.bridge.on_episode(metrics)
+
+                # Pause support — block while dashboard says "paused"
+                while self.bridge.status == "paused":
+                    time.sleep(0.5)
+
             # Logging
             if self.global_episode % cfg.infra.log_every == 0:
                 self._log_metrics(metrics)
 
             # Evaluation
             if self.global_episode % cfg.eval_every == 0 and self.global_episode > 0:
-                self._evaluate()
+                eval_result = self._evaluate()
+                if self.bridge and eval_result:
+                    self.bridge.on_eval(eval_result)
 
             # Checkpoint
             if self.global_episode % cfg.infra.checkpoint_every == 0 and self.global_episode > 0:
@@ -195,6 +220,16 @@ class OgentiTrainer:
         # Export universal adapter if Phase 4 was reached
         if self.adapter is not None:
             self._export_adapter()
+
+        # Notify dashboard
+        if self.bridge:
+            self.bridge.on_training_end({
+                "total_episodes": self.global_episode,
+                "elapsed_min": round(elapsed / 60, 2),
+                "best_reward": round(self.best_reward, 4),
+                "final_phase": self.scheduler.current_phase.phase_id,
+                "adapter_exported": self.adapter is not None,
+            })
 
     # ── Episode ──
 
@@ -248,6 +283,26 @@ class OgentiTrainer:
         delivered = channel.send(
             message, original_nl_tokens=original_tokens
         )
+
+        # Stream channel stats to dashboard
+        if self.bridge:
+            cs = channel.stats
+            self.bridge.on_message({
+                "messages_sent": cs.messages_sent,
+                "messages_dropped": cs.messages_dropped,
+                "total_tokens": cs.total_tokens_transmitted,
+                "compression_ratio": cs.compression_ratio,
+                "noise_injections": cs.noise_injections,
+                "relay_hops": cs.relay_hops,
+                "sender_id": message.sender_id,
+                "receiver_id": message.receiver_id or "",
+                "token_ids": message.token_ids[:10],
+                "token_count": message.token_count,
+                "message_type": message.message_type.value if hasattr(message.message_type, 'value') else str(message.message_type),
+                "success": delivered is not None,
+                "fidelity": 0.0,
+                "task": task.category.value,
+            })
 
         if not delivered:
             # Budget violation → negative reward, skip decode
@@ -706,6 +761,19 @@ class OgentiTrainer:
         # Save phase transition checkpoint
         self._save_checkpoint(tag=f"phase_{phase_id}")
 
+        # Notify dashboard
+        if self.bridge:
+            completed_summary = None
+            history = self.scheduler.get_history()
+            if history:
+                completed_summary = history[-1]
+            self.bridge.on_phase_change({
+                "new_phase": phase_id,
+                "new_phase_name": phase.name,
+                "completed_phase_summary": completed_summary,
+                "current_metrics": self.scheduler.metrics.summary(),
+            })
+
     # ── Phase 4: Adapter Initialization ──
 
     def _init_adapter_for_distillation(self) -> None:
@@ -737,7 +805,7 @@ class OgentiTrainer:
             protocol_vocab_size=256,
             distill_temperature=2.0,
             distill_alpha=0.7,
-            trained_on=self.config.model_name or "Qwen/Qwen2.5-3B-Instruct",
+            trained_on=self.config.encoder.model_name or "Qwen/Qwen2.5-3B-Instruct",
         )
         self.adapter = OgentiAdapter(config=adapter_cfg).to(self.device)
 
@@ -776,7 +844,7 @@ class OgentiTrainer:
         self.adapter.vocab = ProtocolVocab(
             version="1.0",
             trained_episodes=self.global_episode,
-            source_model=self.config.model_name or "Qwen/Qwen2.5-3B-Instruct",
+            source_model=self.config.encoder.model_name or "Qwen/Qwen2.5-3B-Instruct",
         )
 
         # Save
@@ -786,6 +854,20 @@ class OgentiTrainer:
             f"  PPH + PRH weights + protocol vocab\n"
             f"  Attach to any model: adapter.attach(model, tokenizer)"
         )
+
+        # Notify dashboard
+        if self.bridge:
+            self.bridge.on_adapter_exported({
+                "export_dir": str(export_dir),
+                "episodes_trained": self.global_episode,
+                "source_model": self.config.encoder.model_name or "Qwen/Qwen2.5-3B-Instruct",
+                "files": [
+                    "adapter_config.json",
+                    "protocol_vocab.json",
+                    "pph_weights.safetensors",
+                    "prh_weights.safetensors",
+                ],
+            })
 
     # ── Optimizer Setup ──
 
@@ -973,6 +1055,14 @@ def main():
         "--no-wandb", action="store_true",
         help="Disable W&B logging",
     )
+    parser.add_argument(
+        "--monitor", action="store_true",
+        help="Launch live dashboard server alongside training",
+    )
+    parser.add_argument(
+        "--monitor-port", type=int, default=8000,
+        help="Dashboard server port (default: 8000)",
+    )
     args = parser.parse_args()
 
     # Logging setup
@@ -993,8 +1083,16 @@ def main():
     if args.no_wandb:
         config.infra.use_wandb = False
 
+    # Set up live dashboard if requested
+    bridge = None
+    if args.monitor:
+        from ogenti_train.server import TrainerBridge, start_server_background
+        bridge = TrainerBridge()
+        start_server_background(bridge, port=args.monitor_port)
+        logger.info("Live dashboard: http://localhost:%d", args.monitor_port)
+
     # Train
-    trainer = OgentiTrainer(config)
+    trainer = OgentiTrainer(config, bridge=bridge)
     trainer.setup()
     trainer.train()
 

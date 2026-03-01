@@ -64,6 +64,7 @@ PHASE_CATEGORIES = {
         TaskCategory.REASONING,
     ],
     3: [c for c in TaskCategory],  # All categories
+    4: [c for c in TaskCategory],  # All categories (Phase 4: universal adapter)
 }
 
 

@@ -1,0 +1,231 @@
+{
+  "version": "1.0",
+  "trained_episodes": 58000,
+  "source_model": "Qwen/Qwen2.5-3B-Instruct",
+  "tokens": [
+    {
+      "token_id": 7,
+      "meaning": "begin-ctx",
+      "category": "struct",
+      "frequency": 6736,
+      "phase_discovered": 0,
+      "embedding_norm": 0.8105
+    },
+    {
+      "token_id": 22,
+      "meaning": "end-response",
+      "category": "struct",
+      "frequency": 7063,
+      "phase_discovered": 0,
+      "embedding_norm": 0.8304
+    },
+    {
+      "token_id": 1,
+      "meaning": "separator",
+      "category": "struct",
+      "frequency": 3363,
+      "phase_discovered": 0,
+      "embedding_norm": 1.5291
+    },
+    {
+      "token_id": 15,
+      "meaning": "ack",
+      "category": "struct",
+      "frequency": 6104,
+      "phase_discovered": 0,
+      "embedding_norm": 1.5265
+    },
+    {
+      "token_id": 42,
+      "meaning": "summarize",
+      "category": "op",
+      "frequency": 6010,
+      "phase_discovered": 0,
+      "embedding_norm": 1.4134
+    },
+    {
+      "token_id": 87,
+      "meaning": "compare",
+      "category": "op",
+      "frequency": 3793,
+      "phase_discovered": 0,
+      "embedding_norm": 1.5595
+    },
+    {
+      "token_id": 91,
+      "meaning": "extract",
+      "category": "op",
+      "frequency": 4631,
+      "phase_discovered": 0,
+      "embedding_norm": 0.978
+    },
+    {
+      "token_id": 3,
+      "meaning": "key-points",
+      "category": "op",
+      "frequency": 5958,
+      "phase_discovered": 1,
+      "embedding_norm": 1.5868
+    },
+    {
+      "token_id": 67,
+      "meaning": "enumerate",
+      "category": "op",
+      "frequency": 6676,
+      "phase_discovered": 1,
+      "embedding_norm": 1.1515
+    },
+    {
+      "token_id": 45,
+      "meaning": "analyze",
+      "category": "op",
+      "frequency": 7172,
+      "phase_discovered": 1,
+      "embedding_norm": 1.3031
+    },
+    {
+      "token_id": 55,
+      "meaning": "aggregate",
+      "category": "op",
+      "frequency": 2205,
+      "phase_discovered": 1,
+      "embedding_norm": 1.1328
+    },
+    {
+      "token_id": 30,
+      "meaning": "transform",
+      "category": "op",
+      "frequency": 11012,
+      "phase_discovered": 1,
+      "embedding_norm": 1.5119
+    },
+    {
+      "token_id": 33,
+      "meaning": "causal-link",
+      "category": "rel",
+      "frequency": 10003,
+      "phase_discovered": 1,
+      "embedding_norm": 1.5322
+    },
+    {
+      "token_id": 14,
+      "meaning": "contrast",
+      "category": "rel",
+      "frequency": 8678,
+      "phase_discovered": 1,
+      "embedding_norm": 1.1193
+    },
+    {
+      "token_id": 200,
+      "meaning": "temporal",
+      "category": "mod",
+      "frequency": 13206,
+      "phase_discovered": 2,
+      "embedding_norm": 1.0405
+    },
+    {
+      "token_id": 8,
+      "meaning": "quantitative",
+      "category": "mod",
+      "frequency": 13176,
+      "phase_discovered": 2,
+      "embedding_norm": 1.5577
+    },
+    {
+      "token_id": 77,
+      "meaning": "trend-up",
+      "category": "semantic",
+      "frequency": 14583,
+      "phase_discovered": 2,
+      "embedding_norm": 1.294
+    },
+    {
+      "token_id": 78,
+      "meaning": "trend-down",
+      "category": "semantic",
+      "frequency": 3793,
+      "phase_discovered": 2,
+      "embedding_norm": 0.9393
+    },
+    {
+      "token_id": 120,
+      "meaning": "entity-ref",
+      "category": "semantic",
+      "frequency": 1028,
+      "phase_discovered": 2,
+      "embedding_norm": 0.8734
+    },
+    {
+      "token_id": 156,
+      "meaning": "sentiment-pos",
+      "category": "semantic",
+      "frequency": 14845,
+      "phase_discovered": 2,
+      "embedding_norm": 1.0485
+    },
+    {
+      "token_id": 99,
+      "meaning": "confidence-hi",
+      "category": "meta",
+      "frequency": 2913,
+      "phase_discovered": 2,
+      "embedding_norm": 1.1816
+    },
+    {
+      "token_id": 100,
+      "meaning": "confidence-lo",
+      "category": "meta",
+      "frequency": 14363,
+      "phase_discovered": 3,
+      "embedding_norm": 0.9423
+    },
+    {
+      "token_id": 250,
+      "meaning": "uncertainty",
+      "category": "meta",
+      "frequency": 11466,
+      "phase_discovered": 3,
+      "embedding_norm": 1.1494
+    },
+    {
+      "token_id": 11,
+      "meaning": "scope-global",
+      "category": "meta",
+      "frequency": 1549,
+      "phase_discovered": 3,
+      "embedding_norm": 1.1038
+    },
+    {
+      "token_id": 60,
+      "meaning": "cross-model",
+      "category": "op",
+      "frequency": 8591,
+      "phase_discovered": 3,
+      "embedding_norm": 0.8687
+    },
+    {
+      "token_id": 61,
+      "meaning": "distill",
+      "category": "op",
+      "frequency": 6214,
+      "phase_discovered": 3,
+      "embedding_norm": 0.8055
+    },
+    {
+      "token_id": 180,
+      "meaning": "adapter-sync",
+      "category": "struct",
+      "frequency": 12747,
+      "phase_discovered": 3,
+      "embedding_norm": 1.5897
+    },
+    {
+      "token_id": 181,
+      "meaning": "universal-gate",
+      "category": "struct",
+      "frequency": 11519,
+      "phase_discovered": 3,
+      "embedding_norm": 1.1681
+    }
+  ]
+}

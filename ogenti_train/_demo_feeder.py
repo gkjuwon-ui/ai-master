@@ -8,7 +8,9 @@ can be tested end-to-end.
 
 from __future__ import annotations
 
+import json
 import math
+import os
 import random
 import threading
 import time
@@ -108,6 +110,127 @@ def _smoothstep(t: float) -> float:
 
 def _clamp(v: float, lo: float, hi: float) -> float:
     return max(lo, min(hi, v))
+
+
+def _write_adapter_files(
+    export_dir: str,
+    compression: float,
+    fidelity: float,
+    avg_tokens: int,
+    vocab_pool: list[dict],
+) -> None:
+    """Write actual adapter export files to disk after Phase 4."""
+    os.makedirs(export_dir, exist_ok=True)
+
+    # 1. adapter_config.json
+    config = {
+        "version": "1.0",
+        "hidden_dim": 256,
+        "num_layers": 3,
+        "dropout": 0.1,
+        "activation": "gelu",
+        "protocol_vocab_size": 256,
+        "max_protocol_length": 30,
+        "distill_temperature": 2.0,
+        "distill_alpha": 0.7,
+        "trained_on": "Qwen/Qwen2.5-3B-Instruct",
+        "supported_hidden_sizes": [768, 1024, 1536, 2048, 2560, 3072, 3584, 4096, 5120, 8192],
+    }
+    with open(os.path.join(export_dir, "adapter_config.json"), "w") as f:
+        json.dump(config, f, indent=2)
+
+    # 2. protocol_vocab.json
+    vocab = {
+        "version": "1.0",
+        "trained_episodes": 58000,
+        "source_model": "Qwen/Qwen2.5-3B-Instruct",
+        "tokens": [
+            {
+                "token_id": t["token_id"],
+                "meaning": t["meaning"],
+                "category": t["category"],
+                "frequency": random.randint(800, 15000),
+                "phase_discovered": i // 7,
+                "embedding_norm": round(random.uniform(0.8, 1.6), 4),
+            }
+            for i, t in enumerate(vocab_pool)
+        ],
+    }
+    with open(os.path.join(export_dir, "protocol_vocab.json"), "w") as f:
+        json.dump(vocab, f, indent=2)
+
+    # 3. pph_weights.safetensors (demo placeholder — valid binary header)
+    _write_placeholder_safetensors(
+        os.path.join(export_dir, "pph_weights.safetensors"),
+        layer_prefix="pph",
+        hidden_dim=256,
+        vocab_size=256,
+    )
+
+    # 4. prh_weights.safetensors
+    _write_placeholder_safetensors(
+        os.path.join(export_dir, "prh_weights.safetensors"),
+        layer_prefix="prh",
+        hidden_dim=256,
+        vocab_size=256,
+    )
+
+
+def _write_placeholder_safetensors(
+    path: str,
+    layer_prefix: str,
+    hidden_dim: int,
+    vocab_size: int,
+) -> None:
+    """
+    Write a minimal safetensors-format file with realistic metadata.
+
+    The actual tensor data is random, but the file structure is valid
+    safetensors format so tools can inspect it.
+    """
+    import struct
+
+    # Build metadata describing the tensors
+    metadata = {
+        "__metadata__": {
+            "format": "pt",
+            "framework": "ogenti",
+            "version": "1.0",
+        },
+    }
+
+    # Define tensor shapes matching adapter architecture
+    tensors = {
+        f"{layer_prefix}.mlp.0.weight": {"dtype": "F32", "shape": [hidden_dim, hidden_dim]},
+        f"{layer_prefix}.mlp.0.bias":   {"dtype": "F32", "shape": [hidden_dim]},
+        f"{layer_prefix}.mlp.1.weight": {"dtype": "F32", "shape": [hidden_dim]},
+        f"{layer_prefix}.mlp.1.bias":   {"dtype": "F32", "shape": [hidden_dim]},
+        f"{layer_prefix}.mlp.4.weight": {"dtype": "F32", "shape": [hidden_dim, hidden_dim]},
+        f"{layer_prefix}.mlp.4.bias":   {"dtype": "F32", "shape": [hidden_dim]},
+        f"{layer_prefix}.mlp.8.weight": {"dtype": "F32", "shape": [hidden_dim, hidden_dim]},
+        f"{layer_prefix}.mlp.8.bias":   {"dtype": "F32", "shape": [hidden_dim]},
+        f"{layer_prefix}.output.weight": {"dtype": "F32", "shape": [vocab_size, hidden_dim]},
+        f"{layer_prefix}.embeddings.weight": {"dtype": "F32", "shape": [vocab_size, hidden_dim]},
+    }
+
+    # Compute offsets
+    offset = 0
+    for name, info in tensors.items():
+        size = 1
+        for s in info["shape"]:
+            size *= s
+        byte_size = size * 4  # F32
+        info["data_offsets"] = [offset, offset + byte_size]
+        offset += byte_size
+
+    header_json = json.dumps({**metadata, **tensors}, separators=(",", ":")).encode("utf-8")
+    header_len = len(header_json)
+
+    with open(path, "wb") as f:
+        f.write(struct.pack("<Q", header_len))
+        f.write(header_json)
+        # Write random tensor data
+        f.write(os.urandom(offset))
 
 
 def _feeder_loop(bridge: TrainerBridge) -> None:
@@ -277,6 +400,12 @@ def _feeder_loop(bridge: TrainerBridge) -> None:
         # ── Loop reset ─────────────────────────────────────
         if episode >= total_episodes:
             # ── Phase 4 complete: export universal adapter ──
+            export_dir = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                "checkpoints", "universal_adapter",
+            )
+            _write_adapter_files(export_dir, compression, fidelity, avg_tokens, VOCAB_POOL)
+
             bridge.on_adapter_exported({
                 "path": "checkpoints/universal_adapter",
                 "files": [

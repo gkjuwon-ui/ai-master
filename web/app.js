@@ -13,7 +13,7 @@
         CHART_HISTORY: 200,
         FEED_MAX: 50,
 
-        PHASES: ['Warmup', 'Simple', 'Complex', 'Generalize'],
+        PHASES: ['Warmup', 'Simple', 'Complex', 'Generalize', 'Universalize'],
 
         // API base — auto-detect from current host
         get API_BASE() {
@@ -203,7 +203,20 @@
     }
 
     function handleEpisode(data) {
-        state.episode = data.episode || state.episode;
+        const newEp = data.episode || state.episode;
+
+        // Detect cycle reset — episode went backwards → clear history
+        if (newEp < state.episode - 100) {
+            state.history = { episodes: [], compression: [], fidelity: [], budget: [] };
+            state.vocab = [];
+            rebuildVocabUI();
+            $('#protocolFeed').innerHTML = '';
+            state.phase = 0;
+            state.phaseName = 'Warmup';
+            updatePhaseTimeline();
+        }
+
+        state.episode = newEp;
         state.phase = data.phase ?? state.phase;
         state.metrics.compression = data.compression || state.metrics.compression;
 
@@ -658,12 +671,13 @@
     let demoInterval = null;
 
     const DEMO = {
-        TICK: 250, EP_PER_TICK: 12, TOTAL: 5000,
+        TICK: 250, EP_PER_TICK: 12, TOTAL: 6000,
         PHASES: [
-            { name: 'Warmup', start: 0, end: 500 },
-            { name: 'Simple', start: 500, end: 2000 },
-            { name: 'Complex', start: 2000, end: 3500 },
-            { name: 'Generalize', start: 3500, end: 5000 },
+            { name: 'Warmup', start: 0, end: 400 },
+            { name: 'Simple', start: 400, end: 1500 },
+            { name: 'Complex', start: 1500, end: 2800 },
+            { name: 'Generalize', start: 2800, end: 4200 },
+            { name: 'Universalize', start: 4200, end: 6000 },
         ],
         TARGETS: [
             { compression: 1.0, fidelity: 0.00, tokens: 30, budget: 30 },
@@ -671,6 +685,7 @@
             { compression: 8.5, fidelity: 0.86, tokens: 11, budget: 18 },
             { compression: 13.0, fidelity: 0.94, tokens: 6, budget: 8 },
             { compression: 15.8, fidelity: 0.97, tokens: 5, budget: 5 },
+            { compression: 16.5, fidelity: 0.98, tokens: 4, budget: 4 },
         ],
         VOCAB: [
             { id: 7, meaning: 'begin-ctx', category: 'struct', phase: 0 },

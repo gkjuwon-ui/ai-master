@@ -34,6 +34,19 @@ def __getattr__(name):
     if name == "DecodedAction":
         from ogenti_core.decoder import DecodedAction
         return DecodedAction
+    # ── Universal adapter & interpreter (Phase 4+) ──
+    if name == "OgentiAdapter":
+        from ogenti_core.adapter import OgentiAdapter
+        return OgentiAdapter
+    if name == "AdapterConfig":
+        from ogenti_core.adapter import AdapterConfig
+        return AdapterConfig
+    if name == "ProtocolVocab":
+        from ogenti_core.adapter import ProtocolVocab
+        return ProtocolVocab
+    if name == "ProtocolInterpreter":
+        from ogenti_core.interpreter import ProtocolInterpreter
+        return ProtocolInterpreter
     raise AttributeError(f"module 'ogenti_core' has no attribute {name!r}")
 
 
@@ -49,4 +62,9 @@ __all__ = [
     "DecodedAction",
     "CommunicationChannel",
     "ChannelStats",
+    # Phase 4+ universal adapter
+    "OgentiAdapter",
+    "AdapterConfig",
+    "ProtocolVocab",
+    "ProtocolInterpreter",
 ]

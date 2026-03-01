@@ -18,14 +18,16 @@ from ogenti_train.server import TrainerBridge
 
 # Phase definitions matching ogenti_train/curriculum.py defaults
 PHASES = [
-    {"phase_id": 0, "name": "warmup",     "description": "Supervised warm-up",
+    {"phase_id": 0, "name": "warmup",       "description": "Supervised warm-up",
      "max_episodes": 5000,  "min_accuracy": 0.60, "min_compression": 2.0},
-    {"phase_id": 1, "name": "simple",      "description": "Simple 1:1 MARL",
+    {"phase_id": 1, "name": "simple",       "description": "Simple 1:1 MARL",
      "max_episodes": 15000, "min_accuracy": 0.75, "min_compression": 8.0},
-    {"phase_id": 2, "name": "complex",     "description": "Multi-hop routing",
+    {"phase_id": 2, "name": "complex",      "description": "Multi-hop routing",
      "max_episodes": 20000, "min_accuracy": 0.70, "min_compression": 12.0},
-    {"phase_id": 3, "name": "generalize",  "description": "Zero-shot transfer",
+    {"phase_id": 3, "name": "generalize",   "description": "Zero-shot transfer",
      "max_episodes": 10000, "min_accuracy": 0.65, "min_compression": 15.0},
+    {"phase_id": 4, "name": "universalize", "description": "Cross-model adapter distillation",
+     "max_episodes": 8000,  "min_accuracy": 0.60, "min_compression": 15.0},
 ]
 
 # Target metrics at each phase boundary
@@ -35,6 +37,7 @@ TARGETS = [
     {"compression": 8.5,  "fidelity": 0.86, "tokens": 11, "budget": 18.0},
     {"compression": 13.0, "fidelity": 0.94, "tokens": 6,  "budget": 8.0},
     {"compression": 15.8, "fidelity": 0.97, "tokens": 5,  "budget": 5.0},
+    {"compression": 16.5, "fidelity": 0.98, "tokens": 4,  "budget": 4.0},
 ]
 
 TASKS = [
@@ -82,8 +85,17 @@ VOCAB_POOL = [
     {"token_id": 11,  "meaning": "scope-global",   "category": "meta"},
 ]
 
+# Phase 4 (universalize) vocab — cross-model protocol adaptation tokens
+VOCAB_POOL_P4 = [
+    {"token_id": 60,  "meaning": "cross-model",    "category": "op"},
+    {"token_id": 61,  "meaning": "distill",        "category": "op"},
+    {"token_id": 180, "meaning": "adapter-sync",   "category": "struct"},
+    {"token_id": 181, "meaning": "universal-gate", "category": "struct"},
+]
+VOCAB_POOL.extend(VOCAB_POOL_P4)
+
 # Phases in which each vocab token is discovered
-VOCAB_PHASE = [0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3]
+VOCAB_PHASE = [0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4]
 
 
 def _lerp(a: float, b: float, t: float) -> float:
@@ -108,7 +120,7 @@ def _feeder_loop(bridge: TrainerBridge) -> None:
     # Notify training start
     bridge.on_training_start({"phases": PHASES})
     
-    total_episodes = 5000
+    total_episodes = 6000
     tick_interval = 0.25      # seconds between ticks
     ep_per_tick = 12           # episodes per tick → ~48 ep/sec
     vocab_idx = 0
@@ -116,8 +128,8 @@ def _feeder_loop(bridge: TrainerBridge) -> None:
     
     phase = 0
     phase_start_ep = 0
-    # Fast phase limits — full cycle in ~2 min
-    phase_ep_limits = [500, 1500, 2000, 1000]
+    # Fast phase limits — full cycle in ~2.5 min
+    phase_ep_limits = [400, 1100, 1300, 1400, 800]
     
     episode = 0
     
@@ -141,7 +153,7 @@ def _feeder_loop(bridge: TrainerBridge) -> None:
         phase_ep = episode - phase_start_ep
         phase_max = phase_ep_limits[phase]
         
-        if phase_ep >= phase_max and phase < 3:
+        if phase_ep >= phase_max and phase < 4:
             old_name = PHASES[phase]["name"]
             phase += 1
             phase_start_ep = episode
@@ -167,7 +179,7 @@ def _feeder_loop(bridge: TrainerBridge) -> None:
         t_local = _smoothstep(local_progress)
         
         # Blend: 70% global curve + 30% phase-local detail
-        t = 0.7 * t_global + 0.3 * t_local * ((phase + 1) / 4)
+        t = 0.7 * t_global + 0.3 * t_local * ((phase + 1) / 5)
         
         src = TARGETS[0]          # always interpolate from the ground floor
         dst = TARGETS[min(phase + 1, len(TARGETS) - 1)]

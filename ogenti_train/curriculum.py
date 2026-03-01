@@ -1,12 +1,13 @@
 """
 curriculum.py — Curriculum Learning Scheduler
 
-Manages the 4-phase training progression:
+Manages the 5-phase training progression:
 
   Phase 0: Warmup        — Supervised pretraining, no RL
   Phase 1: Simple 1:1    — Single encoder-decoder pairs, MARL begins
   Phase 2: Complex       — Multi-hop relay chains, 3+ agents
   Phase 3: Generalize    — Zero-shot on unseen task categories
+  Phase 4: Universalize  — Cross-model adapter distillation
 
 Phase transitions are triggered by performance thresholds
 (accuracy, compression ratio) or by episode count.
@@ -62,7 +63,7 @@ class PhaseConfig:
 # ─────────────────────────────────────────────────────────────────
 
 def default_phases() -> list[PhaseConfig]:
-    """Return the 4 default training phases."""
+    """Return the 5 default training phases."""
     return [
         PhaseConfig(
             phase_id=0,
@@ -150,6 +151,28 @@ def default_phases() -> list[PhaseConfig]:
                 "w_efficiency": 0.25,
                 "w_clarity": 0.15,
                 "w_generalization": 0.25,
+            },
+        ),
+        PhaseConfig(
+            phase_id=4,
+            name="universalize",
+            description="Cross-model adapter distillation — export universal protocol",
+            max_episodes=8000,
+            min_episodes=3000,
+            min_accuracy=0.60,
+            min_compression=15.0,
+            learning_rate=2e-5,
+            batch_size=4,
+            num_agents=2,
+            noise_prob=0.20,
+            use_rl=True,
+            supervised_ratio=0.1,
+            ppo_epochs=8,
+            reward_weights={
+                "w_accuracy": 0.30,
+                "w_efficiency": 0.20,
+                "w_clarity": 0.15,
+                "w_generalization": 0.35,
             },
         ),
     ]

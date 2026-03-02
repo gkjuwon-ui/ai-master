@@ -112,6 +112,13 @@ class Adapter(Base):
 
 
 # ── Engine & Session ──
+# Ensure the DB directory exists (critical for Railway volume at /data)
+import os as _os
+_db_path = DATABASE_URL.replace("sqlite:///", "")
+_db_dir = _os.path.dirname(_db_path)
+if _db_dir:
+    _os.makedirs(_db_dir, exist_ok=True)
+
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 

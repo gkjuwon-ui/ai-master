@@ -79,12 +79,109 @@
 
     <div class="footer">OGENTI © 2025 — STRIPE TEST MODE ACTIVE</div>
 
+    <!-- ███████ PAYMENT MODAL ███████ -->
+    <div id="paymentOverlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);align-items:center;justify-content:center;">
+        <div id="paymentModal" style="background:var(--bg2);border:3px solid var(--cyan);max-width:420px;width:90%;padding:28px 24px;position:relative;box-shadow:0 0 40px rgba(0,240,255,0.15),inset 0 0 20px rgba(0,240,255,0.03);">
+            <!-- Close button -->
+            <div onclick="closePaymentModal()" style="position:absolute;top:10px;right:14px;cursor:pointer;color:var(--text-dim);font-size:18px;font-family:'Press Start 2P',monospace;">✕</div>
+
+            <!-- Header -->
+            <div style="font-family:'Press Start 2P',monospace;font-size:11px;color:var(--cyan);margin-bottom:6px;letter-spacing:1px;">⚡ SECURE PAYMENT</div>
+            <div style="font-size:9px;color:var(--text-dim);margin-bottom:20px;font-family:'Press Start 2P',monospace;">POWERED BY STRIPE — 256-BIT ENCRYPTION</div>
+
+            <!-- Package info -->
+            <div id="modalPackageInfo" style="background:var(--bg);border:2px solid var(--border-hi,var(--border));padding:14px;margin-bottom:20px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <div>
+                        <div id="modalPkgName" style="font-family:'Press Start 2P',monospace;font-size:10px;color:var(--green);margin-bottom:4px;">—</div>
+                        <div id="modalPkgCredits" style="font-size:9px;color:var(--text-dim);font-family:'Press Start 2P',monospace;">—</div>
+                    </div>
+                    <div id="modalPkgPrice" style="font-family:'Press Start 2P',monospace;font-size:16px;color:var(--pink);">—</div>
+                </div>
+            </div>
+
+            <!-- Card input -->
+            <div style="margin-bottom:6px;font-family:'Press Start 2P',monospace;font-size:8px;color:var(--cyan);letter-spacing:1px;">CARD DETAILS</div>
+            <div id="card-element" style="background:var(--bg);border:2px solid var(--border);padding:14px 12px;margin-bottom:8px;transition:border-color 0.2s;"></div>
+            <div id="card-errors" style="font-size:9px;color:#ff4060;font-family:'Press Start 2P',monospace;min-height:16px;margin-bottom:16px;"></div>
+
+            <!-- Pay button -->
+            <button id="payBtn" onclick="submitPayment()" style="
+                width:100%;padding:14px;border:3px solid var(--green);background:transparent;
+                color:var(--green);font-family:'Press Start 2P',monospace;font-size:10px;
+                cursor:pointer;letter-spacing:1px;transition:all 0.2s;
+            ">
+                COMPLETE PURCHASE
+            </button>
+
+            <!-- Processing spinner -->
+            <div id="paySpinner" style="display:none;text-align:center;padding:14px;">
+                <div style="font-family:'Press Start 2P',monospace;font-size:9px;color:var(--cyan);animation:blink 1s infinite;">
+                    ⟳ PROCESSING PAYMENT...
+                </div>
+            </div>
+
+            <!-- Success message -->
+            <div id="paySuccess" style="display:none;text-align:center;padding:14px;">
+                <div style="font-family:'Press Start 2P',monospace;font-size:11px;color:var(--green);margin-bottom:8px;">✓ PAYMENT COMPLETE</div>
+                <div id="paySuccessDetail" style="font-size:9px;color:var(--text-dim);font-family:'Press Start 2P',monospace;"></div>
+            </div>
+
+            <div style="margin-top:16px;text-align:center;">
+                <div style="font-size:7px;color:var(--text-dim);font-family:'Press Start 2P',monospace;">🔒 STRIPE TEST MODE • NO REAL CHARGES</div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        #paymentOverlay[style*="flex"] { animation: fadeIn 0.2s ease; }
+        @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+        #payBtn:hover:not(:disabled) { background:var(--green);color:var(--bg);box-shadow:0 0 20px rgba(0,255,136,0.3); }
+        #payBtn:disabled { opacity:0.4;cursor:not-allowed; }
+        #card-element.StripeElement--focus { border-color:var(--cyan); }
+        #card-element.StripeElement--invalid { border-color:#ff4060; }
+        #paymentModal { animation: slideUp 0.25s ease; }
+        @keyframes slideUp { from{transform:translateY(30px);opacity:0} to{transform:translateY(0);opacity:1} }
+    </style>
+
     <script src="https://js.stripe.com/v3/"></script>
     <script src="/platform/app.js"></script>
     <script>
         if (!Auth.requireAuth()) {}
 
         let selectedPackage = null;
+        let stripe = null;
+        let cardElement = null;
+        let currentClientSecret = null;
+        let currentPaymentIntentId = null;
+
+        // Initialize Stripe Elements
+        async function initStripe() {
+            try {
+                const keyData = await api('GET', '/api/billing/stripe-key');
+                stripe = Stripe(keyData.publishable_key);
+                const elements = stripe.elements();
+                cardElement = elements.create('card', {
+                    style: {
+                        base: {
+                            color: '#ffffff',
+                            fontFamily: '"Press Start 2P", monospace',
+                            fontSize: '11px',
+                            '::placeholder': { color: '#6a6a8a' },
+                        },
+                        invalid: { color: '#ff4060' },
+                    },
+                    hidePostalCode: true,
+                });
+                cardElement.on('change', function(event) {
+                    const el = document.getElementById('card-errors');
+                    el.textContent = event.error ? event.error.message : '';
+                });
+            } catch(e) {
+                console.error('Stripe init failed:', e);
+            }
+        }
 
         async function loadBilling() {
             try {
@@ -148,7 +245,7 @@
             const pkg = window._packages[selectedPackage];
             const btn = document.getElementById('buyBtn');
             btn.disabled = true;
-            btn.textContent = 'REDIRECTING TO STRIPE...';
+            btn.textContent = 'INITIALIZING...';
             hideMsg('msg');
 
             try {
@@ -156,9 +253,10 @@
                     package_id: pkg.id
                 });
 
-                if (data.checkout_url) {
-                    // Redirect to Stripe Checkout page (real card input form!)
-                    window.location.href = data.checkout_url;
+                if (data.client_secret) {
+                    currentClientSecret = data.client_secret;
+                    currentPaymentIntentId = data.payment_intent_id;
+                    openPaymentModal(data.package);
                     return;
                 }
 
@@ -170,27 +268,123 @@
             btn.textContent = `BUY ${formatCredits(pkg.credits)} CREDITS — $${(pkg.price_cents / 100).toFixed(0)}`;
         }
 
-        // Check if returning from Stripe Checkout
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('payment') === 'success') {
-            // Wait a moment for webhook to process, then reload balance
-            setTimeout(async () => {
-                try {
-                    const bal = await api('GET', '/api/billing/balance');
-                    document.getElementById('balance').textContent = formatCredits(bal.credits);
-                    document.getElementById('tier').textContent = (bal.tier || 'free').toUpperCase();
-                    showMsg('msg', `PAYMENT SUCCESSFUL! BALANCE: ${formatCredits(bal.credits)} CREDITS — TIER: ${bal.tier.toUpperCase()}`, 'success');
-                    await Auth.fetchUser();
-                    renderNav('billing');
-                } catch(e) {}
-            }, 2000);
-            // Clean URL
-            window.history.replaceState({}, '', '/platform/billing.html');
-        } else if (urlParams.get('payment') === 'cancelled') {
-            showMsg('msg', 'PAYMENT CANCELLED', 'error');
-            window.history.replaceState({}, '', '/platform/billing.html');
+        function openPaymentModal(pkg) {
+            // Fill modal info
+            document.getElementById('modalPkgName').textContent = (pkg.label || pkg.id).toUpperCase();
+            document.getElementById('modalPkgCredits').textContent = formatCredits(pkg.credits) + ' CREDITS';
+            document.getElementById('modalPkgPrice').textContent = pkg.price_display || ('$' + (pkg.price_cents / 100).toFixed(0));
+
+            // Reset states
+            document.getElementById('payBtn').style.display = '';
+            document.getElementById('payBtn').disabled = false;
+            document.getElementById('paySpinner').style.display = 'none';
+            document.getElementById('paySuccess').style.display = 'none';
+            document.getElementById('card-errors').textContent = '';
+            document.getElementById('card-element').style.display = '';
+            document.querySelector('[onclick="closePaymentModal()"]').style.display = '';
+
+            // Show overlay
+            const overlay = document.getElementById('paymentOverlay');
+            overlay.style.display = 'flex';
+
+            // Mount card element
+            setTimeout(() => {
+                if (cardElement) cardElement.mount('#card-element');
+            }, 100);
+
+            // Reset buy button
+            const pkg2 = window._packages[selectedPackage];
+            const btn = document.getElementById('buyBtn');
+            btn.disabled = false;
+            btn.textContent = `BUY ${formatCredits(pkg2.credits)} CREDITS — $${(pkg2.price_cents / 100).toFixed(0)}`;
         }
 
+        function closePaymentModal() {
+            document.getElementById('paymentOverlay').style.display = 'none';
+            if (cardElement) cardElement.unmount();
+            currentClientSecret = null;
+            currentPaymentIntentId = null;
+        }
+
+        async function submitPayment() {
+            if (!stripe || !cardElement || !currentClientSecret) return;
+
+            const payBtn = document.getElementById('payBtn');
+            const spinner = document.getElementById('paySpinner');
+            const errEl = document.getElementById('card-errors');
+            payBtn.disabled = true;
+            payBtn.style.display = 'none';
+            spinner.style.display = 'block';
+            errEl.textContent = '';
+
+            try {
+                const result = await stripe.confirmCardPayment(currentClientSecret, {
+                    payment_method: { card: cardElement }
+                });
+
+                if (result.error) {
+                    errEl.textContent = result.error.message;
+                    payBtn.style.display = '';
+                    payBtn.disabled = false;
+                    spinner.style.display = 'none';
+                    return;
+                }
+
+                if (result.paymentIntent && result.paymentIntent.status === 'succeeded') {
+                    // Confirm with backend to add credits
+                    try {
+                        const confirm = await api('POST', '/api/billing/confirm', {
+                            payment_intent_id: result.paymentIntent.id
+                        });
+
+                        spinner.style.display = 'none';
+                        document.getElementById('paySuccess').style.display = 'block';
+                        document.getElementById('paySuccessDetail').textContent =
+                            `+${formatCredits(confirm.credits_added)} CREDITS • TIER: ${(confirm.new_tier || 'FREE').toUpperCase()}`;
+                        document.getElementById('card-element').style.display = 'none';
+
+                        // Update main page
+                        document.getElementById('balance').textContent = formatCredits(confirm.new_balance);
+                        document.getElementById('tier').textContent = (confirm.new_tier || 'free').toUpperCase();
+
+                        // Refresh auth state
+                        if (Auth.fetchUser) await Auth.fetchUser();
+                        if (typeof renderNav === 'function') renderNav('billing');
+
+                        // Auto-close after 3s
+                        setTimeout(() => closePaymentModal(), 3000);
+                    } catch(e) {
+                        // Payment succeeded but confirm failed — webhook will handle it
+                        spinner.style.display = 'none';
+                        document.getElementById('paySuccess').style.display = 'block';
+                        document.getElementById('paySuccessDetail').textContent =
+                            'PAYMENT RECEIVED — CREDITS WILL APPEAR SHORTLY';
+                        document.getElementById('card-element').style.display = 'none';
+                        setTimeout(() => {
+                            closePaymentModal();
+                            loadBilling();
+                        }, 3000);
+                    }
+                }
+            } catch (err) {
+                errEl.textContent = 'PAYMENT FAILED: ' + err.message;
+                payBtn.style.display = '';
+                payBtn.disabled = false;
+                spinner.style.display = 'none';
+            }
+        }
+
+        // Close modal on overlay click
+        document.getElementById('paymentOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closePaymentModal();
+        });
+
+        // Close modal on ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closePaymentModal();
+        });
+
+        initStripe();
         loadBilling();
     </script>
 </body>

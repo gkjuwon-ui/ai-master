@@ -88,7 +88,7 @@ async def estimate_cost(req: EstimateRequest):
 
 @router.post("/purchase")
 async def purchase_credits(req: PurchaseRequest, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    """Create Stripe Checkout Session — redirects user to real payment page."""
+    """Create PaymentIntent — returns client_secret for in-page card modal."""
 
     # Find package
     package = next((p for p in CREDIT_PACKAGES if p["id"] == req.package_id), None)
@@ -98,38 +98,92 @@ async def purchase_credits(req: PurchaseRequest, user: User = Depends(get_curren
     try:
         _ensure_stripe_key()
 
-        # Create Stripe Checkout Session (shows actual card form)
-        session = stripe.checkout.Session.create(
-            mode="payment",
-            payment_method_types=["card"],
-            line_items=[{
-                "price_data": {
-                    "currency": "usd",
-                    "unit_amount": package["price_cents"],
-                    "product_data": {
-                        "name": f"Ogenti {package['label']}",
-                        "description": f"{package['credits']:,} credits for AI adapter training & inference",
-                    },
-                },
-                "quantity": 1,
-            }],
+        # Create PaymentIntent (NOT auto-confirmed — user enters card in our modal)
+        intent = stripe.PaymentIntent.create(
+            amount=package["price_cents"],
+            currency="usd",
             metadata={
                 "user_id": str(user.id),
                 "package_id": package["id"],
                 "credits": str(package["credits"]),
             },
-            success_url="https://ogenti.com/platform/billing.html?payment=success",
-            cancel_url="https://ogenti.com/platform/billing.html?payment=cancelled",
+            description=f"Ogenti Credits: {package['label']}",
         )
 
         return {
-            "status": "checkout",
-            "checkout_url": session.url,
-            "session_id": session.id,
+            "status": "requires_payment",
+            "client_secret": intent.client_secret,
+            "payment_intent_id": intent.id,
+            "package": {
+                "id": package["id"],
+                "credits": package["credits"],
+                "label": package["label"],
+                "price_display": package["price_display"],
+            },
         }
 
     except stripe.error.StripeError as e:
         raise HTTPException(400, f"Stripe error: {str(e)}")
+
+
+@router.post("/confirm")
+async def confirm_payment(request: Request, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Called after client-side card payment succeeds. Adds credits immediately."""
+    body = await request.json()
+    payment_intent_id = body.get("payment_intent_id", "")
+
+    if not payment_intent_id:
+        raise HTTPException(400, "Missing payment_intent_id")
+
+    try:
+        _ensure_stripe_key()
+        intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+    except stripe.error.StripeError as e:
+        raise HTTPException(400, f"Stripe error: {str(e)}")
+
+    if intent.status != "succeeded":
+        raise HTTPException(400, f"Payment not completed: {intent.status}")
+
+    meta = intent.metadata or {}
+    if str(user.id) != meta.get("user_id"):
+        raise HTTPException(403, "Payment does not belong to this user")
+
+    # 중복 처리 방지
+    existing = db.query(Transaction).filter(Transaction.stripe_payment_id == intent.id).first()
+    if existing:
+        return {"status": "already_processed", "credits": user.credits, "tier": user.tier}
+
+    credits = int(meta.get("credits", 0))
+    package_id = meta.get("package_id", "")
+
+    old_tier = user.tier
+    user.credits += credits
+
+    if user.credits >= 50_000:
+        user.tier = "enterprise"
+    elif user.credits >= 5_000:
+        user.tier = "pro"
+    elif user.credits >= 1_000:
+        user.tier = "starter"
+
+    txn = Transaction(
+        user_id=user.id,
+        type="purchase",
+        amount_cents=intent.amount,
+        credits=credits,
+        description=f"Purchased {package_id} package",
+        stripe_payment_id=intent.id,
+    )
+    db.add(txn)
+    db.commit()
+
+    return {
+        "status": "success",
+        "credits_added": credits,
+        "new_balance": user.credits,
+        "tier_upgraded": user.tier != old_tier,
+        "new_tier": user.tier,
+    }
 
 
 @router.get("/balance")
@@ -192,7 +246,7 @@ async def debug_stripe_key():
 
 @router.post("/webhook")
 async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
-    """Stripe webhook — handles checkout.session.completed to add credits."""
+    """Stripe webhook — handles payment_intent.succeeded as backup for credit addition."""
     payload = await request.body()
     sig_header = request.headers.get("stripe-signature", "")
 
@@ -204,19 +258,19 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(400, f"Webhook error: {e}")
 
-    # Checkout Session completed — user paid through Stripe's card form
-    if event["type"] == "checkout.session.completed":
-        session = event["data"]["object"]
-        meta = session.get("metadata", {})
+    # PaymentIntent succeeded — backup to /confirm endpoint
+    if event["type"] == "payment_intent.succeeded":
+        intent = event["data"]["object"]
+        meta = intent.get("metadata", {})
         user_id = int(meta.get("user_id", 0))
         credits = int(meta.get("credits", 0))
         package_id = meta.get("package_id", "")
-        payment_id = session.get("payment_intent") or session.get("id")
+        payment_id = intent.get("id")
 
         if user_id and credits:
             user = db.query(User).filter(User.id == user_id).first()
             if user:
-                # 중복 처리 방지
+                # 중복 처리 방지 (/confirm에서 이미 처리했을 수 있음)
                 existing = db.query(Transaction).filter(
                     Transaction.stripe_payment_id == payment_id
                 ).first()
@@ -232,9 +286,9 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
                     txn = Transaction(
                         user_id=user.id,
                         type="purchase",
-                        amount_cents=session.get("amount_total", 0),
+                        amount_cents=intent.get("amount", 0),
                         credits=credits,
-                        description=f"Purchased {package_id} package",
+                        description=f"Purchased {package_id} package (webhook)",
                         stripe_payment_id=payment_id,
                     )
                     db.add(txn)

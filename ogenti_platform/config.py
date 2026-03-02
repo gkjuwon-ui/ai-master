@@ -2,15 +2,20 @@
 import os
 import secrets
 
+# ── Railway detection ──
+_ON_RAILWAY = bool(os.getenv("RAILWAY_ENVIRONMENT"))
+
 # ── Server ──
 HOST = os.getenv("OGENTI_HOST", "0.0.0.0")
 PORT = int(os.getenv("OGENTI_PORT", "8080"))
 SECRET_KEY = os.getenv("OGENTI_SECRET", secrets.token_hex(32))
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 30  # 30 days
 
 # ── Database ──
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./ogenti_platform/ogenti.db")
+# Railway: use persistent volume (/data) so DB survives redeploys
+_default_db = "sqlite:////data/ogenti.db" if _ON_RAILWAY else "sqlite:///./ogenti_platform/ogenti.db"
+DATABASE_URL = os.getenv("DATABASE_URL", _default_db)
 
 # ── Resend (email) ──
 RESEND_API_KEY = os.getenv("RESEND_API_KEY", "re_test_xxxxxxxxxxxx")
@@ -74,5 +79,6 @@ INFERENCE_COSTS = {
 }
 
 # ── OGT Storage ──
-OGT_STORAGE_DIR = os.getenv("OGT_STORAGE_DIR", "./ogt_adapters")
+_default_ogt = "/data/ogt_adapters" if _ON_RAILWAY else "./ogt_adapters"
+OGT_STORAGE_DIR = os.getenv("OGT_STORAGE_DIR", _default_ogt)
 

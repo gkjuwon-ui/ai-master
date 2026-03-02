@@ -292,23 +292,27 @@
         badge.className = 'connection-badge ' + conn.mode;
 
         const labels = {
-            live: '● LIVE',
-            demo: '◌ DEMO',
-            connecting: '… CONNECTING',
-            reconnecting: '↻ RECONNECTING',
+            live: '[*] LIVE',
+            demo: '[ ] DEMO',
+            connecting: '... CONNECTING',
+            reconnecting: '>>> RECONNECTING',
         };
 
         badge.textContent = labels[conn.mode] || conn.mode;
     }
 
     // ────────────────────────────────────────────────────────────
-    // Canvas: Agent Visualizer
+    // Canvas: 16-bit Pixel Agent Visualizer
     // ────────────────────────────────────────────────────────────
 
     let canvas, ctx;
-    let particles = [];
+    let packets = [];
     let agentA = {}, agentB = {};
     let canvasW = 0, canvasH = 0;
+    let waveOffset = 0;
+
+    // pixel unit for scaling
+    function px(n) { return Math.round(n * Math.max(1, canvasW / 800)); }
 
     function initCanvas() {
         canvas = $('#agentCanvas');
@@ -331,63 +335,144 @@
         canvasW = rect.width;
         canvasH = rect.height;
         const r = Math.min(32, canvasW * 0.045);
-        agentA = { x: canvasW * 0.15, y: canvasH * 0.5, r };
-        agentB = { x: canvasW * 0.85, y: canvasH * 0.5, r };
+        agentA = { x: canvasW * 0.13, y: canvasH * 0.48, r };
+        agentB = { x: canvasW * 0.87, y: canvasH * 0.48, r };
     }
 
+    // Spawn square data packets instead of round particles
     function spawnParticles() {
         const cf = Math.min(state.metrics.compression / 16, 1);
-        const count = Math.max(1, Math.round(5 * (1 - cf * 0.75)));
-        const spread = 25 * (1 - cf * 0.6);
+        const count = Math.max(1, Math.round(3 * (1 - cf * 0.6)));
 
         for (let i = 0; i < count; i++) {
-            particles.push({
-                x: agentA.x + agentA.r + 4,
-                y: agentA.y + (Math.random() - 0.5) * spread * 2,
-                speed: 1.2 + Math.random() * 1.8,
-                size: 1.5 + Math.random() * (1.5 + cf * 2),
-                opacity: 0.7 + Math.random() * 0.3,
-                hue: Math.random() > 0.35 ? 0 : 1,
+            const hueRng = Math.random();
+            packets.push({
+                x: agentA.x + px(28),
+                y: agentA.y + (Math.random() - 0.5) * px(10),
+                speed: px(1.5) + Math.random() * px(1.5),
+                size: px(2) + Math.random() * px(2 + cf * 2),
+                opacity: 0.8 + Math.random() * 0.2,
+                color: hueRng < 0.35 ? '#b060ff' : hueRng < 0.6 ? '#00ff88' : hueRng < 0.8 ? '#ffe040' : '#00f0ff',
             });
         }
     }
 
     function updateParticles() {
-        const boundary = agentB.x - agentB.r - 4;
-        for (const p of particles) {
+        const boundary = agentB.x - px(28);
+        for (const p of packets) {
             p.x += p.speed;
-            p.y += (agentB.y - p.y) * 0.012;
-            if (p.x > boundary - 40) p.opacity *= 0.92;
+            p.y += (agentB.y - p.y) * 0.015;
+            if (p.x > boundary - px(30)) p.opacity *= 0.9;
         }
-        particles = particles.filter(p => p.x < boundary && p.opacity > 0.03);
+        packets = packets.filter(p => p.x < boundary && p.opacity > 0.05);
     }
 
-    function drawAgent(agent, pulse, isSending) {
-        const r = agent.r * pulse;
-        const grad = ctx.createRadialGradient(agent.x, agent.y, r * 0.2, agent.x, agent.y, r * 2.8);
-        grad.addColorStop(0, `rgba(0, 240, 255, ${isSending ? 0.1 : 0.05})`);
-        grad.addColorStop(1, 'rgba(0, 240, 255, 0)');
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(agent.x, agent.y, r * 2.8, 0, Math.PI * 2);
-        ctx.fill();
+    // Draw a 16-bit pixel robot
+    function drawPixelRobot(cx, cy, scale, color, shadowColor, t, isSender) {
+        const s = scale;
+        const bob = Math.round(Math.sin(t * (isSender ? 1.0 : 1.2)) * s * 1.5);
+        const y = cy + bob;
+        const x = cx;
 
-        ctx.beginPath();
-        ctx.arc(agent.x, agent.y, r, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(0, 240, 255, ${isSending ? 0.7 : 0.35})`;
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
+        // Helper: draw a pixel rect
+        function r(rx, ry, rw, rh, c, a) {
+            ctx.globalAlpha = a !== undefined ? a : 1;
+            ctx.fillStyle = c;
+            ctx.fillRect(Math.round(x + rx * s), Math.round(y + ry * s), Math.round(rw * s), Math.round(rh * s));
+            ctx.globalAlpha = 1;
+        }
 
-        ctx.beginPath();
-        ctx.arc(agent.x, agent.y, r * 0.6, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(0, 240, 255, 0.1)';
-        ctx.lineWidth = 0.5;
-        ctx.stroke();
+        // Glow under robot
+        ctx.globalAlpha = 0.08;
+        ctx.fillStyle = color;
+        ctx.fillRect(Math.round(x - 8 * s), Math.round(y + 20 * s), Math.round(16 * s), Math.round(4 * s));
+        ctx.globalAlpha = 1;
 
-        ctx.beginPath();
-        ctx.arc(agent.x, agent.y, 3.5, 0, Math.PI * 2);
+        // Antenna
+        r(-1, -18, 2, 4, color);
+        r(-3, -20, 6, 2, color, 0.5);
+
+        // Head outline
+        r(-4, -14, 8, 2, color);         // top
+        r(-6, -12, 2, 2, color);         // top-left
+        r(4, -12, 2, 2, color);          // top-right
+        r(-8, -10, 2, 10, color);        // left
+        r(6, -10, 2, 10, color);         // right
+        r(-6, 0, 2, 2, color);           // bottom-left
+        r(4, 0, 2, 2, color);            // bottom-right
+        r(-4, 2, 8, 2, color);           // bottom
+
+        // Head fill
+        r(-6, -10, 12, 10, color, 0.08);
+
+        // Eyes (white pixels)
+        const blinkPhase = Math.sin(t * 0.7);
+        if (blinkPhase > -0.95) { // blink occasionally
+            r(-4, -6, 2, 2, '#fff');
+            r(2, -6, 2, 2, '#fff');
+        }
+
+        // Core (center of head)
+        r(-2, -4, 4, 4, color);
+
+        // Neck
+        r(-2, 4, 4, 2, color);
+
+        // Body
+        r(-4, 6, 8, 2, color);           // top
+        r(-6, 8, 12, 2, shadowColor);    // shoulders
+        r(-8, 10, 4, 8, shadowColor);    // left arm
+        r(4, 10, 4, 8, shadowColor);     // right arm
+        r(-4, 8, 8, 12, color);          // torso
+
+        // Legs
+        r(-4, 20, 3, 4, shadowColor);
+        r(1, 20, 3, 4, shadowColor);
+    }
+
+    // Draw 8-bit waveform beam between agents
+    function drawWaveBeam(x1, x2, cy, t) {
+        const segW = px(4);
+        const amplitude = px(6) + state.metrics.fidelity * px(8);
+        const freq = 0.15 + state.metrics.compression * 0.008;
+        const baseAlpha = 0.15 + state.metrics.fidelity * 0.25;
+
+        // Glow trail
+        ctx.globalAlpha = baseAlpha * 0.2;
         ctx.fillStyle = '#00f0ff';
-        ctx.fill();
+        ctx.fillRect(x1, cy - px(1), x2 - x1, px(2));
+        ctx.globalAlpha = 1;
+
+        // Pixelated sine wave
+        const steps = Math.floor((x2 - x1) / segW);
+        for (let i = 0; i < steps; i++) {
+            const xPos = x1 + i * segW;
+            const phase = (i * freq + t) % (Math.PI * 2);
+            const yOff = Math.round(Math.sin(phase) * amplitude / segW) * segW;
+
+            // Main wave pixel
+            const alpha = 0.4 + Math.sin(phase + t * 0.5) * 0.2;
+            ctx.globalAlpha = baseAlpha + alpha * 0.3;
+            ctx.fillStyle = '#00f0ff';
+            ctx.fillRect(xPos, cy + yOff - segW / 2, segW - 1, segW);
+
+            // Secondary harmonic (smaller, purple)
+            if (i % 2 === 0) {
+                const yOff2 = Math.round(Math.sin(phase * 2.3 + 1.5) * amplitude * 0.5 / segW) * segW;
+                ctx.globalAlpha = baseAlpha * 0.5;
+                ctx.fillStyle = '#b060ff';
+                ctx.fillRect(xPos, cy + yOff2 - segW / 4, segW - 1, segW / 2);
+            }
+
+            // Tertiary harmonic (green, sparse)
+            if (i % 4 === 0 && state.metrics.compression > 2) {
+                const yOff3 = Math.round(Math.sin(phase * 0.7 - 0.8) * amplitude * 0.7 / segW) * segW;
+                ctx.globalAlpha = baseAlpha * 0.3;
+                ctx.fillStyle = '#00ff88';
+                ctx.fillRect(xPos + segW / 4, cy + yOff3 - segW / 4, segW / 2, segW / 2);
+            }
+        }
+        ctx.globalAlpha = 1;
     }
 
     function renderCanvas() {
@@ -395,34 +480,35 @@
 
         ctx.clearRect(0, 0, canvasW, canvasH);
 
-        const lineAlpha = 0.03 + (state.metrics.fidelity * 0.04);
-        ctx.beginPath();
-        ctx.moveTo(agentA.x + agentA.r + 8, agentA.y);
-        ctx.lineTo(agentB.x - agentB.r - 8, agentB.y);
-        ctx.strokeStyle = `rgba(0, 240, 255, ${lineAlpha})`;
-        ctx.lineWidth = 1;
-        ctx.setLineDash([4, 8]);
-        ctx.stroke();
-        ctx.setLineDash([]);
+        const t = Date.now() * 0.003;
+        if (!state.paused) waveOffset += 0.06;
 
-        const colors = ['0, 240, 255', '176, 96, 255'];
-        for (const p of particles) {
-            const c = colors[p.hue];
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size * 3.5, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(${c}, ${p.opacity * 0.06})`;
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(${c}, ${p.opacity})`;
-            ctx.fill();
+        // Draw 8-bit waveform beam
+        const beamX1 = agentA.x + px(28);
+        const beamX2 = agentB.x - px(28);
+        drawWaveBeam(beamX1, beamX2, agentA.y, waveOffset);
+
+        // Draw data packets (square pixels)
+        for (const p of packets) {
+            const s = Math.round(p.size);
+            // Glow
+            ctx.globalAlpha = p.opacity * 0.12;
+            ctx.fillStyle = p.color;
+            ctx.fillRect(p.x - s, p.y - s, s * 3, s * 3);
+            // Core pixel
+            ctx.globalAlpha = p.opacity;
+            ctx.fillStyle = p.color;
+            ctx.fillRect(p.x, p.y, s, s);
+            ctx.globalAlpha = 1;
         }
 
-        const t = Date.now() * 0.002;
-        drawAgent(agentA, Math.sin(t) * 0.06 + 0.94, true);
-        drawAgent(agentB, Math.sin(t + Math.PI) * 0.06 + 0.94, false);
+        // Draw pixel robots
+        const robotScale = Math.max(2, Math.min(3.5, canvasW / 280));
+        drawPixelRobot(agentA.x, agentA.y, robotScale, '#00f0ff', '#007088', t, true);
+        drawPixelRobot(agentB.x, agentB.y, robotScale, '#00ff88', '#007744', t, false);
 
-        if (!state.paused && Math.random() < 0.35) spawnParticles();
+        // Spawn & update
+        if (!state.paused && Math.random() < 0.3) spawnParticles();
         updateParticles();
         requestAnimationFrame(renderCanvas);
     }

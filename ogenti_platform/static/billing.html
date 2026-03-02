@@ -101,7 +101,7 @@
                         <div class="pricing-credits">${formatCredits(p.credits)}</div>
                         <div style="font-size:9px;color:var(--text-dim);margin-bottom:4px;">CREDITS</div>
                         <div class="pricing-price">$${(p.price_cents / 100).toFixed(0)}</div>
-                        <div class="pricing-label">${p.name.toUpperCase()}</div>
+                        <div class="pricing-label">${(p.label || p.id).toUpperCase()}</div>
                     </div>
                 `).join('');
                 window._packages = pkgs;

@@ -526,13 +526,94 @@ tr:hover td { background: rgba(0,240,255,0.03); }
 }
 
 /* ── Responsive ── */
-@media (max-width: 600px) {
-    .nav { padding: 8px 12px; }
-    .nav-links { gap: 0; }
-    .page-wrap { padding: 16px 12px; }
-    .auth-box { padding: 24px 16px; }
-    .stat-bar { flex-direction: column; }
+
+/* --- Tablet & Small Desktop (<768px) --- */
+@media (max-width: 768px) {
+    .nav { flex-wrap: wrap; gap: 8px; padding: 10px 14px; }
+    .nav-links { order: 3; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .nav-link { font-size: 10px; padding: 5px 8px; white-space: nowrap; }
+    .nav-user { gap: 8px; }
+    .page-wrap { padding: 20px 14px; }
     .pricing-grid { grid-template-columns: 1fr 1fr; }
+    .model-grid { grid-template-columns: 1fr 1fr; }
+    .stat-number { font-size: 14px; }
+}
+
+/* --- Mobile (<520px) --- */
+@media (max-width: 520px) {
+    .nav {
+        padding: 8px 10px;
+        gap: 6px;
+    }
+    .nav-brand { font-size: 11px; }
+    .nav-tag { font-size: 7px; padding: 2px 4px; }
+    .nav-links {
+        order: 3;
+        width: 100%;
+        gap: 0;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    .nav-links::-webkit-scrollbar { display: none; }
+    .nav-link { font-size: 9px; padding: 5px 8px; white-space: nowrap; flex-shrink: 0; }
+    .nav-user { gap: 6px; }
+    .nav-credits { font-size: 8px; padding: 3px 6px; }
+    .nav-tier { font-size: 7px; padding: 2px 6px; }
+
+    .page-wrap { padding: 14px 10px; }
+    .page-title { font-size: 12px; }
+    .page-sub { font-size: 10px; margin-bottom: 20px; }
+
+    .auth-box { padding: 24px 14px; }
+    .auth-logo { font-size: 16px; }
+    .auth-title { font-size: 10px; }
+    .verification-input { font-size: 18px; letter-spacing: 6px; }
+
+    .card { padding: 16px 12px; }
+    .card-title { font-size: 9px; }
+    .card-row { font-size: 11px; flex-wrap: wrap; gap: 4px; }
+
+    .stat-bar { flex-direction: column; gap: 10px; }
+    .stat-item { padding: 12px 14px; }
+    .stat-number { font-size: 14px; }
+    .stat-label { font-size: 8px; }
+
+    .pricing-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .pricing-card { padding: 14px 10px; }
+    .pricing-credits { font-size: 11px; }
+    .pricing-price { font-size: 16px; }
+    .pricing-label { font-size: 8px; }
+
+    .model-grid { grid-template-columns: 1fr; }
+    .model-card { padding: 12px; }
+
+    .btn { font-size: 8px; padding: 10px 16px; }
+    .btn-small { font-size: 7px; padding: 5px 10px; }
+
+    table { font-size: 10px; }
+    th { font-size: 7px; padding: 8px 6px; }
+    td { padding: 8px 6px; }
+
+    .estimate-row { font-size: 10px; }
+    .estimate-total { font-size: 10px; }
+
+    .key-display { font-size: 11px; padding: 10px; }
+
+    .badge { font-size: 7px; padding: 2px 6px; }
+
+    .footer { font-size: 8px; padding: 16px 10px; }
+}
+
+/* --- Very small phones (<360px) --- */
+@media (max-width: 360px) {
+    .nav-brand { font-size: 9px; }
+    .nav-link { font-size: 8px; padding: 4px 6px; }
+    .page-title { font-size: 10px; }
+    .auth-logo { font-size: 14px; }
+    .pricing-grid { grid-template-columns: 1fr; }
+    .stat-number { font-size: 12px; }
+    .verification-input { font-size: 16px; letter-spacing: 4px; }
 }
 
 /* ── Slider ── */

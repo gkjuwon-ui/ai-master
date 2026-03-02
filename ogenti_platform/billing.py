@@ -88,7 +88,7 @@ async def estimate_cost(req: EstimateRequest):
 
 @router.post("/purchase")
 async def purchase_credits(req: PurchaseRequest, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    """Purchase credits via Stripe (test mode)"""
+    """Create Stripe Checkout Session — redirects user to real payment page."""
 
     # Find package
     package = next((p for p in CREDIT_PACKAGES if p["id"] == req.package_id), None)
@@ -97,57 +97,36 @@ async def purchase_credits(req: PurchaseRequest, user: User = Depends(get_curren
 
     try:
         _ensure_stripe_key()
-        # Create Stripe PaymentIntent (test mode)
-        intent = stripe.PaymentIntent.create(
-            amount=package["price_cents"],
-            currency="usd",
+
+        # Create Stripe Checkout Session (shows actual card form)
+        session = stripe.checkout.Session.create(
+            mode="payment",
+            payment_method_types=["card"],
+            line_items=[{
+                "price_data": {
+                    "currency": "usd",
+                    "unit_amount": package["price_cents"],
+                    "product_data": {
+                        "name": f"Ogenti {package['label']}",
+                        "description": f"{package['credits']:,} credits for AI adapter training & inference",
+                    },
+                },
+                "quantity": 1,
+            }],
             metadata={
                 "user_id": str(user.id),
                 "package_id": package["id"],
                 "credits": str(package["credits"]),
             },
-            description=f"Ogenti Credits: {package['label']}",
-            # In test mode, auto-confirm with test card
-            payment_method="pm_card_visa",
-            confirm=True,
-            automatic_payment_methods={"enabled": True, "allow_redirects": "never"},
+            success_url="https://ogenti.com/platform/billing.html?payment=success",
+            cancel_url="https://ogenti.com/platform/billing.html?payment=cancelled",
         )
 
-        if intent.status == "succeeded":
-            # Add credits
-            old_tier = user.tier
-            user.credits += package["credits"]
-
-            # Auto-upgrade tier based on total credits
-            if user.credits >= 50_000:
-                user.tier = "enterprise"
-            elif user.credits >= 5_000:
-                user.tier = "pro"
-            elif user.credits >= 1_000:
-                user.tier = "starter"
-
-            # Record transaction
-            txn = Transaction(
-                user_id=user.id,
-                type="purchase",
-                amount_cents=package["price_cents"],
-                credits=package["credits"],
-                description=f"Purchased {package['label']}",
-                stripe_payment_id=intent.id,
-            )
-            db.add(txn)
-            db.commit()
-
-            return {
-                "status": "success",
-                "credits_added": package["credits"],
-                "new_balance": user.credits,
-                "tier_upgraded": user.tier != old_tier,
-                "new_tier": user.tier,
-                "payment_id": intent.id,
-            }
-        else:
-            raise HTTPException(400, f"Payment not completed: {intent.status}")
+        return {
+            "status": "checkout",
+            "checkout_url": session.url,
+            "session_id": session.id,
+        }
 
     except stripe.error.StripeError as e:
         raise HTTPException(400, f"Stripe error: {str(e)}")
@@ -213,30 +192,33 @@ async def debug_stripe_key():
 
 @router.post("/webhook")
 async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
-    """Stripe webhook — handles payment_intent.succeeded to add credits."""
+    """Stripe webhook — handles checkout.session.completed to add credits."""
     payload = await request.body()
     sig_header = request.headers.get("stripe-signature", "")
 
     try:
+        _ensure_stripe_key()
         event = stripe.Webhook.construct_event(payload, sig_header, STRIPE_WEBHOOK_SECRET)
     except stripe.error.SignatureVerificationError:
         raise HTTPException(400, "Invalid signature")
     except Exception as e:
         raise HTTPException(400, f"Webhook error: {e}")
 
-    if event["type"] == "payment_intent.succeeded":
-        intent = event["data"]["object"]
-        meta = intent.get("metadata", {})
+    # Checkout Session completed — user paid through Stripe's card form
+    if event["type"] == "checkout.session.completed":
+        session = event["data"]["object"]
+        meta = session.get("metadata", {})
         user_id = int(meta.get("user_id", 0))
         credits = int(meta.get("credits", 0))
         package_id = meta.get("package_id", "")
+        payment_id = session.get("payment_intent") or session.get("id")
 
         if user_id and credits:
             user = db.query(User).filter(User.id == user_id).first()
             if user:
-                # 중복 처리 방지 — 이미 같은 payment_id가 있으면 스킵
+                # 중복 처리 방지
                 existing = db.query(Transaction).filter(
-                    Transaction.stripe_payment_id == intent["id"]
+                    Transaction.stripe_payment_id == payment_id
                 ).first()
                 if not existing:
                     user.credits += credits
@@ -250,10 +232,10 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
                     txn = Transaction(
                         user_id=user.id,
                         type="purchase",
-                        amount_cents=intent.get("amount", 0),
+                        amount_cents=session.get("amount_total", 0),
                         credits=credits,
-                        description=f"Webhook: {package_id} package",
-                        stripe_payment_id=intent["id"],
+                        description=f"Purchased {package_id} package",
+                        stripe_payment_id=payment_id,
                     )
                     db.add(txn)
                     db.commit()

@@ -148,29 +148,47 @@
             const pkg = window._packages[selectedPackage];
             const btn = document.getElementById('buyBtn');
             btn.disabled = true;
-            btn.textContent = 'PROCESSING...';
+            btn.textContent = 'REDIRECTING TO STRIPE...';
             hideMsg('msg');
 
             try {
                 const data = await api('POST', '/api/billing/purchase', {
                     package_id: pkg.id
                 });
-                showMsg('msg',
-                    `${formatCredits(data.credits_added)} CREDITS ADDED! BALANCE: ${formatCredits(data.new_balance)}` +
-                    (data.tier_upgraded ? ` — TIER UPGRADED TO ${data.new_tier.toUpperCase()}!` : ''),
-                    'success'
-                );
-                document.getElementById('balance').textContent = formatCredits(data.new_balance);
-                if (data.tier_upgraded) {
-                    document.getElementById('tier').textContent = data.new_tier.toUpperCase();
+
+                if (data.checkout_url) {
+                    // Redirect to Stripe Checkout page (real card input form!)
+                    window.location.href = data.checkout_url;
+                    return;
                 }
-                await Auth.fetchUser();
-                renderNav('billing');
+
+                showMsg('msg', 'UNEXPECTED RESPONSE', 'error');
             } catch (err) {
                 showMsg('msg', err.message, 'error');
             }
             btn.disabled = false;
             btn.textContent = `BUY ${formatCredits(pkg.credits)} CREDITS — $${(pkg.price_cents / 100).toFixed(0)}`;
+        }
+
+        // Check if returning from Stripe Checkout
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('payment') === 'success') {
+            // Wait a moment for webhook to process, then reload balance
+            setTimeout(async () => {
+                try {
+                    const bal = await api('GET', '/api/billing/balance');
+                    document.getElementById('balance').textContent = formatCredits(bal.credits);
+                    document.getElementById('tier').textContent = (bal.tier || 'free').toUpperCase();
+                    showMsg('msg', `PAYMENT SUCCESSFUL! BALANCE: ${formatCredits(bal.credits)} CREDITS — TIER: ${bal.tier.toUpperCase()}`, 'success');
+                    await Auth.fetchUser();
+                    renderNav('billing');
+                } catch(e) {}
+            }, 2000);
+            // Clean URL
+            window.history.replaceState({}, '', '/platform/billing.html');
+        } else if (urlParams.get('payment') === 'cancelled') {
+            showMsg('msg', 'PAYMENT CANCELLED', 'error');
+            window.history.replaceState({}, '', '/platform/billing.html');
         }
 
         loadBilling();

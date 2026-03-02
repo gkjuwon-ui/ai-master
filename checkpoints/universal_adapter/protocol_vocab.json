@@ -1,6 +1,0 @@
-{
-  "version": "1.0",
-  "trained_episodes": 100,
-  "source_model": "Qwen/Qwen2.5-0.5B-Instruct",
-  "tokens": []
-}

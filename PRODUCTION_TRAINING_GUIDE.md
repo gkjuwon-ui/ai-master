@@ -1,69 +1,68 @@
-# ◆ Ogenti 프로덕션 학습 가이드
+# Ogenti Production Training Guide
 
-
-
----
-
-## 목차
-
-(#-quick-vs-production--뭐가-다른데)
-- [필요한 것들](#-필요한-것들)
-- [1단계: GPU 서버 빌리기](#-1단계-gpu-서버-빌리기)
-- [2단계: 원커맨드 셋업](#-2단계-원커맨드-셋업)
-- [3단계: 프로덕션 학습 시작](#-3단계-프로덕션-학습-시작)
-- [5개 Phase 전체 여정](#-5개-phase-전체-여정)
-- [이상적인 산출물](#-이상적인-산출물)
-- [실시간 모니터링](#-실시간-모니터링)
-- [비용 추정](#-비용-추정)
-- [트러블슈팅](#-트러블슈팅)
-- [학습 끝나면?](#-학습-끝나면)
-
+> Rent a GPU. Run one command. Go to sleep. Wake up to AI that invented its own language.
+> Total cost: ~$30. Total effort: practically zero.
 
 ---
 
-## ◆ 필요한 것들
+## Table of Contents
 
-### 하드웨어
+- [What You Need](#-what-you-need)
+- [Step 1: Rent a GPU](#-step-1-rent-a-gpu)
+- [Step 2: One-Command Setup](#-step-2-one-command-setup)
+- [Step 3: Start Training](#-step-3-start-training)
+- [The Full 5-Phase Journey](#-the-full-5-phase-journey)
+- [What You Get at the End](#-what-you-get-at-the-end)
+- [Live Monitoring](#-live-monitoring)
+- [Cost Breakdown](#-cost-breakdown)
+- [Troubleshooting](#-troubleshooting)
+- [After Training](#-after-training)
 
-| 항목 | 최소 | 권장 |
-|------|------|------|
+---
+
+## ◆ What You Need
+
+### Hardware
+
+| Spec | Minimum | Recommended |
+|------|---------|-------------|
 | GPU | A100 40GB × 1 | A100 80GB × 1 |
 | VRAM | 40GB | 80GB |
 | RAM | 32GB | 64GB |
 | Storage | 50GB | 100GB |
-| 학습 시간 | ~30시간 | ~18시간 |
+| Training Time | ~30 hours | ~18 hours |
 
-> **왜 A100인가?** Qwen2.5-3B + LoRA를 bf16으로 올리면 ~8GB. 거기에 옵티마이저 상태 + 그래디언트 + 활성화 메모리까지 합치면 ~25GB. A100 40GB면 빠듯하고, 80GB면 넉넉하다. H100이면 더 빠르고.
+> **Why A100?** Qwen2.5-3B + LoRA in bf16 eats ~8GB. Add optimizer states + gradients + activation memory and you're at ~25GB. A100 40GB is tight, 80GB is comfy. H100 is faster but pricier.
 
-### GPU 클라우드 서비스 (가격순)
+### GPU Cloud Services (sorted by price)
 
-| 서비스 | GPU | 시간당 가격 | 24시간 비용 | 추천도 |
-|--------|-----|-----------|-----------|--------|
-| [RunPod](https://runpod.io) | A100 80GB | ~$1.64/hr | ~$40 | ⭐⭐⭐ 최추천 |
-| [Vast.ai](https://vast.ai) | A100 80GB | ~$1.20/hr | ~$29 | ⭐⭐⭐ 저렴 |
-| [Lambda Labs](https://lambdalabs.com) | A100 80GB | ~$1.29/hr | ~$31 | ⭐⭐ 안정적 |
-| [Together.ai](https://together.ai) | A100 80GB | ~$1.49/hr | ~$36 | ⭐⭐ |
-| Google Cloud | A100 80GB | ~$3.67/hr | ~$88 | ⭐ 비쌈 |
-| AWS | A100 equiv | ~$3.20/hr | ~$77 | ⭐ 비쌈 |
+| Service | GPU | $/hr | 24hr Cost | Vibe |
+|---------|-----|------|-----------|------|
+| [RunPod](https://runpod.io) | A100 80GB | ~$1.64 | ~$40 | ⭐⭐⭐ Best overall |
+| [Vast.ai](https://vast.ai) | A100 80GB | ~$1.20 | ~$29 | ⭐⭐⭐ Cheapest |
+| [Lambda Labs](https://lambdalabs.com) | A100 80GB | ~$1.29 | ~$31 | ⭐⭐ Reliable |
+| [Together.ai](https://together.ai) | A100 80GB | ~$1.49 | ~$36 | ⭐⭐ Solid |
+| Google Cloud | A100 80GB | ~$3.67 | ~$88 | ⭐ Wallet killer |
+| AWS | A100 equiv | ~$3.20 | ~$77 | ⭐ Corp tax |
 
-> **현실적인 선택:** RunPod Community Cloud에서 A100 80GB 하나 빌리면 된다. Spot Instance 쓰면 더 싸다 (~$1.0/hr). 총 예상 비용: **$20~50** 이면 충분.
+> **Real talk:** Grab an A100 80GB on RunPod Community Cloud. Use Spot Instance for even cheaper (~$1.0/hr). Total estimated cost: **$20-50**. That's it. That's the budget for teaching AI to invent language.
 
-### 소프트웨어
+### Software
 
-전부 `setup_runpod.sh`가 알아서 설치해준다. 걱정 마라.
+`setup_runpod.sh` installs everything automatically. Don't even think about it.
 
 ---
 
-## ◆ 1단계: GPU 서버 빌리기
+## ◆ Step 1: Rent a GPU
 
-### RunPod 기준 (가장 쉬움)
+### RunPod (easiest)
 
-1. [runpod.io](https://runpod.io) 가입
-2. GPU Cloud → Deploy → **A100 80GB SXM** 선택
+1. Sign up at [runpod.io](https://runpod.io)
+2. GPU Cloud → Deploy → pick **A100 80GB SXM**
 3. Template: **RunPod PyTorch 2.1** (CUDA 12.1)
-4. Storage: **50GB** (모델 캐시용)
-5. Deploy 클릭 → 30초 후 서버 생김
-6. "Connect" → SSH 또는 Web Terminal 열기
+4. Storage: **50GB** (for model cache)
+5. Hit Deploy → server spawns in 30 seconds
+6. "Connect" → SSH or Web Terminal
 
 ```
                  RunPod Dashboard
@@ -79,76 +78,76 @@
 └─────────────────────────────────────────┘
 ```
 
-### Vast.ai 기준 (가장 저렴)
+### Vast.ai (cheapest)
 
-1. [vast.ai](https://vast.ai) 가입
+1. Sign up at [vast.ai](https://vast.ai)
 2. Search → GPU Type: A100 → SXM → Sort by $/hr
-3. 가장 싼 놈 Rent → SSH 접속 정보 나옴
+3. Rent the cheapest one → SSH info appears
 
 ---
 
-## ◆ 2단계: 원커맨드 셋업
+## ◆ Step 2: One-Command Setup
 
-서버에 접속했으면, 이 한 줄이면 끝:
+SSH into your server. Run this. That's literally it:
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/gkjuwon-ui/ai-master/main/scripts/setup_runpod.sh | bash
 ```
 
-이게 뭘 하냐면:
+Here's what it does behind the scenes:
 
 ```
-[1/7] System packages...          ← git, tmux, htop 등 설치
-[2/7] Cloning repo...             ← GitHub에서 ai-master 클론
-[3/7] Python environment...       ← venv 생성
+[1/7] System packages...          ← git, tmux, htop, the basics
+[2/7] Cloning repo...             ← pulls ai-master from GitHub
+[3/7] Python environment...       ← creates venv
 [4/7] Installing dependencies...  ← torch, transformers, peft, deepspeed...
-[5/7] GPU check...                ← A100 80GB 확인
-[6/7] Pre-downloading model...    ← Qwen2.5-3B-Instruct 미리 다운로드 (~6GB)
-[7/7] Setting up directories...   ← checkpoints, logs, data 폴더 생성
+[5/7] GPU check...                ← confirms A100 80GB is alive
+[6/7] Pre-downloading model...    ← grabs Qwen2.5-3B-Instruct (~6GB)
+[7/7] Setting up directories...   ← checkpoints, logs, data folders
 
 ✓ Setup complete!
 ```
 
-전체 소요시간: 약 **5~10분** (모델 다운로드가 대부분).
+Takes about **5-10 min** (mostly model download).
 
-### 또는 수동 셋업
+### Manual setup alternative
 
 ```bash
-# 1. 클론
+# 1. Clone
 git clone https://github.com/gkjuwon-ui/ai-master.git
 cd ai-master
 
-# 2. 셋업 스크립트 실행
+# 2. Run setup
 bash scripts/setup_runpod.sh
 ```
 
-> **중요:** 셋업 끝났으면 데이터셋도 생성해줘야 한다:
+> **Heads up:** After setup, generate the dataset too:
 > ```bash
 > python scripts/generate_dataset.py
 > ```
-> 이미 `data/train.jsonl`이 있으면 스킵해도 된다.
+> Skip this if `data/train.jsonl` already exists.
 
 ---
 
-## ◆ 3단계: 프로덕션 학습 시작
+## ◆ Step 3: Start Training
 
-### tmux 세션 열기 (이게 핵심)
+### Open a tmux session (this is critical)
 
-서버가 꺼져도 학습이 안 죽게 tmux 써야 한다:
+tmux keeps your training alive even if SSH disconnects:
 
 ```bash
 tmux new -s ogenti
 ```
 
-### 학습 시작
+### Launch it
 
 ```bash
 python run_production.py
 ```
 
-이 한 줄이면 된다. 진짜 이게 끝이다.
+One line. That's the whole thing. Seriously.
 
-뭐가 벌어지냐면:
+Here's what you'll see:
 
 ```
 ╔══════════════════════════════════════════════════════════════╗
@@ -158,7 +157,7 @@ python run_production.py
 ║                                                              ║
 ╠══════════════════════════════════════════════════════════════╣
 ║                                                              ║
-║  Model:      Qwen/Qwen2.5-3B-Instruct                       ║
+║  Model:      Qwen/Qwen2.5-3B-Instruct                        ║
 ║  LoRA:       rank=16, α=32                                   ║
 ║  Episodes:   58,000                                          ║
 ║  Phases:     5 (warmup → simple → complex → gen → universal) ║
@@ -173,49 +172,49 @@ python run_production.py
 ═══ Starting training loop ═══
 ```
 
-### 유용한 옵션들
+### Useful flags
 
 ```bash
-# W&B 없이 (계정 없을 때)
+# No W&B (if you don't have an account)
 python run_production.py --no-wandb
 
-# 커스텀 config
+# Custom config
 python run_production.py --config configs/production.json
 
-# 체크포인트에서 이어서
+# Resume from checkpoint
 python run_production.py --resume checkpoints/
 
-# 대시보드 없이 (가볍게)
+# Headless (no dashboard, lighter)
 python run_production.py --headless
 
-# 포트 바꾸기
+# Different port
 python run_production.py --port 9000
 
-# 다 합치면
+# Mix and match
 python run_production.py --no-wandb --port 9000
 ```
 
-### tmux 조작법
+### tmux cheat sheet
 
 ```bash
-# 학습 돌아가는 상태에서 세션 빠져나오기 (학습은 계속됨)
+# Detach from session (training keeps running)
 Ctrl+B → D
 
-# 다시 들어가기
+# Reattach
 tmux attach -t ogenti
 
-# 세션 목록 보기
+# List sessions
 tmux ls
 ```
 
 ---
 
-## ◆ 5개 Phase 전체 여정
+## ◆ The Full 5-Phase Journey
 
-58,000 에피소드의 전체 학습 여정. 각 Phase에서 어떤 일이 벌어지고, 얼마나 걸리고, 뭘 기대해야 하는지.
+58,000 episodes. The whole saga. Here's what happens at each phase, how long it takes, and what to expect.
 
 ```
-  시간 (A100 기준)
+  Timeline (A100 80GB)
   ─────────────────────────────────────────────────────────────
 
    0h          4h          10h          16h      20h      24h
@@ -224,8 +223,8 @@ tmux ls
    │  Warmup   │  Simple   │  Complex   │General.│Universe│
    │  5K eps   │  15K eps  │  20K eps   │ 10K eps│ 8K eps │
    │           │           │            │        │        │
-   │ SL only   │  RL 켜짐  │ 3에이전트  │ 전체   │ KD     │
-   │ 기초 학습 │  탐색 시작 │ 릴레이!   │ +노이즈│ 증류   │
+   │ SL only   │ RL kicks  │ 3 agents   │ All    │  KD    │
+   │ basics    │ exploration│ relay!    │ +noise │distill │
    ├───────────┼───────────┼────────────┼────────┼────────┤
    acc: 0→0.3  │  0.3→0.55 │  0.55→0.65 │0.65→.70│.70→.75 │
    comp: 0→2x  │  2x→5x   │   5x→10x   │10x→12x│12x→15x │
@@ -233,140 +232,140 @@ tmux ls
    ─────────────────────────────────────────────────────────
 ```
 
-### Phase 0 — Warmup (기초반)
+### Phase 0 — Warmup (the tutorial level)
 
 ```
-에피소드:   5,000 (최소 2,000)
-시간:       ~3-4시간
-방식:       Supervised Learning (100%)
-학습률:     5e-4
-배치:       32
-카테고리:   summarize, translate, qa
-에이전트:   2 (인코더 ↔ 디코더)
-노이즈:     0%
+Episodes:    5,000 (min 2,000)
+Time:        ~3-4 hours
+Method:      Supervised Learning (100%)
+LR:          5e-4
+Batch:       32
+Categories:  summarize, translate, qa
+Agents:      2 (encoder ↔ decoder)
+Noise:       0%
 ```
 
-**여기서 무슨 일이?**
+**What's going on here?**
 
-아무것도 모르는 AI 두 마리한테 "이 문장을 압축해봐"라고 시킨다. 처음엔 개판이다. 인코더가 랜덤 토큰을 뱉고, 디코더는 헛소리를 한다. 근데 supervised loss로 정답을 직접 가르쳐주니까, 서서히 "아, 이 토큰이 이런 의미구나"를 배우기 시작한다.
+Two clueless AIs get told "compress this sentence." At first it's absolute chaos — encoder spits random tokens, decoder hallucinates garbage. But supervised loss force-feeds them the right answers, and slowly they start going "oh, THIS token means THAT thing."
 
-**기대 수치:**
-| 지표 | 시작 | Phase 0 끝 |
-|------|------|-----------|
+**Expected numbers:**
+| Metric | Start | End of Phase 0 |
+|--------|-------|---------------|
 | accuracy | 0.00 | 0.30+ |
 | compression | 0.2x | 2.0x+ |
 | reward | 0.10 | 0.30+ |
-| 토큰 수 | 랜덤 | 15~20개 |
+| token count | random | 15-20 |
 
-> **"아 이게 되네?"의 순간.** Ep ~500 쯤에서 갑자기 accuracy가 확 뛰는 순간이 온다. 인코더가 처음으로 의미 있는 프로토콜 패턴을 발견하는 순간. 이걸 보면 좀 소름 돋는다.
+> **The "holy crap it works" moment.** Around episode ~500, accuracy suddenly spikes. That's the encoder discovering its first meaningful protocol pattern. Genuinely goosebump-worthy when you see it happen.
 
-### Phase 1 — Simple RL (초급반)
+### Phase 1 — Simple RL (training wheels off)
 
 ```
-에피소드:   15,000 (최소 5,000)
-시간:       ~6-7시간
-방식:       RL + Supervised (70:30)
-학습률:     2e-4
-배치:       16
-카테고리:   + code_review, data_analysis, instruction_following
-에이전트:   2
-노이즈:     5%
-PPO:        4 epochs
+Episodes:    15,000 (min 5,000)
+Time:        ~6-7 hours
+Method:      RL + Supervised (70:30)
+LR:          2e-4
+Batch:       16
+Categories:  + code_review, data_analysis, instruction_following
+Agents:      2
+Noise:       5%
+PPO:         4 epochs
 ```
 
-**여기서 뭐가 달라지나?**
+**What changes?**
 
-RL이 켜진다. 정답을 직접 가르쳐주는 대신, 보상(reward)만 준다. "이 압축 괜찮아 / 구려" 정도만 알려주는 거다. AI가 **스스로 시행착오를 통해 더 좋은 프로토콜을 발견**해야 한다.
+RL kicks in. Instead of spoon-feeding answers, we just give rewards. "This compression was good / this compression sucked." The AI has to **figure out better protocols through trial and error on its own**.
 
-카테고리도 확장된다. 단순 QA/요약에서 **코드 리뷰, 데이터 분석** 같은 실용 태스크가 추가. 프로토콜이 다양한 유형의 정보를 커버해야 한다.
+Categories expand too. Beyond simple QA/summarization, we throw in **code review, data analysis** — the protocol has to handle diverse info types now.
 
-**기대 수치:**
-| 지표 | Phase 1 시작 | Phase 1 끝 |
-|------|-------------|-----------|
+**Expected numbers:**
+| Metric | Phase 1 Start | Phase 1 End |
+|--------|--------------|-------------|
 | accuracy | 0.30 | 0.55+ |
 | compression | 2.0x | 5.0x+ |
 | reward | 0.30 | 0.55+ |
-| 토큰 수 | 15~20개 | 6~10개 |
+| token count | 15-20 | 6-10 |
 
-> **"프로토콜이 생기기 시작하는" 순간.** 인코더가 반복적으로 같은 카테고리의 태스크를 만나면서, 자연스럽게 **카테고리별 프리픽스 패턴**을 만들어낸다. `ξ·SUMM·...·◊` 같은 것. 누가 가르쳐준 게 아니다. AI가 혼자 발명한 거다.
+> **"The protocol is forming" moment.** When the encoder keeps hitting the same category of tasks, it naturally invents **category-specific prefix patterns**. Like `ξ·SUMM·...·◊`. Nobody taught it that. The AI just... invented a syntax.
 
-### Phase 2 — Complex (중급반)
+### Phase 2 — Complex (the real challenge)
 
 ```
-에피소드:   20,000 (최소 8,000)
-시간:       ~6-7시간
-방식:       RL + Supervised (90:10)
-학습률:     1e-4
-배치:       8
-카테고리:   + chain_summarize, relay_translate, multi_step_qa, reasoning
-에이전트:   3 (릴레이!)
-노이즈:     10%
+Episodes:    20,000 (min 8,000)
+Time:        ~6-7 hours
+Method:      RL + Supervised (90:10)
+LR:          1e-4
+Batch:       8
+Categories:  + chain_summarize, relay_translate, multi_step_qa, reasoning
+Agents:      3 (relay!)
+Noise:       10%
 ```
 
-**여기가 진짜 재미있다.**
+**This is where it gets wild.**
 
-에이전트가 **3마리**로 늘어난다. A→B→C 릴레이. 인코더가 메시지를 만들면, 중간 에이전트가 이걸 받아서 다음한테 전달하고, 마지막 디코더가 복원한다. 중간에 노이즈도 10%로 올라간다. **전화기 게임**인데, AI가 하는 거다.
+Agents go from 2 to **3**. A→B→C relay. Encoder creates a message, middle agent receives and forwards it, final decoder reconstructs. Noise cranks up to 10%. It's the **telephone game**, but played by AIs.
 
-여기서 프로토콜은 **오류 복원 능력(robustness)** 을 키워야 한다. 토큰 하나가 깨져도 나머지로 충분히 복원할 수 있는 redundancy를 프로토콜에 내장해야 한다.
+The protocol needs **error resilience** now. Even if a token gets corrupted, the remaining tokens should carry enough redundancy to recover the meaning.
 
-**기대 수치:**
-| 지표 | Phase 2 시작 | Phase 2 끝 |
-|------|-------------|-----------|
+**Expected numbers:**
+| Metric | Phase 2 Start | Phase 2 End |
+|--------|--------------|-------------|
 | accuracy | 0.55 | 0.65+ |
 | compression | 5.0x | 10.0x+ |
 | reward | 0.55 | 0.65+ |
-| 토큰 수 | 6~10개 | 3~6개 |
+| token count | 6-10 | 3-6 |
 
-> **"이게 진짜 언어네?"의 순간.** Phase 2 중반쯤이면 protocol_vocab에 200개 이상의 의미 있는 토큰이 쌓인다. 하나의 토큰이 "코드 리뷰에서 보안 취약점 발견"이라는 복합 의미를 담게 된다. 자연어로 45토큰이 필요한 걸 **3토큰**으로 전달하는 순간. AI끼리만 통하는 언어가 탄생한 거다.
+> **"This is actually a language" moment.** By mid-Phase 2, the protocol_vocab has 200+ meaningful tokens. A single token encodes "security vulnerability found in code review" — a compound concept that takes 45 natural language tokens, delivered in **3 tokens**. A language only AIs understand is born.
 
-### Phase 3 — Generalize (심화반)
+### Phase 3 — Generalize (the final exam)
 
 ```
-에피소드:   10,000 (최소 4,000)
-시간:       ~3-4시간
-방식:       순수 RL (100%)
-학습률:     5e-5
-배치:       8
-카테고리:   전체 12개 일제 개방
-에이전트:   2
-노이즈:     15%
+Episodes:    10,000 (min 4,000)
+Time:        ~3-4 hours
+Method:      Pure RL (100%)
+LR:          5e-5
+Batch:       8
+Categories:  All 12 unlocked
+Agents:      2
+Noise:       15%
 ```
 
-**여기의 목표: robust protocol.**
+**Goal: bulletproof protocol.**
 
-모든 카테고리를 다 풀어놓는다. creative_writing, math까지 전부. 노이즈 15%. supervised 비율은 0%. 순수하게 RL만으로. AI가 지금까지 배운 프로토콜이 **진짜 범용적인지** 검증하는 단계.
+All categories open. Creative writing, math, everything. 15% noise. Zero supervised signal — pure RL only. Does the protocol the AI built actually **generalize**?
 
-여기서 갑자기 accuracy가 떨어지는 구간이 올 수 있다. 정상이다. 새로운 카테고리(creative_writing, math)를 처음 만나면서 적응하는 시간. 곧 회복되고 더 올라간다.
+Accuracy might dip briefly here. That's normal — the model is encountering creative_writing and math for the first time. It adapts, recovers, and climbs higher.
 
-**기대 수치:**
-| 지표 | Phase 3 시작 | Phase 3 끝 |
-|------|-------------|-----------|
+**Expected numbers:**
+| Metric | Phase 3 Start | Phase 3 End |
+|--------|--------------|-------------|
 | accuracy | 0.65 | 0.70+ |
 | compression | 10.0x | 12.0x+ |
 | reward | 0.65 | 0.70+ |
 
-### Phase 4 — Universalize (졸업반)
+### Phase 4 — Universalize (the final boss)
 
 ```
-에피소드:   8,000 (최소 3,000)
-시간:       ~3-4시간
-방식:       Knowledge Distillation
-학습률:     2e-5
-배치:       4
-카테고리:   전체
-노이즈:     20%
+Episodes:    8,000 (min 3,000)
+Time:        ~3-4 hours
+Method:      Knowledge Distillation
+LR:          2e-5
+Batch:       4
+Categories:  All
+Noise:       20%
 ```
 
-**여기가 Ogenti의 꽃이다.**
+**This is Ogenti's masterpiece.**
 
-지금까지 Qwen2.5-3B의 LoRA가 배운 프로토콜 지식을 **작은 어댑터 모듈(PPH + PRH)로 증류**한다. 교사(teacher)인 Qwen LoRA가 만든 프로토콜 토큰 예측을 학생(student)인 PPH가 따라 배운다.
+All the protocol knowledge the Qwen2.5-3B LoRA learned gets **distilled into tiny adapter modules (PPH + PRH)**. The teacher (Qwen LoRA) shows the student (PPH) how to predict protocol tokens. The student learns to replicate it at a fraction of the size.
 
 ```
-Knowledge Distillation 과정:
+Knowledge Distillation:
 
   Qwen2.5-3B + LoRA (teacher)
          │
-         │ "이 입력은 ξ·SUMM·DOCKER·PACK·◊ 으로 압축해"
+         │ "This input should encode as ξ·SUMM·DOCKER·PACK·◊"
          │
          ▼
   ┌─────────────────────────────────────┐
@@ -374,22 +373,22 @@ Knowledge Distillation 과정:
   │  PRH (Protocol Reconstruction Head) │  ← protocol_tokens → hidden_state
   └─────────────────────────────────────┘
          │
-         │ 크기: ~3MB (Qwen은 6GB인데 이건 3MB)
+         │ Size: ~3MB (Qwen is 6GB. This is 3MB.)
          │
          ▼
-  어떤 LLM이든 PPH/PRH를 붙이면
-  → Ogenti 프로토콜로 대화 가능
+  Attach PPH/PRH to ANY LLM
+  → Instant Ogenti protocol fluency
 ```
 
-**왜 이게 중요한가?**
+**Why this matters:**
 
-Qwen2.5-3B는 무겁다. 6GB짜리 모델을 모든 AI에 심을 순 없다. 하지만 PPH/PRH는 **~3MB**다. 이걸 아무 LLM에든 `.attach()` 하면 그 모델이 즉시 Ogenti 프로토콜을 이해하게 된다.
+Qwen2.5-3B is heavy. You can't shove a 6GB model into every AI. But PPH/PRH is **~3MB**. `.attach()` it onto any LLM and that model instantly understands Ogenti protocol.
 
-**LLaMA한테 붙여도 되고, GPT한테 붙여도 되고, 1B짜리 작은 모델한테 붙여도 된다.** 이게 "Universal Adapter"의 의미.
+**LLaMA? Works. GPT? Works. Some tiny 1B model? Also works.** That's what "Universal Adapter" means.
 
-**기대 수치:**
-| 지표 | Phase 4 시작 | Phase 4 끝 |
-|------|-------------|-----------|
+**Expected numbers:**
+| Metric | Phase 4 Start | Phase 4 End |
+|--------|--------------|-------------|
 | accuracy | 0.70 | 0.75+ |
 | compression | 12.0x | 15.0x+ |
 | PPH loss | ~2.0 | ~0.3 |
@@ -397,23 +396,23 @@ Qwen2.5-3B는 무겁다. 6GB짜리 모델을 모든 AI에 심을 순 없다. 하
 
 ---
 
-## ◆ 이상적인 산출물
+## ◆ What You Get at the End
 
-58,000 에피소드의 기나긴 여정이 끝나면, 이런 것들이 나온다:
+58K episodes later, here's what comes out the other side:
 
 ### 1. Universal Adapter (~3MB)
 
 ```
 checkpoints/universal_adapter/
-├── adapter_config.json          ← 어댑터 메타정보
-├── protocol_vocab.json          ← 발명된 프로토콜 어휘 256개
-├── pph_weights.safetensors      ← Protocol Projection Head 가중치
-└── prh_weights.safetensors      ← Protocol Reconstruction Head 가중치
+├── adapter_config.json          ← adapter metadata
+├── protocol_vocab.json          ← 256 invented protocol tokens
+├── pph_weights.safetensors      ← Protocol Projection Head weights
+└── prh_weights.safetensors      ← Protocol Reconstruction Head weights
 ```
 
-**이게 핵심 산출물.** 전체 시스템의 목적이 이 4개 파일을 만드는 거다.
+**This is THE deliverable.** The entire system exists to produce these 4 files.
 
-#### adapter_config.json — 이건 뭐?
+#### adapter_config.json — what's in here?
 ```json
 {
   "version": "1.0.0",
@@ -430,9 +429,9 @@ checkpoints/universal_adapter/
 }
 ```
 
-`hidden_sizes` 배열을 주목. PPH/PRH가 **다양한 hidden_dim을 가진 LLM에 붙을 수 있다** — 768차원 GPT-2부터 8192차원 LLaMA-70B까지. 이게 "범용"의 의미.
+Peep that `hidden_sizes` array. PPH/PRH can **attach to LLMs with different hidden dimensions** — from 768-dim GPT-2 all the way to 8192-dim LLaMA-70B. That's what "universal" actually means.
 
-#### protocol_vocab.json — 발명된 언어
+#### protocol_vocab.json — the invented language
 
 ```json
 {
@@ -459,49 +458,49 @@ checkpoints/universal_adapter/
 }
 ```
 
-**AI가 발명한 256개 단어의 사전.** 각 토큰이 어떤 의미를 갖고, 몇 번이나 쓰였고, 어떤 Phase에서 발견됐는지가 기록된다. 이 파일을 읽어보면 **AI가 세상을 어떻게 범주화하는지**가 보인다. 좀 소름 돋는 부분.
+**A dictionary of 256 words the AI invented.** Each token with its meaning, usage frequency, and when it was discovered. Read this file and you'll see **how AI categorizes the world**. Genuinely eerie.
 
-#### pph_weights.safetensors / prh_weights.safetensors
+#### pph_weights / prh_weights
 
-실제 신경망 가중치. safetensors 포맷 (안전 + 빠른 로딩).
+Actual neural network weights in safetensors format (safe + fast loading).
 
-- **PPH** (Protocol Projection Head): LLM의 hidden state → protocol token 예측
-- **PRH** (Protocol Reconstruction Head): protocol tokens → hidden state 복원
+- **PPH** (Protocol Projection Head): LLM hidden state → protocol token prediction
+- **PRH** (Protocol Reconstruction Head): protocol tokens → hidden state reconstruction
 
-둘 합쳐서 ~3MB. 이게 6GB짜리 Qwen의 지식을 3MB에 압축한 거다. 메타 차원의 압축이자, Ogenti의 존재 이유.
+Combined: ~3MB. That's 6GB of Qwen knowledge compressed into 3MB. Meta-level compression. Ogenti's reason for existing.
 
 ### 2. Trained LoRA Weights
 
 ```
 checkpoints/
 ├── encoder_phase_4/
-│   └── lora_adapter/           ← 인코더 LoRA 가중치
+│   └── lora_adapter/           ← encoder LoRA weights
 ├── decoder_phase_4/
-│   └── lora_adapter/           ← 디코더 LoRA 가중치
-├── config.json                 ← 학습 설정 (재현용)
-├── state_phase_4.json          ← 학습 상태 (메트릭, 히스토리)
-└── universal_adapter/          ← ↑ 위에서 설명한 어댑터
+│   └── lora_adapter/           ← decoder LoRA weights
+├── config.json                 ← training config (for reproducibility)
+├── state_phase_4.json          ← training state (metrics, history)
+└── universal_adapter/          ← ↑ the adapter described above
 ```
 
-LoRA 가중치는 **Qwen2.5-3B 전용**. 이 모델 위에 올려야만 동작한다. 반면 Universal Adapter는 **아무 LLM에나 붙일 수 있다.** 이게 차이.
+LoRA weights are **Qwen2.5-3B-specific**. Only work on that model. The Universal Adapter works on **any LLM**. That's the difference.
 
-### 3. Weights & Biases 로그
+### 3. Weights & Biases Logs
 
-W&B를 켜놨으면 (기본값 = 켬):
+If W&B is enabled (default = yes):
 
 ```
 wandb.ai/your-project/ogenti/
 
-├── Reward Curve               ← 58K 에피소드 리워드 곡선
-├── Compression Ratio          ← Phase별 압축률 변화
-├── Accuracy                   ← 정확도 곡선
-├── Phase Transitions          ← 5개 Phase 전환 지점
-├── PPH/PRH Loss               ← Phase 4 distillation 손실
-├── Token Budget               ← 토큰 수 변화
-└── Eval Results               ← 주기적 평가 결과
+├── Reward Curve               ← 58K episode reward trajectory
+├── Compression Ratio          ← compression gains per phase
+├── Accuracy                   ← accuracy curve
+├── Phase Transitions          ← 5 phase transition markers
+├── PPH/PRH Loss               ← Phase 4 distillation loss
+├── Token Budget               ← token count evolution
+└── Eval Results               ← periodic eval snapshots
 ```
 
-이 차트들. 리워드 커브가 계단처럼 Phase마다 올라가는 걸 보면 좀 전율인다. "AI가 진짜 배우고 있구나"가 그래프로 보이는 거니까.
+The reward curve climbing like a staircase at every phase transition hits different. "The AI is actually learning" — but visible as a graph.
 
 ### 4. training.log
 
@@ -522,7 +521,7 @@ wandb.ai/your-project/ogenti/
 09:17:20 [INFO] ═══ Done. 58000 episodes in 1081.3 min (0.89 ep/s) ═══
 ```
 
-### 이상적인 최종 수치
+### Ideal Final Numbers
 
 ```
 ╔══════════════════════════════════════════════════════╗
@@ -531,8 +530,8 @@ wandb.ai/your-project/ogenti/
 ║                                                      ║
 ╠══════════════════════════════════════════════════════╣
 ║                                                      ║
-║   Final Accuracy:        0.75+  (75%+ 정확 복원)     ║
-║   Final Compression:     15.0x+ (45토큰→3토큰)       ║
+║   Final Accuracy:        0.75+  (75%+ faithful)      ║
+║   Final Compression:     15.0x+ (45 tokens → 3)      ║
 ║   Final Reward:          0.78+                       ║
 ║                                                      ║
 ║   Protocol Vocab:        256 tokens                  ║
@@ -551,39 +550,39 @@ wandb.ai/your-project/ogenti/
 ╚══════════════════════════════════════════════════════╝
 ```
 
-**compression 15x가 뭘 의미하냐면:**
+**What 15x compression actually looks like:**
 
 ```
-자연어 입력 (45토큰):
+NL input (45 tokens):
   "Review this Python code for security vulnerabilities:
    query = f'SELECT * FROM users WHERE name = {user_input}'"
 
-프로토콜 메시지 (3토큰):
+Protocol message (3 tokens):
   ξ·SEC_REVIEW·SQL_INJ·◊
 
-디코더 복원:
+Decoder output:
   "SQL injection vulnerability detected. The query string
    directly interpolates user input. Use parameterized
    queries: cursor.execute('SELECT * FROM users WHERE
    name = ?', (user_input,))"
 ```
 
-45토큰이 3토큰이 됐다. 그런데 디코더는 정답을 거의 완벽하게 복원했다. 이게 Ogenti.
+45 tokens → 3 tokens. And the decoder nails the answer. That's Ogenti.
 
 ---
 
-## ◆ 실시간 모니터링
+## ◆ Live Monitoring
 
-학습이 돌아가는 동안 대시보드로 실시간 확인:
+Watch training in real-time while it runs:
 
-### 웹 대시보드
+### Web Dashboard
 
 ```bash
-# 서버 IP가 69.42.123.456 이라면:
+# If your server IP is 69.42.123.456:
 http://69.42.123.456:8000
 ```
 
-브라우저에서 열면 ogenti.com과 동일한 대시보드가 뜬다:
+Same retro dashboard from ogenti.com. WebSocket-powered, 10Hz real-time updates. Charts that breathe.
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -612,222 +611,217 @@ http://69.42.123.456:8000
 └─────────────────────────────────────────────────────────┘
 ```
 
-WebSocket으로 10Hz 실시간 업데이트. 차트가 살아 움직인다.
-
-### 터미널 로그 확인
+### Terminal Log Commands
 
 ```bash
-# tmux 안에서 실시간 로그
+# Live log stream
 tail -f training.log
 
-# 에피소드만 필터
+# Filter episodes only
 grep "\[Ep" training.log | tail -20
 
-# Phase 전환만
+# Phase transitions only
 grep "Phase transition" training.log
 
-# Eval 결과만
+# Eval results only
 grep "Eval:" training.log
 ```
 
-### GPU 사용량 확인
+### GPU Usage
 
 ```bash
-# nvidia-smi 실시간
+# Real-time nvidia-smi
 watch -n 1 nvidia-smi
 
-# htop으로 CPU/메모리
+# CPU/memory with htop
 htop
 ```
 
 ---
 
-## ◆ 비용 추정
+## ◆ Cost Breakdown
 
-### RunPod A100 80GB 기준
+### RunPod A100 80GB
 
 ```
 ╔══════════════════════════════════════════╗
-║  예상 비용                              ║
+║  Estimated Cost                         ║
 ╠══════════════════════════════════════════╣
 ║                                         ║
-║  GPU 시간:   ~24시간                    ║
-║  시간당:     $1.64 (on-demand)          ║
+║  GPU Time:     ~24 hours                ║
+║  Rate:         $1.64/hr (on-demand)     ║
 ║                                         ║
-║  셋업 + 모델 다운:     ~0.5시간  $0.82  ║
-║  Phase 0 (warmup):     ~4시간    $6.56  ║
-║  Phase 1 (simple):     ~7시간   $11.48  ║
-║  Phase 2 (complex):    ~7시간   $11.48  ║
-║  Phase 3 (generalize): ~3시간    $4.92  ║
-║  Phase 4 (universal):  ~3시간    $4.92  ║
+║  Setup + model download:  ~0.5hr  $0.82 ║
+║  Phase 0 (warmup):        ~4hr    $6.56 ║
+║  Phase 1 (simple):        ~7hr   $11.48 ║
+║  Phase 2 (complex):       ~7hr   $11.48 ║
+║  Phase 3 (generalize):    ~3hr    $4.92 ║
+║  Phase 4 (universal):     ~3hr    $4.92 ║
 ║                                         ║
-║  ── 총 합계 ──                          ║
+║  ── Total ──                            ║
 ║  On-demand:  ~$40                       ║
-║  Spot:       ~$22 (spot 할인 적용)      ║
+║  Spot:       ~$22 (with spot discount)  ║
 ║                                         ║
-║  * Vast.ai 쓰면 ~$29                   ║
-║  * Lambda Labs 쓰면 ~$31               ║
+║  * Vast.ai:     ~$29                    ║
+║  * Lambda Labs: ~$31                    ║
 ║                                         ║
 ╚══════════════════════════════════════════╝
 ```
 
-> **진짜 $30-40이면 AI가 자기만의 언어를 발명한다.** 생각해보면 좀 미친 시대다.
+> **$30-40 for AI to invent its own language.** We're living in a wild timeline.
 
-### 비용 절약 팁
+### Saving Money
 
-1. **Spot Instance** — RunPod Community Cloud에서 Spot 쓰면 ~40% 할인. 대신 서버가 갑자기 종료될 수 있으니 체크포인트 필수 (기본 1000 에피소드마다 저장)
-2. **Vast.ai** — 가장 저렴하지만 서버 품질 복불복
-3. **밤에 돌리기** — 미국 시간 새벽에 GPU 수요가 적어서 Spot 가격이 낮다
-4. **A100 40GB도 가능** — 배치사이즈만 줄이면 됨. 좀 더 오래 걸릴 뿐
-5. **H100이면 더 빠름** — ~15시간으로 줄지만 시간당 가격이 높아서 총비용은 비슷
+1. **Spot Instances** — RunPod Community Cloud Spot saves ~40%. Server might die unexpectedly, but checkpoints save every 1000 episodes so you're covered
+2. **Vast.ai** — Cheapest option, but server quality is a dice roll
+3. **Train at night** — GPU demand drops during US nighttime = cheaper Spot pricing
+4. **A100 40GB works too** — Just lower batch size. Takes longer but still gets there
+5. **H100 is faster** — ~15 hours, but higher hourly rate makes total cost about the same
 
 ---
 
-## ◆ 트러블슈팅
+## ◆ Troubleshooting
 
 ### "CUDA Out of Memory"
 
 ```bash
-# production.json에서 batch_size 줄이기
+# Lower batch_size in production.json
 # Phase 0: 32 → 16
 # Phase 1: 16 → 8
 # Phase 2: 8 → 4
 ```
 
-또는 gradient_checkpointing 켜기 (기본값 = 켜져 있음).
+Or enable gradient_checkpointing (on by default).
 
-### "학습이 중간에 죽었다"
+### "Training crashed mid-run"
 
-체크포인트에서 이어서:
+Resume from checkpoint:
 
 ```bash
 python run_production.py --resume checkpoints/
 ```
 
-### "accuracy가 안 올라간다"
+### "Accuracy is stuck"
 
-Phase 0에서 accuracy가 0.1 아래에 머무르면:
-- 학습률을 올려봐 (5e-4 → 1e-3)
-- 배치사이즈를 줄여봐 (32 → 16)
-- 데이터셋을 확인해봐 (`python -c "import json; print(json.loads(open('data/train.jsonl').readline()))"`)
+If Phase 0 accuracy stays below 0.1:
+- Bump learning rate (5e-4 → 1e-3)
+- Lower batch size (32 → 16)
+- Check dataset (`python -c "import json; print(json.loads(open('data/train.jsonl').readline()))"`)
 
-### "Phase 전환이 안 된다"
+### "Phase won't transition"
 
-Phase의 `max_episodes`에 도달하면 강제 전환된다. `min_accuracy`/`min_compression` 기준을 못 맞추면 부족해도 max에서 전환. 정상 동작.
+Phases force-transition at `max_episodes` even if accuracy/compression thresholds aren't met. This is by design.
 
-### "W&B 로그인이 안 된다"
+### "Can't log into W&B"
 
 ```bash
-# W&B 없이 돌리기
+# Skip W&B entirely
 python run_production.py --no-wandb
 
-# 또는 로그인
+# Or log in
 wandb login
 ```
 
-### "디스크 용량이 부족하다"
+### "Disk full"
 
 ```bash
-# 모델 캐시 위치 확인
+# Check model cache
 du -sh ~/.cache/huggingface/
 
-# 체크포인트는 keep_last_n=5 (자동 정리됨)
-# 수동으로 옛 체크포인트 삭제
+# Old checkpoints auto-clean (keep_last_n=5)
+# Manual cleanup
 rm -rf checkpoints/encoder_phase_0/ checkpoints/decoder_phase_0/
 ```
 
-### "Windows에서 돌리고 싶은데..."
+### "Can I run this on Windows?"
 
-가능은 하지만 추천하지 않는다. CPU로 0.5B 모델 `--quick`은 되지만, 프로덕션 3B 학습은 GPU 서버에서 해야 한다. 우리가 아까 해본 건 "되는지 확인"이었고, 진짜 학습은 GPU 서버에서.
+Technically yes — CPU-only with `--quick` on a 0.5B model works for testing. But real production training needs a GPU server. What we did locally was proof-of-concept. The real training happens in the cloud.
 
 ---
 
-## ◆ 학습 끝나면?
+## ◆ After Training
 
-### 1. 산출물 다운로드
+### 1. Download Your Artifacts
 
 ```bash
-# 로컬로 다운로드 (scp)
+# SCP to local
 scp -r root@69.42.xxx.xxx:/workspace/ai-master/checkpoints/universal_adapter/ ./
 
-# 또는 tar로 묶어서
+# Or tar it up first
 ssh root@69.42.xxx.xxx "cd /workspace/ai-master && tar czf adapter.tar.gz checkpoints/universal_adapter/"
 scp root@69.42.xxx.xxx:/workspace/ai-master/adapter.tar.gz ./
 ```
 
-### 2. 어댑터 사용법 (미래)
+### 2. Using the Adapter (the endgame)
 
 ```python
 from ogenti_core.adapter import OgentiAdapter
 
-# 어댑터 로드
+# Load the adapter
 adapter = OgentiAdapter.from_pretrained("checkpoints/universal_adapter/")
 
-# 아무 LLM에 부착
+# Attach to ANY LLM
 from transformers import AutoModel, AutoTokenizer
 model = AutoModel.from_pretrained("meta-llama/Llama-3-8B")
 tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3-8B")
 
 adapter.attach(model, tokenizer)
 
-# 이제 이 LLaMA는 Ogenti 프로토콜을 이해한다
+# This LLaMA now speaks Ogenti protocol
 msg = adapter.encode("Summarize this document about Docker...")
-# → ξ·SUMM·DOCKER·CONTAINER·◊  (4토큰!)
+# → ξ·SUMM·DOCKER·CONTAINER·◊  (4 tokens!)
 
 restored = adapter.decode(msg)
 # → "Docker is a containerization platform that packages applications..."
 ```
 
-**LLaMA도, Mistral도, GPT도, Gemma도 — PPH/PRH만 붙이면 같은 프로토콜로 대화한다.** 이게 Universal의 의미.
+**LLaMA, Mistral, GPT, Gemma — attach PPH/PRH and they all speak the same protocol.** That's Universal.
 
-### 3. HuggingFace에 올리기
+### 3. Upload to HuggingFace
 
 ```bash
-# huggingface-cli 설치
 pip install huggingface_hub
-
-# 어댑터 업로드
 huggingface-cli upload your-username/ogenti-adapter-v1 checkpoints/universal_adapter/
 ```
 
-### 4. 서버 끄기
+### 4. Kill the Server
 
-돈 나간다. 학습 끝났으면 바로 서버 종료.
+Your money is literally burning. Training done = server terminated. Now.
 
 ```bash
-# RunPod: Dashboard에서 Terminate
-# Vast.ai: Dashboard에서 Destroy
-# Lambda: Dashboard에서 Terminate
+# RunPod: Dashboard → Terminate
+# Vast.ai: Dashboard → Destroy
+# Lambda: Dashboard → Terminate
 ```
 
 ---
 
-## ◆ 전체 타임라인 요약
+## ◆ Full Timeline Summary
 
 ```
-Day 0 — 준비
-  ├─ RunPod 가입 + 결제 수단 등록 (5분)
-  ├─ A100 80GB 서버 생성 (30초)
-  ├─ setup_runpod.sh 실행 (10분)
-  └─ "준비 끝"
+Day 0 — Setup
+  ├─ Sign up for RunPod + add payment (5 min)
+  ├─ Spin up A100 80GB (30 seconds)
+  ├─ Run setup_runpod.sh (10 min)
+  └─ "Ready to go"
 
-Day 0 — 학습 시작
+Day 0 — Launch
   ├─ tmux new -s ogenti
   ├─ python run_production.py
-  ├─ 대시보드 열어서 확인 (http://IP:8000)
-  └─ "자러 간다"
+  ├─ Open dashboard (http://IP:8000)
+  └─ "Going to sleep"
 
-Day 1 — 결과 확인
+Day 1 — Results
   ├─ tmux attach -t ogenti
-  ├─ training.log 확인
-  ├─ "Phase 4까지 완료! accuracy 0.75, compression 15x"
-  ├─ checkpoints/universal_adapter/ 다운로드
-  ├─ 서버 종료
-  └─ "끝."
+  ├─ Check training.log
+  ├─ "Phase 4 complete! accuracy 0.75, compression 15x"
+  ├─ Download checkpoints/universal_adapter/
+  ├─ Terminate server
+  └─ "Done."
 
-총 비용: ~$30-40
-총 시간: ~24시간 (대부분 자는 동안)
-산출물:  3MB 어댑터 = AI끼리 대화하는 법을 담은 파일
+Total cost: ~$30-40
+Total time: ~24 hours (mostly while sleeping)
+Output:     3MB adapter = a file containing how AIs talk to each other
 ```
 
 ---
@@ -835,27 +829,26 @@ Day 1 — 결과 확인
 ## ◆ TL;DR
 
 ```bash
-# 1. 서버 빌리기 (RunPod A100 80GB, ~$1.64/hr)
-# 2. 셋업
+# 1. Rent a GPU (RunPod A100 80GB, ~$1.64/hr)
+# 2. Setup
 curl -sSL https://raw.githubusercontent.com/gkjuwon-ui/ai-master/main/scripts/setup_runpod.sh | bash
-# 3. 학습 시작
+# 3. Train
 tmux new -s ogenti
 python run_production.py
-# 4. 자러 가기 (진지함)
-# 5. 24시간 후 일어나서 결과 확인
-# 6. checkpoints/universal_adapter/ 다운로드
-# 7. 서버 끄기 (돈!)
+# 4. Go to sleep (genuinely)
+# 5. Wake up 24 hours later
+# 6. Download checkpoints/universal_adapter/
+# 7. Kill the server (your wallet will thank you)
 ```
 
-**$30이면 AI가 자기만의 언어를 발명한다.** 
+**$30 and AI invents its own language.**
 
+The encoder creates `ξ·SEC_REVIEW·SQL_INJ·◊` — 3 tokens it made up. The decoder sees it and outputs "SQL injection vulnerability detected" — perfectly reconstructed.
 
-인코더가 `ξ·SEC_REVIEW·SQL_INJ·◊` 라는 3토큰을 발명하고, 디코더가 그걸 보고 "SQL injection vulnerability detected" 라고 완벽하게 복원하는 순간. 
+A language nobody taught. A protocol born from pure optimization pressure.
 
-아무도 가르쳐주지 않은 언어를 AI가 스스로 만들어낸 순간.
-
-그걸 보려면 `python run_production.py` 하나만 치면 된다.
+To see it happen, just type `python run_production.py`.
 
 ---
 
-*Built for Ogenti — $30으로 AI에게 언어를 선물하는 프로젝트.*
+*Built for Ogenti — $30 to give AI the gift of its own language.*

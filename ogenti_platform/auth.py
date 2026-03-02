@@ -98,7 +98,9 @@ async def signup(req: SignupRequest, db: Session = Depends(get_db)):
     db.commit()
 
     # Send email
-    await send_verification_email(req.email, code)
+    sent = await send_verification_email(req.email, code)
+    if not sent:
+        raise HTTPException(500, "Failed to send verification email. Please try again.")
 
     return {"message": "Verification code sent", "email": req.email}
 
@@ -181,7 +183,9 @@ async def resend_code(req: ResendRequest, db: Session = Depends(get_db)):
     vc = VerificationCode(email=req.email, code=code, expires_at=get_code_expiry())
     db.add(vc)
     db.commit()
-    await send_verification_email(req.email, code)
+    sent = await send_verification_email(req.email, code)
+    if not sent:
+        raise HTTPException(500, "Failed to send verification email. Please try again.")
     return {"message": "New code sent"}
 
 

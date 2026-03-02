@@ -16,17 +16,11 @@ async def send_verification_email(to_email: str, code: str) -> bool:
     """Send verification code via Resend API"""
     try:
         async with httpx.AsyncClient() as client:
-            resp = await client.post(
-                "https://api.resend.com/emails",
-                headers={
-                    "Authorization": f"Bearer {RESEND_API_KEY}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "from": f"Ogenti <{FROM_EMAIL}>",
-                    "to": [to_email],
-                    "subject": f"[OGENTI] Verification Code: {code}",
-                    "html": f"""
+            payload = {
+                "from": f"Ogenti <{FROM_EMAIL}>",
+                "to": [to_email],
+                "subject": f"[OGENTI] Verification Code: {code}",
+                "html": f"""
                     <div style="font-family:'Courier New',monospace;background:#0a0a1a;color:#c8c8e0;padding:40px;text-align:center;">
                         <div style="border:3px solid #00f0ff;padding:30px;max-width:420px;margin:0 auto;background:#0f0f2a;image-rendering:pixelated;">
                             <h1 style="font-family:'Courier New',monospace;color:#00f0ff;font-size:24px;margin-bottom:4px;letter-spacing:4px;text-shadow:0 0 10px rgba(0,240,255,0.4);">&#9670; OGENTI &#9670;</h1>
@@ -42,14 +36,24 @@ async def send_verification_email(to_email: str, code: str) -> bool:
                         </div>
                     </div>
                     """,
+            }
+            resp = await client.post(
+                "https://api.resend.com/emails",
+                headers={
+                    "Authorization": f"Bearer {RESEND_API_KEY}",
+                    "Content-Type": "application/json",
                 },
+                json=payload,
             )
-            return resp.status_code == 200
+            if resp.status_code == 200:
+                print(f"[EMAIL] Sent verification to {to_email}")
+                return True
+            else:
+                print(f"[EMAIL] Resend API error {resp.status_code}: {resp.text}")
+                return False
     except Exception as e:
         print(f"[EMAIL] Failed to send to {to_email}: {e}")
-        # In dev/test mode, just print the code
-        print(f"[EMAIL] DEV MODE — Verification code for {to_email}: {code}")
-        return True  # Return True in dev so signup still works
+        return False
 
 
 def get_code_expiry() -> datetime:

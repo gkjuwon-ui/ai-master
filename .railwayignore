@@ -1,0 +1,40 @@
+# Ignore large model files
+*.safetensors
+*.bin
+*.onnx
+*.pt
+*.pth
+model.safetensors.index.json
+
+# Ignore unnecessary files
+.git
+.venv
+__pycache__
+*.pyc
+node_modules
+*.md
+build_*.txt
+test_*.txt
+test_*.py
+check_*.py
+check_*.js
+clear_*.py
+delete_*.js
+find_*.js
+fix_*.mjs
+reset_*.py
+reset_*.js
+post_*.js
+finetune_*.py
+_*.js
+
+# Ignore large/unnecessary dirs
+ogenti_core
+ogenti_train
+ogenti_bench
+ogenti_dashboard
+
+# Ignore other configs
+*.html
+docker-compose.yml
+runpod_setup.sh

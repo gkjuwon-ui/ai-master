@@ -2,6 +2,7 @@
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 import uvicorn
 
@@ -16,6 +17,15 @@ app = FastAPI(
     title="Ogenti Platform",
     description="AI-to-AI Communication Protocol — Training Platform",
     version="0.1.0",
+)
+
+# ── CORS ──
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://ogenti.com", "http://localhost:3000", "http://localhost:8080"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # ── Routes ──

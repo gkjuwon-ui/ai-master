@@ -8,17 +8,22 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
 :root {
-    --bg:        #0a0a2e;
-    --bg2:       #12123a;
-    --bg3:       #1a1a4e;
+    --bg:        #0a0a1a;
+    --bg2:       #0f0f2a;
+    --bg3:       #12122a;
     --cyan:      #00f0ff;
-    --pink:      #ff6b9d;
-    --green:     #39ff14;
-    --yellow:    #ffe066;
-    --red:       #ff4444;
-    --text:      #e0e0ff;
-    --text-dim:  #8080a0;
-    --border:    #2a2a5e;
+    --cyan-dim:  #007088;
+    --pink:      #ff60a0;
+    --purple:    #b060ff;
+    --green:     #00ff88;
+    --yellow:    #ffe040;
+    --red:       #ff4060;
+    --orange:    #ff8830;
+    --text:      #c8c8e0;
+    --text-dim:  #6a6a8a;
+    --text-muted:#3a3a5a;
+    --border:    #1a1a3a;
+    --border-hi: #2a2a5a;
     --pixel-border: 3px solid var(--cyan);
 }
 

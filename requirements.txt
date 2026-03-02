@@ -1,21 +1,10 @@
-# Core
-torch>=2.1.0
-transformers>=4.36.0
-peft>=0.7.0
-trl>=0.7.0
-accelerate>=0.25.0
-datasets>=2.16.0
-sentencepiece>=0.1.99
-numpy>=1.24.0
-
-# Training
-deepspeed>=0.12.0
-wandb>=0.16.0
-
-# Benchmark
-matplotlib>=3.7.0
-sentence-transformers>=2.2.0
-
-# Dev
-pytest>=7.4.0
-ruff>=0.1.0
+# Ogenti Platform API
+fastapi==0.115.0
+uvicorn[standard]==0.30.0
+sqlalchemy==2.0.35
+passlib[bcrypt]==1.7.4
+bcrypt<5
+python-jose[cryptography]==3.3.0
+httpx==0.27.0
+stripe==10.12.0
+python-multipart==0.0.9

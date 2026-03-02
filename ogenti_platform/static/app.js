@@ -2,7 +2,7 @@
    OGENTI PLATFORM — AUTH HELPERS
    ═══════════════════════════════════════════════ */
 
-const API = '';
+const API = 'https://ogenti-api-production.up.railway.app';
 
 const Auth = {
     getToken: () => localStorage.getItem('og_token'),

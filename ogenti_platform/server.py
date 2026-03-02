@@ -11,6 +11,7 @@ from .auth import router as auth_router
 from .billing import router as billing_router
 from .api_keys import router as keys_router
 from .training import router as training_router
+from .adapter import router as adapter_router
 
 # ── App ──
 app = FastAPI(
@@ -33,6 +34,7 @@ app.include_router(auth_router)
 app.include_router(billing_router)
 app.include_router(keys_router)
 app.include_router(training_router)
+app.include_router(adapter_router)
 
 # ── Static files ──
 STATIC_DIR = Path(__file__).parent / "static"

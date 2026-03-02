@@ -1,7 +1,7 @@
 """Ogenti Platform — Database Models"""
 from datetime import datetime, timezone
 from sqlalchemy import (
-    Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text, create_engine
+    Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text, LargeBinary, create_engine
 )
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 
@@ -25,6 +25,7 @@ class User(Base):
     api_keys = relationship("ApiKey", back_populates="user", cascade="all, delete-orphan")
     transactions = relationship("Transaction", back_populates="user", cascade="all, delete-orphan")
     training_jobs = relationship("TrainingJob", back_populates="user", cascade="all, delete-orphan")
+    adapters = relationship("Adapter", back_populates="user", cascade="all, delete-orphan")
 
 
 class VerificationCode(Base):
@@ -88,6 +89,26 @@ class TrainingJob(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     user = relationship("User", back_populates="training_jobs")
+
+
+class Adapter(Base):
+    """Encrypted .ogt adapter — keys stored server-side only."""
+    __tablename__ = "adapters"
+
+    id = Column(String(36), primary_key=True)  # UUID
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    name = Column(String(200), nullable=False)
+    base_model = Column(String(50), nullable=False)
+    encryption_key = Column(LargeBinary(32), nullable=False)  # AES-256 key (never leaves server)
+    training_job_id = Column(Integer, ForeignKey("training_jobs.id"), nullable=True)
+    file_size = Column(Integer, default=0)  # .ogt file size in bytes
+    file_path = Column(String(500), nullable=True)  # server-local .ogt path
+    status = Column(String(20), default="active")  # active / disabled / deleted
+    inference_count = Column(Integer, default=0)  # total inference calls
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    user = relationship("User", back_populates="adapters")
+    training_job = relationship("TrainingJob", backref="adapter")
 
 
 # ── Engine & Session ──

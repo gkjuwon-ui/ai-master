@@ -55,3 +55,24 @@ DATASETS = [
     {"id": "alpaca-converted", "label": "Alpaca Converted (10K tasks)",   "tasks": 10_000, "categories": 8},
     {"id": "custom-upload",    "label": "Custom Upload (JSONL)",          "tasks": 0, "categories": 0},
 ]
+
+# ── Inference / Adapter Usage Pricing (credits per call) ──
+# Pricing logic:
+#   GPT-4o  ≈ $0.0075/conversation (~1K in + 500 out tokens)
+#   1 credit = $0.005 (starter), $0.003 (pro), $0.0025 (enterprise)
+#   → 1 credit/call for 3B = $0.005  = 33% cheaper than GPT-4o
+#   → 2 credits/call for 7B = $0.01  but FINE-TUNED specialist > generic GPT
+#   → 3 credits/call for 14B = $0.015 = enterprise-grade specialist
+INFERENCE_COSTS = {
+    "qwen2.5-3b":   {"credits_per_call": 1,  "label": "Qwen2.5-3B"},
+    "qwen2.5-7b":   {"credits_per_call": 2,  "label": "Qwen2.5-7B"},
+    "qwen2.5-14b":  {"credits_per_call": 3,  "label": "Qwen2.5-14B"},
+    "llama3.2-3b":  {"credits_per_call": 1,  "label": "LLaMA-3.2-3B"},
+    "llama3.2-8b":  {"credits_per_call": 2,  "label": "LLaMA-3.2-8B"},
+    "mistral-7b":   {"credits_per_call": 2,  "label": "Mistral-7B"},
+    "custom":       {"credits_per_call": 1,  "label": "Custom"},
+}
+
+# ── OGT Storage ──
+OGT_STORAGE_DIR = os.getenv("OGT_STORAGE_DIR", "./ogt_adapters")
+

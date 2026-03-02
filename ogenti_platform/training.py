@@ -4,9 +4,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from .database import get_db, User, TrainingJob, Transaction
+from .database import get_db, User, TrainingJob, Transaction, Adapter
 from .auth import get_current_user
-from .config import MODEL_COSTS, DATASETS, TIERS
+from .config import MODEL_COSTS, DATASETS, TIERS, INFERENCE_COSTS
 
 router = APIRouter(prefix="/api/training", tags=["training"])
 
@@ -109,8 +109,24 @@ async def list_jobs(user: User = Depends(get_current_user), db: Session = Depend
     model_labels = {k: v["label"] for k, v in MODEL_COSTS.items()}
     dataset_labels = {d["id"]: d["label"] for d in DATASETS}
 
-    return [
-        {
+    result = []
+    for j in jobs:
+        # Check if adapter exists for this job
+        adapter = db.query(Adapter).filter(Adapter.training_job_id == j.id).first()
+        adapter_info = None
+        if adapter:
+            inf_cost = INFERENCE_COSTS.get(j.model, {}).get("credits_per_call", 1)
+            adapter_info = {
+                "id": adapter.id,
+                "name": adapter.name,
+                "status": adapter.status,
+                "file_size": adapter.file_size,
+                "format": ".ogt",
+                "inference_count": adapter.inference_count,
+                "credits_per_call": inf_cost,
+            }
+
+        result.append({
             "id": j.id,
             "status": j.status,
             "model": j.model,
@@ -125,12 +141,13 @@ async def list_jobs(user: User = Depends(get_current_user), db: Session = Depend
             "compression": j.compression,
             "credits_used": j.credits_used,
             "adapter_url": j.adapter_url,
+            "adapter": adapter_info,
             "created_at": j.created_at.isoformat() if j.created_at else None,
             "started_at": j.started_at.isoformat() if j.started_at else None,
             "completed_at": j.completed_at.isoformat() if j.completed_at else None,
-        }
-        for j in jobs
-    ]
+        })
+
+    return result
 
 
 @router.get("/job/{job_id}")

@@ -27,16 +27,18 @@ async def send_verification_email(to_email: str, code: str) -> bool:
                     "to": [to_email],
                     "subject": f"[OGENTI] Verification Code: {code}",
                     "html": f"""
-                    <div style="font-family:'Courier New',monospace;background:#0a0a2e;color:#00f0ff;padding:40px;text-align:center;">
-                        <div style="border:2px solid #00f0ff;padding:30px;max-width:400px;margin:0 auto;">
-                            <h1 style="color:#ff6b9d;font-size:24px;margin-bottom:8px;">◆ OGENTI ◆</h1>
-                            <p style="color:#b0b0d0;font-size:12px;margin-bottom:24px;">AI-TO-AI COMMUNICATION PROTOCOL</p>
-                            <p style="color:#e0e0ff;font-size:14px;">Your verification code:</p>
-                            <div style="background:#1a1a4e;border:2px solid #ff6b9d;padding:20px;margin:16px 0;font-size:32px;letter-spacing:8px;color:#00f0ff;font-weight:bold;">
+                    <div style="font-family:'Courier New',monospace;background:#0a0a1a;color:#c8c8e0;padding:40px;text-align:center;">
+                        <div style="border:3px solid #00f0ff;padding:30px;max-width:420px;margin:0 auto;background:#0f0f2a;image-rendering:pixelated;">
+                            <h1 style="font-family:'Courier New',monospace;color:#00f0ff;font-size:24px;margin-bottom:4px;letter-spacing:4px;text-shadow:0 0 10px rgba(0,240,255,0.4);">&#9670; OGENTI &#9670;</h1>
+                            <p style="color:#6a6a8a;font-size:11px;margin-bottom:28px;letter-spacing:3px;">AI-TO-AI COMMUNICATION PROTOCOL</p>
+                            <p style="color:#c8c8e0;font-size:13px;margin-bottom:8px;">Your verification code:</p>
+                            <div style="background:#12122a;border:3px solid #b060ff;padding:20px;margin:16px 0;font-size:36px;letter-spacing:12px;color:#00f0ff;font-weight:bold;text-shadow:0 0 15px rgba(0,240,255,0.5);font-family:'Courier New',monospace;">
                                 {code}
                             </div>
-                            <p style="color:#8080a0;font-size:11px;">Expires in 10 minutes. Don't share this code.</p>
-                            <div style="margin-top:24px;color:#4a4a6e;font-size:10px;">PRESS START TO CONTINUE_</div>
+                            <p style="color:#6a6a8a;font-size:10px;margin-top:16px;">Expires in 10 minutes. Don't share this code.</p>
+                            <div style="margin-top:28px;padding-top:16px;border-top:1px solid #1a1a3a;">
+                                <span style="color:#3a3a5a;font-size:9px;letter-spacing:2px;">PRESS START TO CONTINUE_</span>
+                            </div>
                         </div>
                     </div>
                     """,

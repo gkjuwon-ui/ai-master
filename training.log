@@ -1,0 +1,314 @@
+08:02:25 [INFO] ogenti.production: Running pre-flight checks...
+08:02:28 [WARNING] ogenti.production: No CUDA GPU detected! Training will be extremely slow on CPU. Consider using RunPod, Lambda Labs, or another GPU provider.
+08:02:29 [INFO] ogenti.production: Loading config: configs\production.json
+08:05:47 [INFO] ogenti.production: Running pre-flight checks...
+08:05:50 [WARNING] ogenti.production: No CUDA GPU detected! Training will be extremely slow on CPU. Consider using RunPod, Lambda Labs, or another GPU provider.
+08:05:50 [INFO] ogenti.production: Loading config: configs\production.json
+08:05:55 [INFO] ogenti.production: Quick test mode: 100 episodes, shortened phases
+08:06:10 [INFO] ogenti.production: Running pre-flight checks...
+08:06:13 [WARNING] ogenti.production: No CUDA GPU detected! Training will be extremely slow on CPU. Consider using RunPod, Lambda Labs, or another GPU provider.
+08:06:13 [INFO] ogenti.production: Loading config: configs\production.json
+08:06:17 [INFO] ogenti.production: Quick test mode: 100 episodes, shortened phases
+08:06:18 [INFO] ogenti_train.server: Monitor server started at http://0.0.0.0:8000
+08:06:18 [INFO] ogenti_train.server: OGENTI Protocol Monitor server started
+08:06:19 [INFO] ogenti_train.train: Building agent pool...
+08:06:19 [INFO] ogenti_core.encoder: Loading base model: Qwen/Qwen2.5-3B-Instruct
+08:06:20 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+08:06:20 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-3B-Instruct/aa8e72537993ba99e69dfaafa59ed015b17504d1/config.json "HTTP/1.1 200 OK"
+08:06:20 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-3B-Instruct/aa8e72537993ba99e69dfaafa59ed015b17504d1/config.json "HTTP/1.1 200 OK"
+08:06:20 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+08:06:20 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-3B-Instruct/aa8e72537993ba99e69dfaafa59ed015b17504d1/tokenizer_config.json "HTTP/1.1 200 OK"
+08:06:20 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-3B-Instruct/aa8e72537993ba99e69dfaafa59ed015b17504d1/tokenizer_config.json "HTTP/1.1 200 OK"
+08:06:20 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-3B-Instruct/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+08:06:21 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-3B-Instruct/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+08:06:21 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/resolve/main/vocab.json "HTTP/1.1 307 Temporary Redirect"
+08:06:21 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-3B-Instruct/aa8e72537993ba99e69dfaafa59ed015b17504d1/vocab.json "HTTP/1.1 200 OK"
+08:06:21 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-3B-Instruct/aa8e72537993ba99e69dfaafa59ed015b17504d1/vocab.json "HTTP/1.1 200 OK"
+08:06:21 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/resolve/main/merges.txt "HTTP/1.1 307 Temporary Redirect"
+08:06:21 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-3B-Instruct/aa8e72537993ba99e69dfaafa59ed015b17504d1/merges.txt "HTTP/1.1 200 OK"
+08:06:21 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-3B-Instruct/aa8e72537993ba99e69dfaafa59ed015b17504d1/merges.txt "HTTP/1.1 200 OK"
+08:06:21 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/resolve/main/tokenizer.json "HTTP/1.1 307 Temporary Redirect"
+08:06:21 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-3B-Instruct/aa8e72537993ba99e69dfaafa59ed015b17504d1/tokenizer.json "HTTP/1.1 200 OK"
+08:06:21 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-3B-Instruct/aa8e72537993ba99e69dfaafa59ed015b17504d1/tokenizer.json "HTTP/1.1 200 OK"
+08:06:22 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/resolve/main/added_tokens.json "HTTP/1.1 404 Not Found"
+08:06:22 [WARNING] huggingface_hub.utils._http: Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+08:06:22 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/resolve/main/special_tokens_map.json "HTTP/1.1 404 Not Found"
+08:06:22 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/resolve/main/chat_template.jinja "HTTP/1.1 404 Not Found"
+08:06:23 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-3B-Instruct "HTTP/1.1 200 OK"
+08:06:24 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+08:06:24 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-3B-Instruct/aa8e72537993ba99e69dfaafa59ed015b17504d1/config.json "HTTP/1.1 200 OK"
+08:06:24 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/resolve/main/adapter_config.json "HTTP/1.1 404 Not Found"
+08:06:25 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+08:06:25 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-3B-Instruct/aa8e72537993ba99e69dfaafa59ed015b17504d1/config.json "HTTP/1.1 200 OK"
+08:06:25 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/resolve/main/model.safetensors "HTTP/1.1 404 Not Found"
+08:06:25 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/resolve/main/model.safetensors.index.json "HTTP/1.1 307 Temporary Redirect"
+08:06:25 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-3B-Instruct/aa8e72537993ba99e69dfaafa59ed015b17504d1/model.safetensors.index.json "HTTP/1.1 200 OK"
+08:06:25 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-3B-Instruct/aa8e72537993ba99e69dfaafa59ed015b17504d1/model.safetensors.index.json "HTTP/1.1 200 OK"
+08:06:25 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-3B-Instruct/revision/main "HTTP/1.1 200 OK"
+08:06:25 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/resolve/aa8e72537993ba99e69dfaafa59ed015b17504d1/model-00001-of-00002.safetensors "HTTP/1.1 302 Found"
+08:06:25 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/resolve/aa8e72537993ba99e69dfaafa59ed015b17504d1/model-00002-of-00002.safetensors "HTTP/1.1 302 Found"
+08:06:27 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-3B-Instruct/xet-read-token/aa8e72537993ba99e69dfaafa59ed015b17504d1 "HTTP/1.1 200 OK"
+08:06:27 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-3B-Instruct/xet-read-token/aa8e72537993ba99e69dfaafa59ed015b17504d1 "HTTP/1.1 200 OK"
+08:09:04 [INFO] ogenti.production: Graceful shutdown requested (Ctrl+C again to force)...
+08:11:25 [INFO] ogenti.production: Running pre-flight checks...
+08:11:29 [WARNING] ogenti.production: No CUDA GPU detected! Training will be extremely slow on CPU. Consider using RunPod, Lambda Labs, or another GPU provider.
+08:11:29 [INFO] ogenti.production: Loading config: configs\production.json
+08:11:34 [INFO] ogenti.production: CPU detected: switching to Qwen/Qwen2.5-0.5B-Instruct for faster testing
+08:11:34 [INFO] ogenti.production: Quick test mode: 100 episodes, shortened phases
+08:11:34 [INFO] ogenti_train.server: Monitor server started at http://0.0.0.0:8000
+08:11:34 [INFO] ogenti.production: ═══ Live Dashboard: http://localhost:8000 ═══
+08:11:34 [INFO] ogenti_train.server: OGENTI Protocol Monitor server started
+08:11:35 [INFO] ogenti_train.train: 
+═══ Ogenti Training Config ═══
+Model:       Qwen/Qwen2.5-0.5B-Instruct
+LoRA rank:   16
+Phases:      5
+Total eps:   100
+GPUs:        1× A100-80GB
+DeepSpeed:   ZeRO-2
+Precision:   no
+Budget:      30 → 5
+═══════════════════════════════
+08:11:35 [INFO] ogenti_train.train: Building agent pool...
+08:11:35 [INFO] ogenti_core.encoder: Loading base model: Qwen/Qwen2.5-3B-Instruct
+08:11:36 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+08:11:36 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-3B-Instruct/aa8e72537993ba99e69dfaafa59ed015b17504d1/config.json "HTTP/1.1 200 OK"
+08:11:36 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+08:11:36 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-3B-Instruct/aa8e72537993ba99e69dfaafa59ed015b17504d1/tokenizer_config.json "HTTP/1.1 200 OK"
+08:11:37 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-3B-Instruct/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+08:11:37 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-3B-Instruct/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+08:11:38 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-3B-Instruct "HTTP/1.1 200 OK"
+08:11:38 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+08:11:38 [WARNING] huggingface_hub.utils._http: Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+08:11:38 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-3B-Instruct/aa8e72537993ba99e69dfaafa59ed015b17504d1/config.json "HTTP/1.1 200 OK"
+08:11:39 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+08:11:39 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-3B-Instruct/aa8e72537993ba99e69dfaafa59ed015b17504d1/config.json "HTTP/1.1 200 OK"
+08:11:39 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-3B-Instruct/revision/main "HTTP/1.1 200 OK"
+08:11:39 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/resolve/aa8e72537993ba99e69dfaafa59ed015b17504d1/model-00001-of-00002.safetensors "HTTP/1.1 302 Found"
+08:11:39 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/resolve/aa8e72537993ba99e69dfaafa59ed015b17504d1/model-00002-of-00002.safetensors "HTTP/1.1 302 Found"
+08:11:39 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-3B-Instruct/xet-read-token/aa8e72537993ba99e69dfaafa59ed015b17504d1 "HTTP/1.1 200 OK"
+08:11:39 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-3B-Instruct/xet-read-token/aa8e72537993ba99e69dfaafa59ed015b17504d1 "HTTP/1.1 200 OK"
+08:12:26 [INFO] ogenti.production: Running pre-flight checks...
+08:12:29 [WARNING] ogenti.production: No CUDA GPU detected! Training will be extremely slow on CPU. Consider using RunPod, Lambda Labs, or another GPU provider.
+08:12:29 [INFO] ogenti.production: Loading config: configs\production.json
+08:12:33 [INFO] ogenti.production: CPU detected: switching to Qwen/Qwen2.5-0.5B-Instruct for faster testing
+08:12:33 [INFO] ogenti.production: Quick test mode: 100 episodes, shortened phases
+08:12:34 [INFO] ogenti_train.server: Monitor server started at http://0.0.0.0:8000
+08:12:34 [INFO] ogenti.production: ═══ Live Dashboard: http://localhost:8000 ═══
+08:12:34 [INFO] ogenti_train.server: OGENTI Protocol Monitor server started
+08:12:35 [INFO] ogenti_train.train: 
+═══ Ogenti Training Config ═══
+Model:       Qwen/Qwen2.5-0.5B-Instruct
+LoRA rank:   16
+Phases:      5
+Total eps:   100
+GPUs:        1× A100-80GB
+DeepSpeed:   ZeRO-2
+Precision:   no
+Budget:      30 → 5
+═══════════════════════════════
+08:12:35 [INFO] ogenti_train.train: Building agent pool...
+08:12:35 [INFO] ogenti_core.encoder: Loading base model: Qwen/Qwen2.5-3B-Instruct
+08:12:35 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+08:12:35 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-3B-Instruct/aa8e72537993ba99e69dfaafa59ed015b17504d1/config.json "HTTP/1.1 200 OK"
+08:12:36 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+08:12:36 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-3B-Instruct/aa8e72537993ba99e69dfaafa59ed015b17504d1/tokenizer_config.json "HTTP/1.1 200 OK"
+08:12:36 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-3B-Instruct/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+08:12:36 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-3B-Instruct/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+08:12:37 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-3B-Instruct "HTTP/1.1 200 OK"
+08:12:37 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+08:12:37 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-3B-Instruct/aa8e72537993ba99e69dfaafa59ed015b17504d1/config.json "HTTP/1.1 200 OK"
+08:12:38 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+08:12:38 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-3B-Instruct/aa8e72537993ba99e69dfaafa59ed015b17504d1/config.json "HTTP/1.1 200 OK"
+08:12:38 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-3B-Instruct/revision/main "HTTP/1.1 200 OK"
+08:12:38 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/resolve/aa8e72537993ba99e69dfaafa59ed015b17504d1/model-00001-of-00002.safetensors "HTTP/1.1 302 Found"
+08:12:38 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-3B-Instruct/resolve/aa8e72537993ba99e69dfaafa59ed015b17504d1/model-00002-of-00002.safetensors "HTTP/1.1 302 Found"
+08:12:38 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-3B-Instruct/xet-read-token/aa8e72537993ba99e69dfaafa59ed015b17504d1 "HTTP/1.1 200 OK"
+08:12:38 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-3B-Instruct/xet-read-token/aa8e72537993ba99e69dfaafa59ed015b17504d1 "HTTP/1.1 200 OK"
+08:12:47 [INFO] ogenti_train.server: WebSocket client connected. Total: 1
+08:15:09 [INFO] ogenti.production: Running pre-flight checks...
+08:15:12 [WARNING] ogenti.production: No CUDA GPU detected! Training will be extremely slow on CPU. Consider using RunPod, Lambda Labs, or another GPU provider.
+08:15:12 [INFO] ogenti.production: Loading config: configs\production.json
+08:15:17 [INFO] ogenti.production: CPU detected: switching to Qwen/Qwen2.5-0.5B-Instruct for faster testing
+08:15:17 [INFO] ogenti.production: Quick test mode: 100 episodes, shortened phases
+08:15:17 [INFO] ogenti_train.train: 
+═══ Ogenti Training Config ═══
+Model:       Qwen/Qwen2.5-0.5B-Instruct
+LoRA rank:   16
+Phases:      5
+Total eps:   100
+GPUs:        1× A100-80GB
+DeepSpeed:   ZeRO-2
+Precision:   no
+Budget:      30 → 5
+═══════════════════════════════
+08:15:17 [INFO] ogenti_train.train: Building agent pool...
+08:15:17 [INFO] ogenti_core.encoder: Loading base model: Qwen/Qwen2.5-0.5B-Instruct
+08:15:18 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+08:15:18 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/config.json "HTTP/1.1 200 OK"
+08:15:18 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/config.json "HTTP/1.1 200 OK"
+08:15:18 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+08:15:18 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/tokenizer_config.json "HTTP/1.1 200 OK"
+08:15:18 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/tokenizer_config.json "HTTP/1.1 200 OK"
+08:15:18 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-0.5B-Instruct/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+08:15:19 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-0.5B-Instruct/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+08:15:19 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/vocab.json "HTTP/1.1 307 Temporary Redirect"
+08:15:19 [WARNING] huggingface_hub.utils._http: Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+08:15:19 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/vocab.json "HTTP/1.1 200 OK"
+08:15:19 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/vocab.json "HTTP/1.1 200 OK"
+08:15:19 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/merges.txt "HTTP/1.1 307 Temporary Redirect"
+08:15:19 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/merges.txt "HTTP/1.1 200 OK"
+08:15:19 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/merges.txt "HTTP/1.1 200 OK"
+08:15:19 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/tokenizer.json "HTTP/1.1 307 Temporary Redirect"
+08:15:19 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/tokenizer.json "HTTP/1.1 200 OK"
+08:15:19 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/tokenizer.json "HTTP/1.1 200 OK"
+08:15:20 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/added_tokens.json "HTTP/1.1 404 Not Found"
+08:15:20 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/special_tokens_map.json "HTTP/1.1 404 Not Found"
+08:15:20 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/chat_template.jinja "HTTP/1.1 404 Not Found"
+08:15:21 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-0.5B-Instruct "HTTP/1.1 200 OK"
+08:15:22 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+08:15:22 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/config.json "HTTP/1.1 200 OK"
+08:15:22 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/adapter_config.json "HTTP/1.1 404 Not Found"
+08:15:22 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+08:15:22 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/config.json "HTTP/1.1 200 OK"
+08:15:22 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/model.safetensors "HTTP/1.1 302 Found"
+08:15:22 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-0.5B-Instruct/xet-read-token/7ae557604adf67be50417f59c2c2f167def9a775 "HTTP/1.1 200 OK"
+08:16:01 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/generation_config.json "HTTP/1.1 307 Temporary Redirect"
+08:16:01 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/generation_config.json "HTTP/1.1 200 OK"
+08:16:01 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/generation_config.json "HTTP/1.1 200 OK"
+08:16:01 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/custom_generate/generate.py "HTTP/1.1 404 Not Found"
+08:16:02 [INFO] ogenti_core.encoder: LoRA applied — trainable: 2,162,688 / 496,195,456 (0.44%)
+08:16:02 [INFO] ogenti_core.decoder: Loading base model for decoder: Qwen/Qwen2.5-0.5B-Instruct
+08:16:03 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+08:16:03 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/config.json "HTTP/1.1 200 OK"
+08:16:03 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+08:16:03 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/tokenizer_config.json "HTTP/1.1 200 OK"
+08:16:03 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-0.5B-Instruct/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+08:16:03 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-0.5B-Instruct/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+08:16:05 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-0.5B-Instruct "HTTP/1.1 200 OK"
+08:16:05 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+08:16:05 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/config.json "HTTP/1.1 200 OK"
+08:16:05 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+08:16:05 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/config.json "HTTP/1.1 200 OK"
+08:16:16 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/generation_config.json "HTTP/1.1 307 Temporary Redirect"
+08:16:16 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/generation_config.json "HTTP/1.1 200 OK"
+08:16:16 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/custom_generate/generate.py "HTTP/1.1 404 Not Found"
+08:16:17 [INFO] ogenti_core.decoder: Decoder LoRA — trainable: 2,162,688 / 496,195,456 (0.44%)
+08:16:17 [INFO] ogenti_train.train: Trainable parameters: 6,163,969
+08:16:17 [INFO] ogenti_train.train: Setting up environment...
+08:16:17 [INFO] ogenti_train.environment: Loaded 93 tasks from data/train.jsonl
+08:16:17 [INFO] ogenti_train.train: Setup complete. Ready to train.
+08:16:17 [INFO] ogenti.production: ═══ Starting training loop ═══
+08:16:17 [INFO] ogenti_train.train: ═══ Training started ═══
+08:17:20 [INFO] ogenti_train.train: [Ep     0 | Phase 0/warmup] R=0.115  acc=0.000  comp=0.2x  tokens=6→30  (avg: R=0.115  acc=0.000  comp=0.2x)
+08:22:50 [INFO] ogenti_train.train: [Ep     5 | Phase 0/warmup] R=0.215  acc=0.014  comp=1.0x  tokens=30→29  (avg: R=0.188  acc=0.025  comp=0.7x)
+08:28:50 [INFO] ogenti_train.train: [Ep    10 | Phase 0/warmup] R=0.225  acc=0.044  comp=0.3x  tokens=9→29  (avg: R=0.201  acc=0.024  comp=0.6x)
+08:35:10 [INFO] ogenti_train.train: [Ep    15 | Phase 0/warmup] R=0.258  acc=0.135  comp=1.6x  tokens=47→29  (avg: R=0.209  acc=0.032  comp=0.7x)
+08:41:30 [INFO] ogenti_train.train: [Ep    20 | Phase 0/warmup] R=0.228  acc=0.065  comp=0.8x  tokens=24→29  (avg: R=0.213  acc=0.038  comp=0.8x)
+08:45:59 [INFO] ogenti_train.curriculum: Phase 0 (warmup) hit max episodes (25), advancing
+08:45:59 [INFO] ogenti_train.curriculum: ═══ Phase transition: warmup → simple ═══
+08:45:59 [INFO] ogenti_train.train: Phase transition → 1 (simple): lr=0.0002, batch=16, agents=2
+08:46:00 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+08:46:00 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/config.json "HTTP/1.1 200 OK"
+08:46:00 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+08:46:00 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/config.json "HTTP/1.1 200 OK"
+08:46:02 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+08:46:02 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/config.json "HTTP/1.1 200 OK"
+08:46:02 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+08:46:02 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/config.json "HTTP/1.1 200 OK"
+08:46:03 [INFO] ogenti_train.config: Config saved to checkpoints\config.json
+08:46:03 [INFO] ogenti_train.train: Checkpoint saved: _phase_1
+08:47:05 [INFO] ogenti_train.train: [Ep    25 | Phase 1/simple] R=0.159  acc=0.015  comp=0.2x  tokens=7→29  (avg: R=0.159  acc=0.015  comp=0.2x)
+08:47:05 [INFO] ogenti_train.train: Running evaluation (5 episodes)...
+08:51:44 [INFO] ogenti_train.train: Eval: accuracy=0.0439, compression=0.4x
+08:58:13 [INFO] ogenti_train.train: [Ep    30 | Phase 1/simple] R=0.156  acc=0.000  comp=0.3x  tokens=8→29  (avg: R=0.163  acc=0.014  comp=0.5x)
+09:05:15 [INFO] ogenti_train.train: [Ep    35 | Phase 1/simple] R=0.169  acc=0.016  comp=1.2x  tokens=33→28  (avg: R=0.165  acc=0.015  comp=0.6x)
+09:19:49 [INFO] ogenti_train.train: [Ep    40 | Phase 1/simple] R=0.168  acc=0.013  comp=1.1x  tokens=32→28  (avg: R=0.167  acc=0.016  comp=0.8x)
+09:27:47 [INFO] ogenti_train.train: [Ep    45 | Phase 1/simple] R=0.189  acc=0.059  comp=1.2x  tokens=35→28  (avg: R=0.169  acc=0.020  comp=0.7x)
+09:31:40 [INFO] ogenti_train.curriculum: Phase 1 (simple) hit max episodes (25), advancing
+09:31:40 [INFO] ogenti_train.curriculum: ═══ Phase transition: simple → complex ═══
+09:31:40 [INFO] ogenti_train.train: Phase transition → 2 (complex): lr=0.0001, batch=8, agents=3
+09:31:41 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+09:31:41 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/config.json "HTTP/1.1 200 OK"
+09:31:41 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+09:31:41 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/config.json "HTTP/1.1 200 OK"
+09:31:42 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+09:31:42 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/config.json "HTTP/1.1 200 OK"
+09:31:42 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+09:31:42 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/config.json "HTTP/1.1 200 OK"
+09:31:43 [INFO] ogenti_train.config: Config saved to checkpoints\config.json
+09:31:43 [INFO] ogenti_train.train: Checkpoint saved: _phase_2
+09:37:24 [INFO] ogenti_train.train: [Ep    50 | Phase 2/complex] R=0.185  acc=0.059  comp=0.7x  tokens=20→28  (avg: R=0.185  acc=0.059  comp=0.7x)
+09:37:24 [INFO] ogenti_train.train: Running evaluation (5 episodes)...
+09:42:31 [INFO] ogenti_train.train: Eval: accuracy=0.0326, compression=1.6x
+09:42:35 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+09:42:35 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/config.json "HTTP/1.1 200 OK"
+09:42:35 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+09:42:35 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/config.json "HTTP/1.1 200 OK"
+09:42:36 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+09:42:36 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/config.json "HTTP/1.1 200 OK"
+09:42:36 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+09:42:36 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/config.json "HTTP/1.1 200 OK"
+09:42:37 [INFO] ogenti_train.config: Config saved to checkpoints\config.json
+09:42:37 [INFO] ogenti_train.train: Checkpoint saved: _ep50
+09:47:41 [INFO] ogenti_train.train: [Ep    55 | Phase 2/complex] R=0.173  acc=0.023  comp=1.9x  tokens=52→28  (avg: R=0.186  acc=0.055  comp=1.6x)
+09:57:54 [INFO] ogenti_train.train: [Ep    60 | Phase 2/complex] R=0.177  acc=0.029  comp=2.0x  tokens=55→28  (avg: R=0.181  acc=0.043  comp=1.6x)
+10:04:17 [INFO] ogenti_train.train: [Ep    65 | Phase 2/complex] R=0.186  acc=0.035  comp=2.3x  tokens=65→28  (avg: R=0.179  acc=0.037  comp=1.6x)
+10:13:54 [INFO] ogenti_train.train: [Ep    70 | Phase 2/complex] R=0.169  acc=0.000  comp=1.9x  tokens=50→27  (avg: R=0.180  acc=0.036  comp=1.7x)
+10:22:56 [INFO] ogenti_train.curriculum: Phase 2 (complex) hit max episodes (25), advancing
+10:22:56 [INFO] ogenti_train.curriculum: ═══ Phase transition: complex → generalize ═══
+10:22:56 [INFO] ogenti_train.train: Phase transition → 3 (generalize): lr=5e-05, batch=8, agents=2
+10:22:57 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+10:22:57 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/config.json "HTTP/1.1 200 OK"
+10:22:57 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+10:22:57 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/config.json "HTTP/1.1 200 OK"
+10:22:58 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+10:22:58 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/config.json "HTTP/1.1 200 OK"
+10:22:58 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+10:22:58 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/config.json "HTTP/1.1 200 OK"
+10:22:59 [INFO] ogenti_train.config: Config saved to checkpoints\config.json
+10:22:59 [INFO] ogenti_train.train: Checkpoint saved: _phase_3
+10:24:15 [INFO] ogenti_train.train: [Ep    75 | Phase 3/generalize] R=0.182  acc=0.053  comp=1.1x  tokens=31→27  (avg: R=0.182  acc=0.053  comp=1.1x)
+10:24:15 [INFO] ogenti_train.train: Running evaluation (5 episodes)...
+10:30:05 [INFO] ogenti_train.train: Eval: accuracy=0.0158, compression=0.9x
+10:35:03 [INFO] ogenti_train.train: [Ep    80 | Phase 3/generalize] R=0.171  acc=0.026  comp=0.8x  tokens=21→27  (avg: R=0.170  acc=0.023  comp=0.8x)
+10:43:39 [INFO] ogenti_train.train: [Ep    85 | Phase 3/generalize] R=0.180  acc=0.052  comp=1.5x  tokens=41→27  (avg: R=0.173  acc=0.033  comp=1.0x)
+10:53:28 [INFO] ogenti_train.train: [Ep    90 | Phase 3/generalize] R=0.178  acc=0.046  comp=1.2x  tokens=32→27  (avg: R=0.175  acc=0.039  comp=1.0x)
+10:58:51 [INFO] ogenti_train.train: [Ep    95 | Phase 3/generalize] R=0.161  acc=0.000  comp=1.2x  tokens=32→27  (avg: R=0.173  acc=0.033  comp=1.0x)
+11:08:20 [INFO] ogenti_train.curriculum: Phase 3 (generalize) hit max episodes (25), advancing
+11:08:20 [INFO] ogenti_train.curriculum: ═══ Phase transition: generalize → universalize ═══
+11:08:20 [INFO] ogenti_train.train: Phase transition → 4 (universalize): lr=2e-05, batch=4, agents=2
+11:08:20 [INFO] ogenti_train.train: ═══ Phase 4: Initializing Universal Adapter ═══
+11:08:20 [INFO] ogenti_train.train: Teacher (Qwen LoRA) frozen.
+11:08:20 [INFO] ogenti_train.train: Source model hidden size: 896
+11:08:20 [INFO] ogenti_train.train: Universal adapter created: 16,994,048 params (PPH + PRH, hidden_dim=256)
+11:08:21 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+11:08:21 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/config.json "HTTP/1.1 200 OK"
+11:08:21 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+11:08:21 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/config.json "HTTP/1.1 200 OK"
+11:08:22 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+11:08:22 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/config.json "HTTP/1.1 200 OK"
+11:08:22 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+11:08:22 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/config.json "HTTP/1.1 200 OK"
+11:08:23 [INFO] ogenti_train.config: Config saved to checkpoints\config.json
+11:08:23 [INFO] ogenti_train.train: Checkpoint saved: _phase_4
+11:08:23 [INFO] ogenti_train.train: Hit total_episodes cap (100), stopping
+11:08:23 [INFO] ogenti_train.train: ═══ Training complete ═══
+Episodes: 100 | Time: 172.1 min | Best reward: 0.2582
+11:08:23 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+11:08:23 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/config.json "HTTP/1.1 200 OK"
+11:08:23 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+11:08:23 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/config.json "HTTP/1.1 200 OK"
+11:08:24 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+11:08:24 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/config.json "HTTP/1.1 200 OK"
+11:08:24 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+11:08:24 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-0.5B-Instruct/7ae557604adf67be50417f59c2c2f167def9a775/config.json "HTTP/1.1 200 OK"
+11:08:24 [INFO] ogenti_train.config: Config saved to checkpoints\config.json
+11:08:24 [INFO] ogenti_train.train: Checkpoint saved: _final
+11:08:24 [INFO] ogenti_core.adapter: Protocol vocab saved: 0 tokens → checkpoints\universal_adapter\protocol_vocab.json
+11:08:25 [INFO] ogenti_core.adapter: OgentiAdapter saved to checkpoints\universal_adapter
+11:08:25 [INFO] ogenti_train.train: ═══ Universal Adapter exported to checkpoints\universal_adapter ═══
+  PPH + PRH weights + protocol vocab
+  Attach to any model: adapter.attach(model, tokenizer)
+11:08:25 [INFO] ogenti.production: ═══ Done. 100 episodes in 172.1 min (0.0 ep/s) ═══
+11:08:25 [INFO] ogenti.production: Goodbye.

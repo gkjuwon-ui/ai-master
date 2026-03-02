@@ -70,13 +70,13 @@ body::before {
     align-items: center;
     gap: 8px;
 }
-.nav-brand:hover { color: var(--pink); }
+.nav-brand:hover { color: var(--purple); }
 .nav-tag {
     font-size: 8px;
-    color: var(--pink);
-    background: rgba(255,107,157,0.15);
+    color: var(--purple);
+    background: rgba(176,96,255,0.15);
     padding: 2px 6px;
-    border: 1px solid var(--pink);
+    border: 1px solid var(--purple);
 }
 .nav-links {
     display: flex;
@@ -144,7 +144,7 @@ body::before {
 .card-title {
     font-family: 'Press Start 2P', monospace;
     font-size: 11px;
-    color: var(--pink);
+    color: var(--cyan);
     margin-bottom: 16px;
 }
 .card-row {
@@ -160,7 +160,7 @@ body::before {
 .card-value { color: var(--text); font-weight: bold; }
 .card-value.cyan { color: var(--cyan); }
 .card-value.green { color: var(--green); }
-.card-value.pink { color: var(--pink); }
+.card-value.pink { color: var(--purple); }
 .card-value.yellow { color: var(--yellow); }
 
 /* ── Auth Pages (centered) ── */
@@ -195,7 +195,7 @@ body::before {
 .auth-title {
     font-family: 'Press Start 2P', monospace;
     font-size: 12px;
-    color: var(--pink);
+    color: var(--cyan);
     margin-bottom: 24px;
 }
 
@@ -262,11 +262,11 @@ body::before {
 }
 .btn-secondary {
     background: transparent;
-    color: var(--pink);
-    border-color: var(--pink);
+    color: var(--purple);
+    border-color: var(--purple);
 }
 .btn-secondary:hover {
-    background: var(--pink);
+    background: var(--purple);
     color: var(--bg);
 }
 .btn-green {
@@ -401,14 +401,14 @@ tr:hover td { background: rgba(0,240,255,0.03); }
     transition: all .15s;
 }
 .model-card:hover, .model-card.selected {
-    border-color: var(--pink);
-    box-shadow: 0 0 15px rgba(255,107,157,0.15);
+    border-color: var(--purple);
+    box-shadow: 0 0 15px rgba(176,96,255,0.15);
 }
-.model-card.selected { background: rgba(255,107,157,0.05); }
+.model-card.selected { background: rgba(176,96,255,0.05); }
 .model-name {
     font-family: 'Press Start 2P', monospace;
     font-size: 9px;
-    color: var(--pink);
+    color: var(--purple);
     margin-bottom: 6px;
 }
 .model-detail {
@@ -511,7 +511,7 @@ tr:hover td { background: rgba(0,240,255,0.03); }
 }
 .badge-green { border-color: var(--green); color: var(--green); background: rgba(57,255,20,0.1); }
 .badge-cyan { border-color: var(--cyan); color: var(--cyan); background: rgba(0,240,255,0.1); }
-.badge-pink { border-color: var(--pink); color: var(--pink); background: rgba(255,107,157,0.1); }
+.badge-purple { border-color: var(--purple); color: var(--purple); background: rgba(176,96,255,0.1); }
 .badge-yellow { border-color: var(--yellow); color: var(--yellow); background: rgba(255,224,102,0.1); }
 .badge-red { border-color: var(--red); color: var(--red); background: rgba(255,68,68,0.1); }
 

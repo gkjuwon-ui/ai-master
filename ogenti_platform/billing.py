@@ -184,3 +184,53 @@ async def get_transactions(user: User = Depends(get_current_user), db: Session =
 async def get_stripe_key():
     """Return publishable key for frontend"""
     return {"publishable_key": STRIPE_PUBLISHABLE_KEY}
+
+
+@router.post("/webhook")
+async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
+    """Stripe webhook — handles payment_intent.succeeded to add credits."""
+    payload = await request.body()
+    sig_header = request.headers.get("stripe-signature", "")
+
+    try:
+        event = stripe.Webhook.construct_event(payload, sig_header, STRIPE_WEBHOOK_SECRET)
+    except stripe.error.SignatureVerificationError:
+        raise HTTPException(400, "Invalid signature")
+    except Exception as e:
+        raise HTTPException(400, f"Webhook error: {e}")
+
+    if event["type"] == "payment_intent.succeeded":
+        intent = event["data"]["object"]
+        meta = intent.get("metadata", {})
+        user_id = int(meta.get("user_id", 0))
+        credits = int(meta.get("credits", 0))
+        package_id = meta.get("package_id", "")
+
+        if user_id and credits:
+            user = db.query(User).filter(User.id == user_id).first()
+            if user:
+                # 중복 처리 방지 — 이미 같은 payment_id가 있으면 스킵
+                existing = db.query(Transaction).filter(
+                    Transaction.stripe_payment_id == intent["id"]
+                ).first()
+                if not existing:
+                    user.credits += credits
+                    if user.credits >= 50_000:
+                        user.tier = "enterprise"
+                    elif user.credits >= 5_000:
+                        user.tier = "pro"
+                    elif user.credits >= 1_000:
+                        user.tier = "starter"
+
+                    txn = Transaction(
+                        user_id=user.id,
+                        type="purchase",
+                        amount_cents=intent.get("amount", 0),
+                        credits=credits,
+                        description=f"Webhook: {package_id} package",
+                        stripe_payment_id=intent["id"],
+                    )
+                    db.add(txn)
+                    db.commit()
+
+    return {"status": "ok"}

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OGENTI — LOGIN</title>
+    <link rel="stylesheet" href="/platform/style.css">
+</head>
+<body data-page="login">
+    <nav id="main-nav" class="nav"></nav>
+
+    <div class="auth-wrap">
+        <div class="auth-box">
+            <div class="auth-logo">OGENTI</div>
+            <div class="auth-subtitle">AI-TO-AI COMMUNICATION PROTOCOL</div>
+            <div class="auth-title">— LOGIN —</div>
+
+            <div id="msg" class="msg"></div>
+
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label class="form-label">EMAIL</label>
+                    <input type="email" id="email" class="form-input" placeholder="you@example.com" required autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">PASSWORD</label>
+                    <input type="password" id="password" class="form-input" placeholder="••••••••" required autocomplete="current-password">
+                </div>
+                <button type="submit" id="submitBtn" class="btn btn-primary">
+                    LOG IN
+                </button>
+            </form>
+
+            <div class="auth-link">
+                NO ACCOUNT? <a href="/platform/signup.html">CREATE ONE →</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="/platform/app.js"></script>
+    <script>
+        Auth.redirectIfAuth();
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            hideMsg('msg');
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.textContent = 'LOGGING IN...';
+
+            try {
+                const data = await api('POST', '/api/auth/login', {
+                    email: document.getElementById('email').value.trim(),
+                    password: document.getElementById('password').value
+                });
+                Auth.setToken(data.token);
+                await Auth.fetchUser();
+                window.location.href = '/platform/account.html';
+            } catch (err) {
+                showMsg('msg', err.message, 'error');
+                btn.disabled = false;
+                btn.textContent = 'LOG IN';
+            }
+        }
+    </script>
+</body>
+</html>

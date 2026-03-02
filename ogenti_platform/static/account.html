@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OGENTI — ACCOUNT</title>
+    <link rel="stylesheet" href="/platform/style.css">
+</head>
+<body data-page="account">
+    <nav id="main-nav" class="nav"></nav>
+
+    <div class="page-wrap">
+        <div class="page-title">ACCOUNT</div>
+        <div class="page-sub">YOUR OGENTI PROFILE & STATS</div>
+
+        <!-- First-time API key alert -->
+        <div id="firstKeyAlert" class="msg msg-success" style="display:none;">
+            <div style="margin-bottom:8px;font-family:'Press Start 2P',monospace;font-size:9px;">
+                🔑 YOUR FIRST API KEY
+            </div>
+            <div class="key-display" id="firstKeyValue" style="margin:8px 0"></div>
+            <div class="key-warning">
+                ⚠ SAVE THIS KEY NOW — YOU WON'T SEE IT AGAIN
+            </div>
+            <button onclick="dismissFirstKey()" class="btn btn-small btn-secondary" style="margin-top:10px">
+                I SAVED IT →
+            </button>
+        </div>
+
+        <!-- Stats bar -->
+        <div class="stat-bar">
+            <div class="stat-item">
+                <div class="stat-number" id="creditBalance">—</div>
+                <div class="stat-label">CREDITS</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="currentTier">—</div>
+                <div class="stat-label">TIER</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="totalJobs">—</div>
+                <div class="stat-label">TRAINING JOBS</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="apiKeyCount">—</div>
+                <div class="stat-label">API KEYS</div>
+            </div>
+        </div>
+
+        <!-- Profile card -->
+        <div class="card">
+            <div class="card-title">PROFILE</div>
+            <div class="card-row">
+                <span class="card-label">EMAIL</span>
+                <span class="card-value cyan" id="userEmail">—</span>
+            </div>
+            <div class="card-row">
+                <span class="card-label">NAME</span>
+                <span class="card-value" id="userName">—</span>
+            </div>
+            <div class="card-row">
+                <span class="card-label">MEMBER SINCE</span>
+                <span class="card-value" id="userSince">—</span>
+            </div>
+            <div class="card-row">
+                <span class="card-label">EMAIL VERIFIED</span>
+                <span id="userVerified">—</span>
+            </div>
+        </div>
+
+        <!-- Tier card -->
+        <div class="card">
+            <div class="card-title">YOUR TIER</div>
+            <div id="tierInfo"></div>
+        </div>
+
+        <!-- Quick actions -->
+        <div class="card">
+            <div class="card-title">QUICK ACTIONS</div>
+            <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;">
+                <a href="/platform/training.html" class="btn btn-primary btn-small">LAUNCH TRAINING</a>
+                <a href="/platform/billing.html" class="btn btn-green btn-small">BUY CREDITS</a>
+                <a href="/platform/api_keys.html" class="btn btn-secondary btn-small">MANAGE KEYS</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">OGENTI © 2025 — AI-TO-AI COMMUNICATION PROTOCOL</div>
+
+    <script src="/platform/app.js"></script>
+    <script>
+        if (!Auth.requireAuth()) { /* redirects */ }
+
+        // Show first-time API key
+        const firstKey = localStorage.getItem('og_first_key');
+        if (firstKey) {
+            const alert = document.getElementById('firstKeyAlert');
+            alert.style.display = 'block';
+            alert.className = 'msg show msg-success';
+            document.getElementById('firstKeyValue').textContent = firstKey;
+        }
+
+        function dismissFirstKey() {
+            localStorage.removeItem('og_first_key');
+            document.getElementById('firstKeyAlert').style.display = 'none';
+        }
+
+        async function loadAccount() {
+            try {
+                const user = await Auth.fetchUser();
+                if (!user) return;
+
+                document.getElementById('creditBalance').textContent = formatCredits(user.credits);
+                document.getElementById('currentTier').textContent = (user.tier || 'free').toUpperCase();
+                document.getElementById('userEmail').textContent = user.email;
+                document.getElementById('userName').textContent = user.name || '—';
+                document.getElementById('userSince').textContent = formatDate(user.created_at);
+                document.getElementById('userVerified').innerHTML = user.email_verified
+                    ? '<span class="badge badge-green">YES</span>'
+                    : '<span class="badge badge-red">NO</span>';
+
+                renderNav('account');
+
+                // Load jobs count
+                try {
+                    const jobs = await api('GET', '/api/training/jobs');
+                    document.getElementById('totalJobs').textContent = jobs.length;
+                } catch { document.getElementById('totalJobs').textContent = '0'; }
+
+                // Load keys count
+                try {
+                    const keys = await api('GET', '/api/keys/list');
+                    document.getElementById('apiKeyCount').textContent = keys.length;
+                } catch { document.getElementById('apiKeyCount').textContent = '0'; }
+
+                // Load tier info
+                try {
+                    const tiers = await api('GET', '/api/billing/tiers');
+                    const current = tiers.find(t => t.name === (user.tier || 'free'));
+                    if (current) {
+                        document.getElementById('tierInfo').innerHTML = `
+                            <div class="card-row">
+                                <span class="card-label">TIER</span>
+                                <span class="badge badge-cyan">${current.name.toUpperCase()}</span>
+                            </div>
+                            <div class="card-row">
+                                <span class="card-label">MODELS AVAILABLE</span>
+                                <span class="card-value">${current.models_available}</span>
+                            </div>
+                            <div class="card-row">
+                                <span class="card-label">MAX CREDITS</span>
+                                <span class="card-value green">${current.max_credits === -1 ? 'UNLIMITED' : formatCredits(current.max_credits)}</span>
+                            </div>
+                            <div class="card-row">
+                                <span class="card-label">UPGRADE AT</span>
+                                <span class="card-value yellow">${current.credits_required === 0 ? '—' : '$' + (current.credits_required * 0.005).toFixed(0) + ' spent'}</span>
+                            </div>
+                        `;
+                    }
+                } catch {}
+
+            } catch (err) {
+                console.error('Failed to load account:', err);
+            }
+        }
+
+        loadAccount();
+    </script>
+</body>
+</html>

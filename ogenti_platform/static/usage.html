@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OGENTI — USAGE</title>
+    <link rel="stylesheet" href="/platform/style.css">
+</head>
+<body data-page="usage">
+    <nav id="main-nav" class="nav"></nav>
+
+    <div class="page-wrap">
+        <div class="page-title">USAGE</div>
+        <div class="page-sub">CREDIT USAGE & TRANSACTION HISTORY</div>
+
+        <!-- Stats -->
+        <div class="stat-bar">
+            <div class="stat-item">
+                <div class="stat-number green" id="balance">—</div>
+                <div class="stat-label">CURRENT BALANCE</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number cyan" id="totalPurchased">—</div>
+                <div class="stat-label">TOTAL PURCHASED</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number pink" id="totalSpent">—</div>
+                <div class="stat-label">TOTAL USED</div>
+            </div>
+        </div>
+
+        <!-- Transaction history -->
+        <div class="card">
+            <div class="card-title">TRANSACTION HISTORY</div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>DATE</th>
+                            <th>TYPE</th>
+                            <th>CREDITS</th>
+                            <th>AMOUNT</th>
+                            <th>DETAILS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="txBody">
+                        <tr><td colspan="5" style="text-align:center;color:var(--text-dim)">LOADING...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="noTx" style="display:none;text-align:center;padding:30px;color:var(--text-dim);font-size:10px;">
+                NO TRANSACTIONS YET.<br>
+                <a href="/platform/billing.html" style="color:var(--cyan)">BUY CREDITS →</a>
+            </div>
+        </div>
+
+        <!-- Training jobs -->
+        <div class="card">
+            <div class="card-title">TRAINING JOBS</div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>DATE</th>
+                            <th>MODEL</th>
+                            <th>DATASET</th>
+                            <th>EPISODES</th>
+                            <th>CREDITS</th>
+                            <th>STATUS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="jobsBody">
+                        <tr><td colspan="6" style="text-align:center;color:var(--text-dim)">LOADING...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="noJobs" style="display:none;text-align:center;padding:30px;color:var(--text-dim);font-size:10px;">
+                NO TRAINING JOBS YET.<br>
+                <a href="/platform/training.html" style="color:var(--cyan)">LAUNCH TRAINING →</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">OGENTI © 2025 — AI-TO-AI COMMUNICATION PROTOCOL</div>
+
+    <script src="/platform/app.js"></script>
+    <script>
+        if (!Auth.requireAuth()) {}
+
+        async function loadUsage() {
+            try {
+                const [bal, txns, jobs] = await Promise.all([
+                    api('GET', '/api/billing/balance'),
+                    api('GET', '/api/billing/transactions'),
+                    api('GET', '/api/training/jobs')
+                ]);
+
+                document.getElementById('balance').textContent = formatCredits(bal.credits);
+
+                // Compute totals
+                let purchased = 0, used = 0;
+                txns.forEach(t => {
+                    if (t.type === 'purchase') purchased += t.credits;
+                    if (t.type === 'training') used += Math.abs(t.credits);
+                });
+                document.getElementById('totalPurchased').textContent = formatCredits(purchased);
+                document.getElementById('totalSpent').textContent = formatCredits(used);
+
+                // Transactions table
+                const txBody = document.getElementById('txBody');
+                if (txns.length === 0) {
+                    txBody.innerHTML = '';
+                    document.getElementById('noTx').style.display = 'block';
+                } else {
+                    txBody.innerHTML = txns.map(t => `
+                        <tr>
+                            <td>${formatDate(t.created_at)}</td>
+                            <td>
+                                ${t.type === 'purchase'
+                                    ? '<span class="badge badge-green">PURCHASE</span>'
+                                    : t.type === 'training'
+                                    ? '<span class="badge badge-pink">TRAINING</span>'
+                                    : '<span class="badge badge-cyan">' + t.type.toUpperCase() + '</span>'}
+                            </td>
+                            <td style="color:${t.credits >= 0 ? 'var(--green)' : 'var(--pink)'}">
+                                ${t.credits >= 0 ? '+' : ''}${formatCredits(t.credits)}
+                            </td>
+                            <td>${t.amount_cents ? '$' + (t.amount_cents / 100).toFixed(2) : '—'}</td>
+                            <td style="color:var(--text-dim);font-size:10px">
+                                ${t.stripe_payment_id ? 'Stripe: ' + t.stripe_payment_id.substring(0, 12) + '...' : '—'}
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+
+                // Jobs table
+                const jobsBody = document.getElementById('jobsBody');
+                if (jobs.length === 0) {
+                    jobsBody.innerHTML = '';
+                    document.getElementById('noJobs').style.display = 'block';
+                } else {
+                    jobsBody.innerHTML = jobs.map(j => {
+                        const statusBadge = {
+                            'queued': 'badge-yellow',
+                            'running': 'badge-cyan',
+                            'completed': 'badge-green',
+                            'failed': 'badge-red'
+                        }[j.status] || 'badge-cyan';
+                        return `
+                            <tr>
+                                <td>${formatDate(j.created_at)}</td>
+                                <td style="color:var(--pink)">${j.model}</td>
+                                <td>${j.dataset}</td>
+                                <td>${j.episodes}</td>
+                                <td style="color:var(--pink)">-${formatCredits(j.credits_used)}</td>
+                                <td><span class="badge ${statusBadge}">${j.status.toUpperCase()}</span></td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        loadUsage();
+    </script>
+</body>
+</html>

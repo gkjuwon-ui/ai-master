@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OGENTI — BILLING</title>
+    <link rel="stylesheet" href="/platform/style.css">
+</head>
+<body data-page="billing">
+    <nav id="main-nav" class="nav"></nav>
+
+    <div class="page-wrap">
+        <div class="page-title">BILLING</div>
+        <div class="page-sub">BUY CREDITS TO TRAIN YOUR AI MODELS</div>
+
+        <div id="msg" class="msg"></div>
+
+        <!-- Current balance -->
+        <div class="stat-bar">
+            <div class="stat-item">
+                <div class="stat-number green" id="balance">—</div>
+                <div class="stat-label">CREDIT BALANCE</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number yellow" id="tier">—</div>
+                <div class="stat-label">CURRENT TIER</div>
+            </div>
+        </div>
+
+        <!-- Credit packages -->
+        <div class="card">
+            <div class="card-title">CREDIT PACKAGES</div>
+            <p style="font-size:10px;color:var(--text-dim);margin-bottom:16px;">
+                SELECT A PACKAGE TO PURCHASE CREDITS. 1 CREDIT ≈ 1 EPISODE OF TRAINING ON A 3B MODEL.
+            </p>
+            <div class="pricing-grid" id="packagesGrid">
+                <!-- Filled by JS -->
+            </div>
+        </div>
+
+        <!-- Purchase button -->
+        <button id="buyBtn" onclick="handlePurchase()" class="btn btn-green" style="margin:20px 0" disabled>
+            SELECT A PACKAGE ABOVE
+        </button>
+
+        <!-- Model cost reference -->
+        <div class="card">
+            <div class="card-title">CREDIT COSTS PER EPISODE</div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>MODEL</th><th>SIZE</th><th>CREDITS/EPISODE</th></tr>
+                    </thead>
+                    <tbody id="modelCosts">
+                        <tr><td colspan="3" style="text-align:center;color:var(--text-dim)">LOADING...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tier breakdown -->
+        <div class="card">
+            <div class="card-title">TIER LEVELS</div>
+            <p style="font-size:10px;color:var(--text-dim);margin-bottom:12px;">
+                YOUR TIER UPGRADES AUTOMATICALLY BASED ON TOTAL CREDITS PURCHASED.
+            </p>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>TIER</th><th>UNLOCK AT</th><th>MODELS</th><th>MAX CREDITS</th></tr>
+                    </thead>
+                    <tbody id="tierBody">
+                        <tr><td colspan="4" style="text-align:center;color:var(--text-dim)">LOADING...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">OGENTI © 2025 — STRIPE TEST MODE ACTIVE</div>
+
+    <script src="https://js.stripe.com/v3/"></script>
+    <script src="/platform/app.js"></script>
+    <script>
+        if (!Auth.requireAuth()) {}
+
+        let selectedPackage = null;
+
+        async function loadBilling() {
+            try {
+                // Load balance
+                const bal = await api('GET', '/api/billing/balance');
+                document.getElementById('balance').textContent = formatCredits(bal.credits);
+                document.getElementById('tier').textContent = (bal.tier || 'free').toUpperCase();
+
+                // Load packages
+                const pkgs = await api('GET', '/api/billing/packages');
+                const grid = document.getElementById('packagesGrid');
+                grid.innerHTML = pkgs.map((p, i) => `
+                    <div class="pricing-card" data-idx="${i}" onclick="selectPackage(${i})">
+                        <div class="pricing-credits">${formatCredits(p.credits)}</div>
+                        <div style="font-size:9px;color:var(--text-dim);margin-bottom:4px;">CREDITS</div>
+                        <div class="pricing-price">$${(p.price_cents / 100).toFixed(0)}</div>
+                        <div class="pricing-label">${p.name.toUpperCase()}</div>
+                    </div>
+                `).join('');
+                window._packages = pkgs;
+
+                // Load models
+                const models = await api('GET', '/api/billing/models');
+                document.getElementById('modelCosts').innerHTML = models.map(m => `
+                    <tr>
+                        <td style="color:var(--pink)">${m.name}</td>
+                        <td>${m.name.includes('3b') ? '3B' : m.name.includes('7b') ? '7B' : m.name.includes('8b') ? '8B' : m.name.includes('14b') ? '14B' : '—'}</td>
+                        <td style="color:var(--green)">${m.credits_per_episode} CR/EP</td>
+                    </tr>
+                `).join('');
+
+                // Load tiers
+                const tiers = await api('GET', '/api/billing/tiers');
+                document.getElementById('tierBody').innerHTML = tiers.map(t => `
+                    <tr>
+                        <td><span class="badge badge-cyan">${t.name.toUpperCase()}</span></td>
+                        <td>${t.credits_required === 0 ? 'DEFAULT' : formatCredits(t.credits_required) + ' CR PURCHASED'}</td>
+                        <td>${t.models_available} MODELS</td>
+                        <td>${t.max_credits === -1 ? 'UNLIMITED' : formatCredits(t.max_credits)}</td>
+                    </tr>
+                `).join('');
+
+            } catch (err) {
+                showMsg('msg', 'FAILED TO LOAD: ' + err.message, 'error');
+            }
+        }
+
+        function selectPackage(idx) {
+            selectedPackage = idx;
+            document.querySelectorAll('.pricing-card').forEach((c, i) => {
+                c.classList.toggle('selected', i === idx);
+            });
+            const pkg = window._packages[idx];
+            const btn = document.getElementById('buyBtn');
+            btn.disabled = false;
+            btn.textContent = `BUY ${formatCredits(pkg.credits)} CREDITS — $${(pkg.price_cents / 100).toFixed(0)}`;
+        }
+
+        async function handlePurchase() {
+            if (selectedPackage === null) return;
+            const pkg = window._packages[selectedPackage];
+            const btn = document.getElementById('buyBtn');
+            btn.disabled = true;
+            btn.textContent = 'PROCESSING...';
+            hideMsg('msg');
+
+            try {
+                const data = await api('POST', '/api/billing/purchase', {
+                    package_id: pkg.id
+                });
+                showMsg('msg',
+                    `${formatCredits(data.credits_added)} CREDITS ADDED! BALANCE: ${formatCredits(data.new_balance)}` +
+                    (data.tier_upgraded ? ` — TIER UPGRADED TO ${data.new_tier.toUpperCase()}!` : ''),
+                    'success'
+                );
+                document.getElementById('balance').textContent = formatCredits(data.new_balance);
+                if (data.tier_upgraded) {
+                    document.getElementById('tier').textContent = data.new_tier.toUpperCase();
+                }
+                await Auth.fetchUser();
+                renderNav('billing');
+            } catch (err) {
+                showMsg('msg', err.message, 'error');
+            }
+            btn.disabled = false;
+            btn.textContent = `BUY ${formatCredits(pkg.credits)} CREDITS — $${(pkg.price_cents / 100).toFixed(0)}`;
+        }
+
+        loadBilling();
+    </script>
+</body>
+</html>

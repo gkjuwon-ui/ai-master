@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OGENTI — SIGN UP</title>
+    <link rel="stylesheet" href="/platform/style.css">
+</head>
+<body data-page="signup">
+    <nav id="main-nav" class="nav"></nav>
+
+    <div class="auth-wrap">
+        <div class="auth-box">
+            <div class="auth-logo">OGENTI</div>
+            <div class="auth-subtitle">AI-TO-AI COMMUNICATION PROTOCOL</div>
+            <div class="auth-title">— CREATE ACCOUNT —</div>
+
+            <div id="msg" class="msg"></div>
+
+            <form id="signupForm" onsubmit="handleSignup(event)">
+                <div class="form-group">
+                    <label class="form-label">NAME</label>
+                    <input type="text" id="name" class="form-input" placeholder="your name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">EMAIL</label>
+                    <input type="email" id="email" class="form-input" placeholder="you@example.com" required autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">PASSWORD</label>
+                    <input type="password" id="password" class="form-input" placeholder="min 8 characters" required minlength="8">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">CONFIRM PASSWORD</label>
+                    <input type="password" id="password2" class="form-input" placeholder="••••••••" required minlength="8">
+                </div>
+                <button type="submit" id="submitBtn" class="btn btn-primary">
+                    CREATE ACCOUNT
+                </button>
+            </form>
+
+            <div class="auth-link">
+                ALREADY HAVE AN ACCOUNT? <a href="/platform/login.html">LOG IN →</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="/platform/app.js"></script>
+    <script>
+        Auth.redirectIfAuth();
+
+        async function handleSignup(e) {
+            e.preventDefault();
+            hideMsg('msg');
+
+            const pw = document.getElementById('password').value;
+            const pw2 = document.getElementById('password2').value;
+            if (pw !== pw2) {
+                showMsg('msg', 'PASSWORDS DO NOT MATCH', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.textContent = 'CREATING...';
+
+            try {
+                await api('POST', '/api/auth/signup', {
+                    email: document.getElementById('email').value.trim(),
+                    password: pw,
+                    name: document.getElementById('name').value.trim()
+                });
+                // Save email for verify page
+                localStorage.setItem('og_verify_email', document.getElementById('email').value.trim());
+                window.location.href = '/platform/verify.html';
+            } catch (err) {
+                showMsg('msg', err.message, 'error');
+                btn.disabled = false;
+                btn.textContent = 'CREATE ACCOUNT';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OGENTI — LAUNCH TRAINING</title>
+    <link rel="stylesheet" href="/platform/style.css">
+</head>
+<body data-page="training">
+    <nav id="main-nav" class="nav"></nav>
+
+    <div class="page-wrap">
+        <div class="page-title">TRAINING</div>
+        <div class="page-sub">LAUNCH AN AI-TO-AI COMMUNICATION TRAINING RUN</div>
+
+        <div id="msg" class="msg"></div>
+
+        <!-- Step 1: Model -->
+        <div class="card">
+            <div class="card-title">① SELECT MODEL</div>
+            <p style="font-size:10px;color:var(--text-dim);margin-bottom:12px;">
+                CHOOSE A BASE MODEL. LARGER MODELS COST MORE CREDITS PER EPISODE BUT PRODUCE STRONGER ADAPTERS.
+            </p>
+            <div class="model-grid" id="modelGrid">
+                <!-- filled by JS -->
+            </div>
+        </div>
+
+        <!-- Step 2: Dataset -->
+        <div class="card">
+            <div class="card-title">② SELECT DATASET</div>
+            <div class="model-grid" id="datasetGrid">
+                <!-- filled by JS -->
+            </div>
+        </div>
+
+        <!-- Step 3: Episodes -->
+        <div class="card">
+            <div class="card-title">③ SET EPISODES</div>
+            <p style="font-size:10px;color:var(--text-dim);margin-bottom:12px;">
+                MORE EPISODES = BETTER CONVERGENCE. WE RECOMMEND 50-200 FOR MOST USE CASES.
+            </p>
+            <div class="range-wrap">
+                <input type="range" id="episodeSlider" class="range-input" min="10" max="500" value="100" step="10" oninput="updateEstimate()">
+                <div class="range-labels">
+                    <span>10</span>
+                    <span id="episodeValue" style="color:var(--cyan);font-family:'Press Start 2P',monospace;font-size:11px;">100</span>
+                    <span>500</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cost estimate -->
+        <div class="estimate-box" id="estimateBox">
+            <div style="font-family:'Press Start 2P',monospace;font-size:9px;color:var(--pink);margin-bottom:12px;">
+                COST ESTIMATE
+            </div>
+            <div class="estimate-row">
+                <span>MODEL</span>
+                <span id="estModel" style="color:var(--pink)">—</span>
+            </div>
+            <div class="estimate-row">
+                <span>DATASET</span>
+                <span id="estDataset" style="color:var(--cyan)">—</span>
+            </div>
+            <div class="estimate-row">
+                <span>EPISODES</span>
+                <span id="estEpisodes">—</span>
+            </div>
+            <div class="estimate-row">
+                <span>COST PER EPISODE</span>
+                <span id="estCostPer">—</span>
+            </div>
+            <div class="estimate-row estimate-total">
+                <span>TOTAL CREDITS</span>
+                <span id="estTotal">—</span>
+            </div>
+            <div class="estimate-row" style="margin-top:8px">
+                <span style="color:var(--text-dim)">YOUR BALANCE</span>
+                <span id="estBalance" style="color:var(--green)">—</span>
+            </div>
+            <div id="estWarning" style="display:none;margin-top:8px;font-size:9px;color:var(--red);">
+                ⚠ NOT ENOUGH CREDITS — <a href="/platform/billing.html" style="color:var(--yellow)">BUY MORE →</a>
+            </div>
+        </div>
+
+        <!-- Launch button -->
+        <button id="launchBtn" onclick="handleLaunch()" class="btn btn-primary" disabled>
+            CONFIGURE YOUR TRAINING ABOVE
+        </button>
+
+        <!-- Active jobs -->
+        <div class="card" style="margin-top:32px">
+            <div class="card-title">YOUR TRAINING JOBS</div>
+            <div id="jobsList">
+                <div style="text-align:center;padding:20px;color:var(--text-dim);font-size:10px;">LOADING...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">OGENTI © 2025 — AI-TO-AI COMMUNICATION PROTOCOL</div>
+
+    <script src="/platform/app.js"></script>
+    <script>
+        if (!Auth.requireAuth()) {}
+
+        let selectedModel = null;
+        let selectedDataset = null;
+        let modelsData = [];
+        let datasetsData = [];
+        let userBalance = 0;
+
+        async function loadTraining() {
+            try {
+                const [models, datasets, bal, user] = await Promise.all([
+                    api('GET', '/api/billing/models'),
+                    api('GET', '/api/training/datasets'),
+                    api('GET', '/api/billing/balance'),
+                    Auth.fetchUser()
+                ]);
+
+                modelsData = models;
+                datasetsData = datasets;
+                userBalance = bal.credits;
+
+                // Render models
+                const grid = document.getElementById('modelGrid');
+                grid.innerHTML = models.map((m, i) => `
+                    <div class="model-card" data-idx="${i}" onclick="selectModel(${i})">
+                        <div class="model-name">${m.name.toUpperCase()}</div>
+                        <div class="model-detail">
+                            ${m.name.includes('3b') ? '3B params' : m.name.includes('7b') ? '7B params' : m.name.includes('8b') ? '8B params' : m.name.includes('14b') ? '14B params' : 'Custom'}
+                        </div>
+                        <div class="model-cost">${m.credits_per_episode} CR/EPISODE</div>
+                    </div>
+                `).join('');
+
+                // Render datasets
+                const dGrid = document.getElementById('datasetGrid');
+                dGrid.innerHTML = datasets.map((d, i) => `
+                    <div class="model-card" data-idx="${i}" onclick="selectDataset(${i})">
+                        <div class="model-name" style="color:var(--cyan)">${d.name.toUpperCase()}</div>
+                        <div class="model-detail">${d.description}</div>
+                        <div class="model-detail" style="color:var(--yellow);margin-top:4px;">${d.size}</div>
+                    </div>
+                `).join('');
+
+                // Load jobs
+                loadJobs();
+
+            } catch (err) {
+                showMsg('msg', 'FAILED TO LOAD: ' + err.message, 'error');
+            }
+        }
+
+        function selectModel(idx) {
+            selectedModel = idx;
+            document.querySelectorAll('#modelGrid .model-card').forEach((c, i) => {
+                c.classList.toggle('selected', i === idx);
+            });
+            updateEstimate();
+        }
+
+        function selectDataset(idx) {
+            selectedDataset = idx;
+            document.querySelectorAll('#datasetGrid .model-card').forEach((c, i) => {
+                c.classList.toggle('selected', i === idx);
+            });
+            updateEstimate();
+        }
+
+        function updateEstimate() {
+            const episodes = parseInt(document.getElementById('episodeSlider').value);
+            document.getElementById('episodeValue').textContent = episodes;
+
+            if (selectedModel === null) {
+                document.getElementById('estModel').textContent = '—';
+                document.getElementById('estTotal').textContent = '—';
+                return;
+            }
+
+            const model = modelsData[selectedModel];
+            const dataset = selectedDataset !== null ? datasetsData[selectedDataset] : null;
+            const costPer = model.credits_per_episode;
+            const total = costPer * episodes;
+
+            document.getElementById('estModel').textContent = model.name.toUpperCase();
+            document.getElementById('estDataset').textContent = dataset ? dataset.name.toUpperCase() : '—';
+            document.getElementById('estEpisodes').textContent = episodes;
+            document.getElementById('estCostPer').textContent = costPer + ' CR';
+            document.getElementById('estTotal').textContent = formatCredits(total) + ' CR';
+            document.getElementById('estBalance').textContent = formatCredits(userBalance) + ' CR';
+
+            const hasEnough = userBalance >= total;
+            document.getElementById('estWarning').style.display = hasEnough ? 'none' : 'block';
+
+            const btn = document.getElementById('launchBtn');
+            if (selectedModel !== null && selectedDataset !== null && hasEnough) {
+                btn.disabled = false;
+                btn.textContent = `LAUNCH — ${formatCredits(total)} CREDITS`;
+            } else if (!hasEnough) {
+                btn.disabled = true;
+                btn.textContent = 'NOT ENOUGH CREDITS';
+            } else {
+                btn.disabled = true;
+                btn.textContent = 'SELECT MODEL & DATASET';
+            }
+        }
+
+        async function handleLaunch() {
+            if (selectedModel === null || selectedDataset === null) return;
+            const btn = document.getElementById('launchBtn');
+            btn.disabled = true;
+            btn.textContent = 'LAUNCHING...';
+            hideMsg('msg');
+
+            const episodes = parseInt(document.getElementById('episodeSlider').value);
+            const model = modelsData[selectedModel];
+            const dataset = datasetsData[selectedDataset];
+
+            try {
+                const job = await api('POST', '/api/training/launch', {
+                    model: model.name,
+                    dataset: dataset.id,
+                    episodes: episodes
+                });
+                showMsg('msg', `TRAINING JOB #${job.job_id} LAUNCHED! ${formatCredits(job.credits_used)} CREDITS DEDUCTED.`, 'success');
+
+                // Refresh balance
+                const bal = await api('GET', '/api/billing/balance');
+                userBalance = bal.credits;
+                await Auth.fetchUser();
+                renderNav('training');
+                updateEstimate();
+                loadJobs();
+            } catch (err) {
+                showMsg('msg', err.message, 'error');
+                btn.disabled = false;
+                updateEstimate();
+            }
+        }
+
+        async function loadJobs() {
+            try {
+                const jobs = await api('GET', '/api/training/jobs');
+                const div = document.getElementById('jobsList');
+
+                if (jobs.length === 0) {
+                    div.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-dim);font-size:10px;">NO JOBS YET — LAUNCH YOUR FIRST TRAINING ABOVE</div>';
+                    return;
+                }
+
+                div.innerHTML = jobs.map(j => {
+                    const statusColor = {
+                        'queued': 'var(--yellow)',
+                        'running': 'var(--cyan)',
+                        'completed': 'var(--green)',
+                        'failed': 'var(--red)'
+                    }[j.status] || 'var(--text)';
+
+                    const statusBadge = {
+                        'queued': 'badge-yellow',
+                        'running': 'badge-cyan',
+                        'completed': 'badge-green',
+                        'failed': 'badge-red'
+                    }[j.status] || 'badge-cyan';
+
+                    return `
+                        <div style="border:2px solid var(--border);padding:16px;margin-bottom:8px;background:var(--bg);">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                                <div>
+                                    <span style="font-family:'Press Start 2P',monospace;font-size:9px;color:var(--pink);">
+                                        JOB #${j.id}
+                                    </span>
+                                    <span class="badge ${statusBadge}" style="margin-left:8px">${j.status.toUpperCase()}</span>
+                                </div>
+                                <span style="font-size:9px;color:var(--text-dim)">${formatDate(j.created_at)}</span>
+                            </div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:10px;">
+                                <div>
+                                    <div style="color:var(--text-dim);">MODEL</div>
+                                    <div style="color:var(--pink)">${j.model}</div>
+                                </div>
+                                <div>
+                                    <div style="color:var(--text-dim);">DATASET</div>
+                                    <div style="color:var(--cyan)">${j.dataset}</div>
+                                </div>
+                                <div>
+                                    <div style="color:var(--text-dim);">EPISODES</div>
+                                    <div>${j.episodes} (${formatCredits(j.credits_used)} CR)</div>
+                                </div>
+                            </div>
+                            ${j.status === 'running' ? `
+                                <div style="margin-top:10px;">
+                                    <div class="progress-wrap">
+                                        <div class="progress-bar" style="width:${j.progress || 0}%"></div>
+                                        <span class="progress-text">${j.progress || 0}%</span>
+                                    </div>
+                                    <div style="font-size:9px;color:var(--text-dim);margin-top:4px;">
+                                        PHASE: ${(j.current_phase || 'INITIALIZING').toUpperCase()}
+                                    </div>
+                                </div>
+                            ` : ''}
+                            ${j.status === 'completed' ? `
+                                <div style="margin-top:10px;display:flex;gap:12px;font-size:10px;">
+                                    ${j.accuracy ? `<span style="color:var(--green)">ACC: ${(j.accuracy * 100).toFixed(1)}%</span>` : ''}
+                                    ${j.compression ? `<span style="color:var(--cyan)">COMP: ${j.compression}x</span>` : ''}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        loadTraining();
+    </script>
+</body>
+</html>

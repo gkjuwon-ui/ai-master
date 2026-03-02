@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OGENTI — VERIFY EMAIL</title>
+    <link rel="stylesheet" href="/platform/style.css">
+</head>
+<body data-page="verify">
+    <nav id="main-nav" class="nav"></nav>
+
+    <div class="auth-wrap">
+        <div class="auth-box">
+            <div class="auth-logo">OGENTI</div>
+            <div class="auth-subtitle">CHECK YOUR INBOX</div>
+            <div class="auth-title">— ENTER CODE —</div>
+
+            <p style="font-size:10px;color:var(--text-dim);margin-bottom:20px;">
+                WE SENT A 6-DIGIT CODE TO<br>
+                <span id="emailDisplay" style="color:var(--cyan)"></span>
+            </p>
+
+            <div id="msg" class="msg"></div>
+
+            <form id="verifyForm" onsubmit="handleVerify(event)">
+                <div class="form-group">
+                    <label class="form-label">VERIFICATION CODE</label>
+                    <input type="text" id="code" class="form-input verification-input"
+                           placeholder="000000" required maxlength="6" pattern="[0-9]{6}"
+                           inputmode="numeric" autocomplete="one-time-code">
+                </div>
+                <button type="submit" id="submitBtn" class="btn btn-primary">
+                    VERIFY
+                </button>
+            </form>
+
+            <div style="margin-top:20px">
+                <button onclick="handleResend()" id="resendBtn" class="btn btn-secondary btn-small" style="width:100%">
+                    RESEND CODE
+                </button>
+            </div>
+
+            <div class="auth-link">
+                WRONG EMAIL? <a href="/platform/signup.html">GO BACK →</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="/platform/app.js"></script>
+    <script>
+        const verifyEmail = localStorage.getItem('og_verify_email');
+        if (!verifyEmail) {
+            window.location.href = '/platform/signup.html';
+        }
+        document.getElementById('emailDisplay').textContent = verifyEmail || '';
+
+        async function handleVerify(e) {
+            e.preventDefault();
+            hideMsg('msg');
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.textContent = 'VERIFYING...';
+
+            try {
+                const data = await api('POST', '/api/auth/verify', {
+                    email: verifyEmail,
+                    code: document.getElementById('code').value.trim()
+                });
+                // data has token + api_key
+                Auth.setToken(data.token);
+                await Auth.fetchUser();
+                localStorage.removeItem('og_verify_email');
+
+                // Show the API key briefly
+                if (data.api_key) {
+                    localStorage.setItem('og_first_key', data.api_key);
+                }
+                window.location.href = '/platform/account.html';
+            } catch (err) {
+                showMsg('msg', err.message, 'error');
+                btn.disabled = false;
+                btn.textContent = 'VERIFY';
+            }
+        }
+
+        async function handleResend() {
+            const btn = document.getElementById('resendBtn');
+            btn.disabled = true;
+            btn.textContent = 'SENDING...';
+            hideMsg('msg');
+
+            try {
+                await api('POST', '/api/auth/resend-code', { email: verifyEmail });
+                showMsg('msg', 'NEW CODE SENT! CHECK YOUR INBOX.', 'success');
+            } catch (err) {
+                showMsg('msg', err.message, 'error');
+            }
+            btn.disabled = false;
+            btn.textContent = 'RESEND CODE';
+        }
+    </script>
+</body>
+</html>

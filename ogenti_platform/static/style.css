@@ -1,0 +1,592 @@
+/* ═══════════════════════════════════════════════
+   OGENTI PLATFORM — RETRO 16-BIT STYLE
+   ═══════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen:wght@400;700&display=swap');
+
+/* ── Reset ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root {
+    --bg:        #0a0a2e;
+    --bg2:       #12123a;
+    --bg3:       #1a1a4e;
+    --cyan:      #00f0ff;
+    --pink:      #ff6b9d;
+    --green:     #39ff14;
+    --yellow:    #ffe066;
+    --red:       #ff4444;
+    --text:      #e0e0ff;
+    --text-dim:  #8080a0;
+    --border:    #2a2a5e;
+    --pixel-border: 3px solid var(--cyan);
+}
+
+html { font-size: 16px; }
+body {
+    font-family: 'Silkscreen', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    image-rendering: pixelated;
+    line-height: 1.6;
+}
+
+/* ── CRT Overlay ── */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+        0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+}
+
+/* ── Navigation ── */
+.nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 24px;
+    background: var(--bg2);
+    border-bottom: 2px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+.nav-brand {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 14px;
+    color: var(--cyan);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.nav-brand:hover { color: var(--pink); }
+.nav-tag {
+    font-size: 8px;
+    color: var(--pink);
+    background: rgba(255,107,157,0.15);
+    padding: 2px 6px;
+    border: 1px solid var(--pink);
+}
+.nav-links {
+    display: flex;
+    gap: 4px;
+}
+.nav-link {
+    font-family: 'Silkscreen', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    text-decoration: none;
+    padding: 6px 12px;
+    border: 1px solid transparent;
+    transition: all .15s;
+}
+.nav-link:hover, .nav-link.active {
+    color: var(--cyan);
+    border-color: var(--border);
+    background: rgba(0,240,255,0.05);
+}
+.nav-user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.nav-credits {
+    font-size: 10px;
+    color: var(--green);
+    background: rgba(57,255,20,0.1);
+    padding: 4px 10px;
+    border: 1px solid rgba(57,255,20,0.3);
+}
+.nav-tier {
+    font-size: 9px;
+    color: var(--yellow);
+    padding: 3px 8px;
+    border: 1px solid rgba(255,224,102,0.3);
+    background: rgba(255,224,102,0.1);
+}
+
+/* ── Layout ── */
+.page-wrap {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 32px 20px;
+}
+.page-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 16px;
+    color: var(--cyan);
+    margin-bottom: 8px;
+}
+.page-sub {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-bottom: 32px;
+}
+
+/* ── Cards ── */
+.card {
+    background: var(--bg2);
+    border: 2px solid var(--border);
+    padding: 24px;
+    margin-bottom: 16px;
+}
+.card-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 11px;
+    color: var(--pink);
+    margin-bottom: 16px;
+}
+.card-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+}
+.card-row:last-child { border-bottom: none; }
+.card-label { color: var(--text-dim); }
+.card-value { color: var(--text); font-weight: bold; }
+.card-value.cyan { color: var(--cyan); }
+.card-value.green { color: var(--green); }
+.card-value.pink { color: var(--pink); }
+.card-value.yellow { color: var(--yellow); }
+
+/* ── Auth Pages (centered) ── */
+.auth-wrap {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+.auth-box {
+    background: var(--bg2);
+    border: 3px solid var(--cyan);
+    padding: 40px;
+    width: 100%;
+    max-width: 420px;
+    text-align: center;
+    box-shadow: 0 0 30px rgba(0,240,255,0.1);
+}
+.auth-logo {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 20px;
+    color: var(--cyan);
+    margin-bottom: 4px;
+}
+.auth-subtitle {
+    font-size: 9px;
+    color: var(--text-dim);
+    margin-bottom: 32px;
+    letter-spacing: 2px;
+}
+.auth-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 12px;
+    color: var(--pink);
+    margin-bottom: 24px;
+}
+
+/* ── Forms ── */
+.form-group {
+    margin-bottom: 16px;
+    text-align: left;
+}
+.form-label {
+    display: block;
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+    letter-spacing: 1px;
+}
+.form-input {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--bg);
+    border: 2px solid var(--border);
+    color: var(--text);
+    font-family: 'Silkscreen', monospace;
+    font-size: 13px;
+    outline: none;
+    transition: border-color .15s;
+}
+.form-input:focus {
+    border-color: var(--cyan);
+    box-shadow: 0 0 10px rgba(0,240,255,0.2);
+}
+.form-input::placeholder { color: var(--text-dim); opacity: 0.5; }
+
+.verification-input {
+    text-align: center;
+    font-size: 24px;
+    letter-spacing: 8px;
+    font-family: 'Press Start 2P', monospace;
+    color: var(--cyan);
+}
+
+/* ── Buttons ── */
+.btn {
+    display: inline-block;
+    padding: 12px 24px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    border: 2px solid;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+    transition: all .15s;
+    letter-spacing: 1px;
+    width: 100%;
+}
+.btn-primary {
+    background: var(--cyan);
+    color: var(--bg);
+    border-color: var(--cyan);
+}
+.btn-primary:hover {
+    background: transparent;
+    color: var(--cyan);
+    box-shadow: 0 0 15px rgba(0,240,255,0.3);
+}
+.btn-secondary {
+    background: transparent;
+    color: var(--pink);
+    border-color: var(--pink);
+}
+.btn-secondary:hover {
+    background: var(--pink);
+    color: var(--bg);
+}
+.btn-green {
+    background: var(--green);
+    color: var(--bg);
+    border-color: var(--green);
+}
+.btn-green:hover {
+    background: transparent;
+    color: var(--green);
+}
+.btn-small {
+    padding: 6px 14px;
+    font-size: 8px;
+    width: auto;
+}
+.btn-danger {
+    background: transparent;
+    color: var(--red);
+    border-color: var(--red);
+}
+.btn-danger:hover {
+    background: var(--red);
+    color: #fff;
+}
+.btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* ── Messages ── */
+.msg {
+    padding: 10px 14px;
+    font-size: 10px;
+    margin: 12px 0;
+    border: 1px solid;
+    display: none;
+}
+.msg.show { display: block; }
+.msg-error { border-color: var(--red); color: var(--red); background: rgba(255,68,68,0.1); }
+.msg-success { border-color: var(--green); color: var(--green); background: rgba(57,255,20,0.1); }
+.msg-info { border-color: var(--cyan); color: var(--cyan); background: rgba(0,240,255,0.1); }
+
+/* ── Auth link ── */
+.auth-link {
+    margin-top: 20px;
+    font-size: 10px;
+    color: var(--text-dim);
+}
+.auth-link a {
+    color: var(--cyan);
+    text-decoration: none;
+}
+.auth-link a:hover { text-decoration: underline; }
+
+/* ── Tables ── */
+.table-wrap {
+    overflow-x: auto;
+    margin: 16px 0;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+}
+th {
+    text-align: left;
+    padding: 10px 12px;
+    background: var(--bg3);
+    color: var(--cyan);
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    letter-spacing: 1px;
+    border-bottom: 2px solid var(--border);
+}
+td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+}
+tr:hover td { background: rgba(0,240,255,0.03); }
+
+/* ── Pricing Grid ── */
+.pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin: 20px 0;
+}
+.pricing-card {
+    background: var(--bg2);
+    border: 2px solid var(--border);
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .15s;
+}
+.pricing-card:hover, .pricing-card.selected {
+    border-color: var(--cyan);
+    box-shadow: 0 0 20px rgba(0,240,255,0.15);
+}
+.pricing-card.selected { background: rgba(0,240,255,0.05); }
+.pricing-credits {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 14px;
+    color: var(--cyan);
+    margin-bottom: 4px;
+}
+.pricing-price {
+    font-size: 20px;
+    color: var(--green);
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+.pricing-label {
+    font-size: 9px;
+    color: var(--text-dim);
+}
+
+/* ── Model Selector ── */
+.model-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin: 12px 0;
+}
+.model-card {
+    background: var(--bg2);
+    border: 2px solid var(--border);
+    padding: 16px;
+    cursor: pointer;
+    transition: all .15s;
+}
+.model-card:hover, .model-card.selected {
+    border-color: var(--pink);
+    box-shadow: 0 0 15px rgba(255,107,157,0.15);
+}
+.model-card.selected { background: rgba(255,107,157,0.05); }
+.model-name {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    color: var(--pink);
+    margin-bottom: 6px;
+}
+.model-detail {
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-bottom: 2px;
+}
+.model-cost {
+    font-size: 10px;
+    color: var(--green);
+    margin-top: 6px;
+}
+
+/* ── Stat Bar ── */
+.stat-bar {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+.stat-item {
+    background: var(--bg2);
+    border: 2px solid var(--border);
+    padding: 16px 20px;
+    flex: 1;
+    min-width: 120px;
+    text-align: center;
+}
+.stat-number {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 18px;
+    color: var(--cyan);
+}
+.stat-label {
+    font-size: 9px;
+    color: var(--text-dim);
+    margin-top: 4px;
+    letter-spacing: 1px;
+}
+
+/* ── API Key Display ── */
+.key-display {
+    background: var(--bg);
+    border: 2px solid var(--green);
+    padding: 14px;
+    font-family: monospace;
+    font-size: 13px;
+    color: var(--green);
+    word-break: break-all;
+    margin: 12px 0;
+    position: relative;
+}
+.key-warning {
+    font-size: 9px;
+    color: var(--yellow);
+    margin-top: 8px;
+}
+
+/* ── Progress Bar ── */
+.progress-wrap {
+    background: var(--bg);
+    border: 2px solid var(--border);
+    height: 24px;
+    position: relative;
+    overflow: hidden;
+}
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--cyan), var(--green));
+    transition: width .3s;
+    position: relative;
+}
+.progress-bar::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+        90deg, transparent, transparent 4px, rgba(0,0,0,0.2) 4px, rgba(0,0,0,0.2) 8px
+    );
+}
+.progress-text {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 9px;
+    font-family: 'Press Start 2P', monospace;
+    color: var(--text);
+    text-shadow: 1px 1px 0 var(--bg);
+}
+
+/* ── Badge ── */
+.badge {
+    display: inline-block;
+    padding: 3px 8px;
+    font-size: 8px;
+    font-family: 'Press Start 2P', monospace;
+    border: 1px solid;
+    letter-spacing: 1px;
+}
+.badge-green { border-color: var(--green); color: var(--green); background: rgba(57,255,20,0.1); }
+.badge-cyan { border-color: var(--cyan); color: var(--cyan); background: rgba(0,240,255,0.1); }
+.badge-pink { border-color: var(--pink); color: var(--pink); background: rgba(255,107,157,0.1); }
+.badge-yellow { border-color: var(--yellow); color: var(--yellow); background: rgba(255,224,102,0.1); }
+.badge-red { border-color: var(--red); color: var(--red); background: rgba(255,68,68,0.1); }
+
+/* ── Footer ── */
+.footer {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-dim);
+    font-size: 9px;
+    border-top: 1px solid var(--border);
+    margin-top: 40px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+    .nav { padding: 8px 12px; }
+    .nav-links { gap: 0; }
+    .page-wrap { padding: 16px 12px; }
+    .auth-box { padding: 24px 16px; }
+    .stat-bar { flex-direction: column; }
+    .pricing-grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* ── Slider ── */
+.range-wrap {
+    margin: 16px 0;
+}
+.range-input {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 8px;
+    background: var(--bg);
+    border: 2px solid var(--border);
+    outline: none;
+}
+.range-input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 24px;
+    background: var(--cyan);
+    border: 2px solid var(--bg);
+    cursor: pointer;
+}
+.range-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+    color: var(--text-dim);
+    margin-top: 4px;
+}
+
+/* ── Spinner ── */
+.spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--border);
+    border-top-color: var(--cyan);
+    animation: spin .6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Estimate Box ── */
+.estimate-box {
+    background: var(--bg3);
+    border: 2px solid var(--cyan);
+    padding: 20px;
+    margin: 20px 0;
+}
+.estimate-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 11px;
+}
+.estimate-total {
+    border-top: 2px solid var(--cyan);
+    margin-top: 8px;
+    padding-top: 8px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 12px;
+    color: var(--green);
+}

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OGENTI — API KEYS</title>
+    <link rel="stylesheet" href="/platform/style.css">
+</head>
+<body data-page="api_keys">
+    <nav id="main-nav" class="nav"></nav>
+
+    <div class="page-wrap">
+        <div class="page-title">API KEYS</div>
+        <div class="page-sub">MANAGE YOUR OGENTI API KEYS (MAX 5)</div>
+
+        <div id="msg" class="msg"></div>
+
+        <!-- New API key creation alert -->
+        <div id="newKeyAlert" class="msg" style="display:none;">
+            <div style="margin-bottom:8px;font-family:'Press Start 2P',monospace;font-size:9px;">
+                🔑 NEW API KEY CREATED
+            </div>
+            <div class="key-display" id="newKeyValue"></div>
+            <div class="key-warning">
+                ⚠ COPY THIS KEY NOW — YOU WON'T SEE IT AGAIN
+            </div>
+            <button onclick="copyKey()" class="btn btn-small btn-green" style="margin-top:10px;margin-right:8px;">
+                COPY KEY
+            </button>
+            <button onclick="dismissNewKey()" class="btn btn-small btn-secondary" style="margin-top:10px;">
+                DONE
+            </button>
+        </div>
+
+        <!-- Create key form -->
+        <div class="card">
+            <div class="card-title">CREATE NEW KEY</div>
+            <form id="createForm" onsubmit="handleCreate(event)" style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
+                <div class="form-group" style="flex:1;min-width:200px;margin-bottom:0">
+                    <label class="form-label">KEY NAME</label>
+                    <input type="text" id="keyName" class="form-input" placeholder="e.g. production-server" required>
+                </div>
+                <button type="submit" id="createBtn" class="btn btn-primary btn-small" style="margin-bottom:0;height:38px;">
+                    CREATE KEY
+                </button>
+            </form>
+        </div>
+
+        <!-- Keys table -->
+        <div class="card">
+            <div class="card-title">YOUR KEYS</div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>PREFIX</th>
+                            <th>NAME</th>
+                            <th>CREATED</th>
+                            <th>STATUS</th>
+                            <th>ACTION</th>
+                        </tr>
+                    </thead>
+                    <tbody id="keysBody">
+                        <tr><td colspan="5" style="text-align:center;color:var(--text-dim);">LOADING...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Usage example -->
+        <div class="card">
+            <div class="card-title">USAGE</div>
+            <div style="background:var(--bg);border:2px solid var(--border);padding:16px;font-family:monospace;font-size:12px;color:var(--green);line-height:1.8;">
+                <span style="color:var(--text-dim)"># Install ogenti</span><br>
+                pip install ogenti<br><br>
+                <span style="color:var(--text-dim)"># In your code</span><br>
+                <span style="color:var(--pink)">import</span> ogenti<br>
+                ogenti.api_key = <span style="color:var(--yellow)">"og_your_key_here"</span><br><br>
+                <span style="color:var(--text-dim)"># Attach to your model</span><br>
+                ogenti.attach(your_model)
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">OGENTI © 2025 — AI-TO-AI COMMUNICATION PROTOCOL</div>
+
+    <script src="/platform/app.js"></script>
+    <script>
+        if (!Auth.requireAuth()) { /* redirects */ }
+
+        let lastCreatedKey = '';
+
+        function copyKey() {
+            if (lastCreatedKey) {
+                navigator.clipboard.writeText(lastCreatedKey).then(() => {
+                    showMsg('msg', 'KEY COPIED TO CLIPBOARD', 'success');
+                });
+            }
+        }
+
+        function dismissNewKey() {
+            document.getElementById('newKeyAlert').style.display = 'none';
+            lastCreatedKey = '';
+        }
+
+        async function loadKeys() {
+            try {
+                const keys = await api('GET', '/api/keys/list');
+                const body = document.getElementById('keysBody');
+
+                if (keys.length === 0) {
+                    body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-dim);">NO KEYS YET — CREATE ONE ABOVE</td></tr>';
+                    return;
+                }
+
+                body.innerHTML = keys.map(k => `
+                    <tr>
+                        <td style="font-family:monospace;color:var(--cyan);">${k.key_prefix}...</td>
+                        <td>${k.name}</td>
+                        <td>${formatDate(k.created_at)}</td>
+                        <td>${k.active
+                            ? '<span class="badge badge-green">ACTIVE</span>'
+                            : '<span class="badge badge-red">REVOKED</span>'}</td>
+                        <td>${k.active
+                            ? `<button onclick="revokeKey(${k.id})" class="btn btn-danger btn-small">REVOKE</button>`
+                            : '—'}</td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                showMsg('msg', 'FAILED TO LOAD KEYS: ' + err.message, 'error');
+            }
+        }
+
+        async function handleCreate(e) {
+            e.preventDefault();
+            hideMsg('msg');
+            const btn = document.getElementById('createBtn');
+            btn.disabled = true;
+
+            try {
+                const data = await api('POST', '/api/keys/create', {
+                    name: document.getElementById('keyName').value.trim()
+                });
+                lastCreatedKey = data.key;
+
+                const alert = document.getElementById('newKeyAlert');
+                alert.style.display = 'block';
+                alert.className = 'msg show msg-success';
+                document.getElementById('newKeyValue').textContent = data.key;
+
+                document.getElementById('keyName').value = '';
+                loadKeys();
+            } catch (err) {
+                showMsg('msg', err.message, 'error');
+            }
+            btn.disabled = false;
+        }
+
+        async function revokeKey(keyId) {
+            if (!confirm('REVOKE THIS KEY? THIS CANNOT BE UNDONE.')) return;
+            hideMsg('msg');
+
+            try {
+                await api('POST', '/api/keys/revoke', { key_id: keyId });
+                showMsg('msg', 'KEY REVOKED', 'success');
+                loadKeys();
+            } catch (err) {
+                showMsg('msg', err.message, 'error');
+            }
+        }
+
+        loadKeys();
+    </script>
+</body>
+</html>

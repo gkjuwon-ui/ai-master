@@ -13,7 +13,14 @@ from .config import (
 )
 
 router = APIRouter(prefix="/api/billing", tags=["billing"])
-stripe.api_key = STRIPE_SECRET_KEY
+
+
+def _ensure_stripe_key():
+    """Set Stripe API key fresh from env every time (avoids stale module-level value)."""
+    import os
+    key = os.getenv("STRIPE_SECRET_KEY", STRIPE_SECRET_KEY)
+    stripe.api_key = key
+    return key
 
 
 # ── Schemas ──
@@ -89,6 +96,7 @@ async def purchase_credits(req: PurchaseRequest, user: User = Depends(get_curren
         raise HTTPException(400, "Invalid package")
 
     try:
+        _ensure_stripe_key()
         # Create Stripe PaymentIntent (test mode)
         intent = stripe.PaymentIntent.create(
             amount=package["price_cents"],
@@ -183,7 +191,24 @@ async def get_transactions(user: User = Depends(get_current_user), db: Session =
 @router.get("/stripe-key")
 async def get_stripe_key():
     """Return publishable key for frontend"""
-    return {"publishable_key": STRIPE_PUBLISHABLE_KEY}
+    import os
+    return {"publishable_key": os.getenv("STRIPE_PUBLISHABLE_KEY", STRIPE_PUBLISHABLE_KEY)}
+
+
+@router.get("/debug-key")
+async def debug_stripe_key():
+    """Show masked Stripe key for debugging (never exposes full key)."""
+    import os
+    sk = os.getenv("STRIPE_SECRET_KEY", "NOT_SET")
+    pk = os.getenv("STRIPE_PUBLISHABLE_KEY", "NOT_SET")
+    wh = os.getenv("STRIPE_WEBHOOK_SECRET", "NOT_SET")
+    mask = lambda k: k[:12] + "****" + k[-4:] if len(k) > 16 else k
+    return {
+        "secret_key": mask(sk),
+        "publishable_key": mask(pk),
+        "webhook_secret": mask(wh),
+        "stripe_lib_key": mask(stripe.api_key) if stripe.api_key else "NOT_SET",
+    }
 
 
 @router.post("/webhook")

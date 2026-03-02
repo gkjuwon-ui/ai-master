@@ -78,6 +78,41 @@ INFERENCE_COSTS = {
     "custom":       {"credits_per_call": 1,  "label": "Custom"},
 }
 
+# ── RunPod (GPU Training) ──
+RUNPOD_API_KEY = os.getenv("RUNPOD_API_KEY", "")
+RUNPOD_ENDPOINT_ID = os.getenv("RUNPOD_ENDPOINT_ID", "")
+RUNPOD_WEBHOOK_TOKEN = os.getenv("RUNPOD_WEBHOOK_TOKEN", secrets.token_hex(16))  # verifies callbacks
+RUNPOD_API_BASE = "https://api.runpod.ai/v2"
+
+# Model → GPU type mapping for RunPod
+MODEL_GPU_MAP = {
+    "qwen2.5-3b":   {"gpu": "NVIDIA RTX A4000", "gpu_count": 1},
+    "qwen2.5-7b":   {"gpu": "NVIDIA RTX A5000", "gpu_count": 1},
+    "qwen2.5-14b":  {"gpu": "NVIDIA A100-SXM4-80GB", "gpu_count": 1},
+    "llama3.2-3b":  {"gpu": "NVIDIA RTX A4000", "gpu_count": 1},
+    "llama3.2-8b":  {"gpu": "NVIDIA RTX A5000", "gpu_count": 1},
+    "mistral-7b":   {"gpu": "NVIDIA RTX A5000", "gpu_count": 1},
+    "custom":       {"gpu": "NVIDIA RTX A5000", "gpu_count": 1},
+}
+
+# Model → HuggingFace repo ID mapping
+MODEL_HF_MAP = {
+    "qwen2.5-3b":   "Qwen/Qwen2.5-3B-Instruct",
+    "qwen2.5-7b":   "Qwen/Qwen2.5-7B-Instruct",
+    "qwen2.5-14b":  "Qwen/Qwen2.5-14B-Instruct",
+    "llama3.2-3b":  "meta-llama/Llama-3.2-3B-Instruct",
+    "llama3.2-8b":  "meta-llama/Llama-3.2-8B-Instruct",
+    "mistral-7b":   "mistralai/Mistral-7B-Instruct-v0.3",
+}
+
+# Dataset → HuggingFace repo or URL mapping
+DATASET_HF_MAP = {
+    "ogenti-default":   {"type": "local", "path": "data/ogenti_default.jsonl"},
+    "ogenti-extended":  {"type": "local", "path": "data/ogenti_extended.jsonl"},
+    "alpaca-converted": {"type": "hf", "path": "tatsu-lab/alpaca"},
+    "custom-upload":    {"type": "upload"},
+}
+
 # ── OGT Storage ──
 _default_ogt = "/data/ogt_adapters" if _ON_RAILWAY else "./ogt_adapters"
 OGT_STORAGE_DIR = os.getenv("OGT_STORAGE_DIR", _default_ogt)

@@ -84,6 +84,8 @@ class TrainingJob(Base):
     accuracy = Column(Float, default=0.0)
     compression = Column(Float, default=0.0)
     adapter_url = Column(String(500), nullable=True)  # download URL when done
+    runpod_request_id = Column(String(100), nullable=True)  # RunPod serverless request ID
+    runpod_error = Column(Text, nullable=True)  # error message from RunPod
     started_at = Column(DateTime, nullable=True)
     completed_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))

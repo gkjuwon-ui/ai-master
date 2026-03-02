@@ -1,12 +1,25 @@
-"""Ogenti Platform — Training Job Routes"""
+"""Ogenti Platform — Training Job Routes
+
+RunPod Serverless integration:
+  - POST /launch     → creates job, dispatches to RunPod
+  - GET  /jobs       → list jobs with RunPod status sync
+  - GET  /job/{id}   → single job detail (polls RunPod if running)
+  - POST /callback   → RunPod worker calls back with results
+  - POST /cancel     → cancel a running job
+  - POST /poll       → admin: manually poll all active jobs
+"""
+import logging
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from .database import get_db, User, TrainingJob, Transaction, Adapter
 from .auth import get_current_user
-from .config import MODEL_COSTS, DATASETS, TIERS, INFERENCE_COSTS
+from .config import MODEL_COSTS, DATASETS, TIERS, INFERENCE_COSTS, RUNPOD_WEBHOOK_TOKEN
+from .runpod_client import dispatch_training_job, check_job_status, cancel_job, process_completed_job
+
+logger = logging.getLogger("ogenti.training")
 
 router = APIRouter(prefix="/api/training", tags=["training"])
 
@@ -27,8 +40,8 @@ async def list_datasets():
 
 
 @router.post("/launch")
-async def launch_training(req: LaunchRequest, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    """Launch a training job (deducts credits)"""
+async def launch_training(req: LaunchRequest, request: Request, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Launch a training job → dispatches to RunPod Serverless GPU."""
     tier_info = TIERS.get(user.tier, TIERS["free"])
 
     # Validate model
@@ -82,22 +95,66 @@ async def launch_training(req: LaunchRequest, user: User = Depends(get_current_u
     )
     db.add(job)
     db.commit()
+    db.refresh(job)
+
+    # ── Dispatch to RunPod ──
+    import os
+    base_url = os.getenv("RAILWAY_PUBLIC_DOMAIN", "")
+    if base_url:
+        callback_url = f"https://{base_url}/api/training/callback"
+    else:
+        # Fallback: construct from request
+        callback_url = str(request.base_url).rstrip("/") + "/api/training/callback"
+
+    runpod_result = dispatch_training_job(
+        job_id=job.id,
+        model=req.model,
+        dataset=req.dataset,
+        episodes=req.episodes,
+        user_id=user.id,
+        callback_url=callback_url,
+    )
+
+    if "error" in runpod_result:
+        # RunPod dispatch failed — keep job as "queued", log error
+        job.runpod_error = runpod_result["error"]
+        job.current_phase = "dispatch_failed"
+        logger.error(f"RunPod dispatch failed for job {job.id}: {runpod_result['error']}")
+        db.commit()
+        return {
+            "job_id": job.id,
+            "status": "queued",
+            "model": model_info["label"],
+            "dataset": dataset["label"],
+            "episodes": req.episodes,
+            "credits_used": credits_needed,
+            "remaining_credits": user.credits,
+            "message": f"Training queued! Credits deducted. GPU dispatch pending — {runpod_result['error']}",
+            "runpod_status": "dispatch_failed",
+        }
+
+    # RunPod accepted the job
+    job.runpod_request_id = runpod_result.get("id", "")
+    job.status = "dispatched"
+    job.current_phase = "in_queue"
+    db.commit()
 
     return {
         "job_id": job.id,
-        "status": "queued",
+        "status": "dispatched",
         "model": model_info["label"],
         "dataset": dataset["label"],
         "episodes": req.episodes,
         "credits_used": credits_needed,
         "remaining_credits": user.credits,
-        "message": f"Training queued! {credits_needed} credits deducted.",
+        "message": f"Training dispatched to GPU! {credits_needed} credits deducted.",
+        "runpod_status": runpod_result.get("status", "IN_QUEUE"),
     }
 
 
 @router.get("/jobs")
 async def list_jobs(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    """List user's training jobs"""
+    """List user's training jobs — syncs RunPod status for active jobs."""
     jobs = (
         db.query(TrainingJob)
         .filter(TrainingJob.user_id == user.id)
@@ -108,6 +165,17 @@ async def list_jobs(user: User = Depends(get_current_user), db: Session = Depend
 
     model_labels = {k: v["label"] for k, v in MODEL_COSTS.items()}
     dataset_labels = {d["id"]: d["label"] for d in DATASETS}
+
+    # Sync status for active RunPod jobs
+    for j in jobs:
+        if j.runpod_request_id and j.status in ("dispatched", "running"):
+            try:
+                rp = check_job_status(j.runpod_request_id)
+                _sync_job_from_runpod(j, rp, db)
+            except Exception as e:
+                logger.warning(f"Failed to sync RunPod status for job {j.id}: {e}")
+
+    db.commit()
 
     result = []
     for j in jobs:
@@ -142,6 +210,7 @@ async def list_jobs(user: User = Depends(get_current_user), db: Session = Depend
             "credits_used": j.credits_used,
             "adapter_url": j.adapter_url,
             "adapter": adapter_info,
+            "runpod_error": j.runpod_error,
             "created_at": j.created_at.isoformat() if j.created_at else None,
             "started_at": j.started_at.isoformat() if j.started_at else None,
             "completed_at": j.completed_at.isoformat() if j.completed_at else None,
@@ -152,13 +221,36 @@ async def list_jobs(user: User = Depends(get_current_user), db: Session = Depend
 
 @router.get("/job/{job_id}")
 async def get_job(job_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    """Get single job details"""
+    """Get single job details — polls RunPod if active."""
     job = db.query(TrainingJob).filter(TrainingJob.id == job_id, TrainingJob.user_id == user.id).first()
     if not job:
         raise HTTPException(404, "Job not found")
 
+    # Live sync with RunPod
+    if job.runpod_request_id and job.status in ("dispatched", "running"):
+        try:
+            rp = check_job_status(job.runpod_request_id)
+            _sync_job_from_runpod(job, rp, db)
+            db.commit()
+        except Exception as e:
+            logger.warning(f"Failed to sync RunPod status for job {job.id}: {e}")
+
     model_info = MODEL_COSTS.get(job.model, {})
     progress = (job.current_episode / job.episodes * 100) if job.episodes > 0 else 0
+
+    adapter = db.query(Adapter).filter(Adapter.training_job_id == job.id).first()
+    adapter_info = None
+    if adapter:
+        inf_cost = INFERENCE_COSTS.get(job.model, {}).get("credits_per_call", 1)
+        adapter_info = {
+            "id": adapter.id,
+            "name": adapter.name,
+            "status": adapter.status,
+            "file_size": adapter.file_size,
+            "format": ".ogt",
+            "inference_count": adapter.inference_count,
+            "credits_per_call": inf_cost,
+        }
 
     return {
         "id": job.id,
@@ -174,5 +266,228 @@ async def get_job(job_id: int, user: User = Depends(get_current_user), db: Sessi
         "compression": job.compression,
         "credits_used": job.credits_used,
         "adapter_url": job.adapter_url,
+        "adapter": adapter_info,
+        "runpod_error": job.runpod_error,
         "created_at": job.created_at.isoformat() if job.created_at else None,
+        "started_at": job.started_at.isoformat() if job.started_at else None,
+        "completed_at": job.completed_at.isoformat() if job.completed_at else None,
     }
+
+
+@router.post("/callback")
+async def training_callback(request: Request, db: Session = Depends(get_db)):
+    """
+    RunPod worker calls this when training completes or fails.
+    Receives adapter weights, encrypts to .ogt, creates Adapter record.
+    """
+    import os
+    body = await request.json()
+
+    # Verify callback token
+    token = body.get("callback_token", "")
+    expected_token = os.getenv("RUNPOD_WEBHOOK_TOKEN", RUNPOD_WEBHOOK_TOKEN)
+    if token != expected_token:
+        raise HTTPException(403, "Invalid callback token")
+
+    job_id = body.get("job_id")
+    status = body.get("status", "")  # "completed" or "failed"
+
+    if not job_id:
+        raise HTTPException(400, "Missing job_id")
+
+    job = db.query(TrainingJob).filter(TrainingJob.id == job_id).first()
+    if not job:
+        raise HTTPException(404, f"Job {job_id} not found")
+
+    if status == "failed":
+        error_msg = body.get("error", "Unknown error from GPU worker")
+        job.status = "failed"
+        job.current_phase = "failed"
+        job.runpod_error = error_msg
+        job.completed_at = datetime.now(timezone.utc)
+
+        # Refund credits on failure
+        user = db.query(User).filter(User.id == job.user_id).first()
+        if user:
+            user.credits += job.credits_used
+            refund_txn = Transaction(
+                user_id=user.id,
+                type="refund",
+                credits=job.credits_used,
+                description=f"Refund: Training job #{job.id} failed",
+            )
+            db.add(refund_txn)
+            logger.info(f"Refunded {job.credits_used} credits to user {user.id} for failed job {job.id}")
+
+        db.commit()
+        return {"status": "ok", "job_status": "failed"}
+
+    if status == "completed":
+        output = body.get("output", {})
+        result = process_completed_job(
+            runpod_output=output,
+            job_id=job_id,
+            user_id=job.user_id,
+            model=job.model,
+            db_session=db,
+        )
+
+        if "error" in result:
+            job.status = "failed"
+            job.runpod_error = f"Post-processing failed: {result['error']}"
+            job.completed_at = datetime.now(timezone.utc)
+            db.commit()
+            return {"status": "error", "detail": result["error"]}
+
+        return {"status": "ok", "job_status": "completed", "adapter_id": result.get("adapter_id")}
+
+    # Progress update
+    if status == "progress":
+        job.current_episode = body.get("current_episode", job.current_episode)
+        job.current_phase = body.get("phase", job.current_phase)
+        job.accuracy = body.get("accuracy", job.accuracy)
+        job.status = "running"
+        if not job.started_at:
+            job.started_at = datetime.now(timezone.utc)
+        db.commit()
+        return {"status": "ok"}
+
+    return {"status": "ignored", "detail": f"Unknown status: {status}"}
+
+
+@router.post("/cancel/{job_id}")
+async def cancel_training(job_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Cancel a training job and refund remaining credits."""
+    job = db.query(TrainingJob).filter(TrainingJob.id == job_id, TrainingJob.user_id == user.id).first()
+    if not job:
+        raise HTTPException(404, "Job not found")
+
+    if job.status in ("completed", "failed", "cancelled"):
+        raise HTTPException(400, f"Job already {job.status}")
+
+    # Cancel on RunPod
+    if job.runpod_request_id:
+        try:
+            cancel_job(job.runpod_request_id)
+        except Exception as e:
+            logger.warning(f"Failed to cancel RunPod job {job.runpod_request_id}: {e}")
+
+    # Refund credits
+    user.credits += job.credits_used
+    refund_txn = Transaction(
+        user_id=user.id,
+        type="refund",
+        credits=job.credits_used,
+        description=f"Refund: Training job #{job.id} cancelled",
+    )
+    db.add(refund_txn)
+
+    job.status = "cancelled"
+    job.current_phase = "cancelled"
+    job.completed_at = datetime.now(timezone.utc)
+    db.commit()
+
+    return {
+        "job_id": job.id,
+        "status": "cancelled",
+        "credits_refunded": job.credits_used,
+        "new_balance": user.credits,
+    }
+
+
+@router.post("/poll")
+async def poll_active_jobs(db: Session = Depends(get_db)):
+    """
+    Poll all active RunPod jobs and sync status.
+    Can be called by a cron/scheduler or manually.
+    """
+    active_jobs = (
+        db.query(TrainingJob)
+        .filter(TrainingJob.status.in_(["dispatched", "running"]))
+        .filter(TrainingJob.runpod_request_id.isnot(None))
+        .all()
+    )
+
+    results = []
+    for job in active_jobs:
+        try:
+            rp = check_job_status(job.runpod_request_id)
+            changed = _sync_job_from_runpod(job, rp, db)
+            results.append({"job_id": job.id, "status": job.status, "changed": changed})
+        except Exception as e:
+            results.append({"job_id": job.id, "error": str(e)})
+
+    db.commit()
+    return {"polled": len(active_jobs), "results": results}
+
+
+def _sync_job_from_runpod(job: TrainingJob, rp_data: dict, db: Session) -> bool:
+    """
+    Sync a TrainingJob's status from RunPod API response.
+    Returns True if status changed.
+    """
+    rp_status = rp_data.get("status", "")
+    old_status = job.status
+
+    if rp_status == "IN_QUEUE":
+        job.status = "dispatched"
+        job.current_phase = "in_queue"
+    elif rp_status == "IN_PROGRESS":
+        job.status = "running"
+        job.current_phase = "training"
+        if not job.started_at:
+            job.started_at = datetime.now(timezone.utc)
+    elif rp_status == "COMPLETED":
+        # Process the output
+        output = rp_data.get("output", {})
+        if output and job.status != "completed":
+            result = process_completed_job(
+                runpod_output=output,
+                job_id=job.id,
+                user_id=job.user_id,
+                model=job.model,
+                db_session=db,
+            )
+            if "error" in result:
+                job.status = "failed"
+                job.runpod_error = f"Post-processing: {result['error']}"
+            else:
+                job.status = "completed"
+                job.current_phase = "completed"
+            job.completed_at = datetime.now(timezone.utc)
+    elif rp_status == "FAILED":
+        job.status = "failed"
+        job.current_phase = "failed"
+        job.runpod_error = rp_data.get("error", "RunPod execution failed")
+        job.completed_at = datetime.now(timezone.utc)
+
+        # Refund credits
+        user = db.query(User).filter(User.id == job.user_id).first()
+        if user:
+            user.credits += job.credits_used
+            refund_txn = Transaction(
+                user_id=user.id,
+                type="refund",
+                credits=job.credits_used,
+                description=f"Refund: Training job #{job.id} failed on GPU",
+            )
+            db.add(refund_txn)
+    elif rp_status in ("CANCELLED", "TIMED_OUT"):
+        job.status = "failed"
+        job.current_phase = rp_status.lower()
+        job.runpod_error = f"RunPod: {rp_status}"
+        job.completed_at = datetime.now(timezone.utc)
+
+        # Refund
+        user = db.query(User).filter(User.id == job.user_id).first()
+        if user:
+            user.credits += job.credits_used
+            refund_txn = Transaction(
+                user_id=user.id,
+                type="refund",
+                credits=job.credits_used,
+                description=f"Refund: Training job #{job.id} {rp_status.lower()}",
+            )
+            db.add(refund_txn)
+
+    return job.status != old_status

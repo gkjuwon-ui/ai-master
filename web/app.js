@@ -73,81 +73,138 @@
     const $$ = (sel) => document.querySelectorAll(sel);
 
     // ────────────────────────────────────────────────────────────
-    // WebSocket Connection
+    // REST Polling Engine
     // ────────────────────────────────────────────────────────────
 
-    function connectWebSocket() {
-        if (conn.ws && conn.ws.readyState <= 1) return;
-
+    async function connectWithKey(key) {
+        key = (key || '').trim().toUpperCase();
+        if (!key) return;
+        conn.currentKey = key;
         conn.mode = 'connecting';
         updateConnectionUI();
-
         try {
-            conn.ws = new WebSocket(CONFIG.WS_URL);
-        } catch (e) {
-            fallbackToDemo();
-            return;
-        }
-
-        conn.ws.onopen = () => {
-            conn.connected = true;
+            await pollDashboard(key);
             conn.mode = 'live';
-            conn.retries = 0;
+            conn.connected = true;
             updateConnectionUI();
-            console.log('[OGENTI] WebSocket connected');
-        };
-
-        conn.ws.onmessage = (evt) => {
-            try {
-                const msg = JSON.parse(evt.data);
-                handleServerEvent(msg);
-            } catch (e) {
-                console.warn('[OGENTI] Bad message:', e);
-            }
-        };
-
-        conn.ws.onclose = () => {
+            updateURL(key);
+            const overlay = $('#keyOverlay');
+            if (overlay) overlay.style.display = 'none';
+            startPolling(key);
+        } catch (e) {
+            conn.mode = 'error';
             conn.connected = false;
-            if (conn.mode !== 'demo') {
-                conn.mode = 'reconnecting';
-                updateConnectionUI();
-                scheduleReconnect();
-            }
-        };
-
-        conn.ws.onerror = () => {
-            conn.ws.close();
-        };
+            updateConnectionUI();
+            const el = $('#keyError');
+            if (el) el.textContent = e.message || 'INVALID KEY';
+        }
     }
 
-    function scheduleReconnect() {
-        if (conn.reconnectTimer) return;
-        conn.retries++;
+    async function pollDashboard(key) {
+        const resp = await fetch(`${CONFIG.API_BASE}/api/training/dashboard/${key}`, { cache: 'no-store' });
+        if (resp.status === 404) throw new Error('INVALID KEY — CHECK YOUR DASHBOARD KEY');
+        if (!resp.ok) throw new Error(`SERVER ERROR ${resp.status}`);
+        const data = await resp.json();
+        handleApiData(data);
+        return data;
+    }
 
-        if (conn.retries > CONFIG.WS_MAX_RETRIES) {
-            fallbackToDemo();
-            return;
+    function handleApiData(data) {
+        // Synthetic vocab generation based on real phase
+        const targetVocabSize = Math.floor(data.phase * 8 + (data.progress_pct / 100) * 12);
+        while (state.vocab.length < targetVocabSize && state.vocab.length < DEMO.VOCAB.length) {
+            const v = DEMO.VOCAB[state.vocab.length];
+            if (v) handleVocabToken({ ...v, freq: Math.floor(data.progress_pct * 10 + Math.random() * 500) + 1 });
         }
 
-        const delay = Math.min(CONFIG.WS_RECONNECT_INTERVAL * Math.pow(1.5, Math.min(conn.retries, 8)), 30000);
-        conn.reconnectTimer = setTimeout(() => {
-            conn.reconnectTimer = null;
-            connectWebSocket();
-        }, delay);
+        // Synthetic feed message based on live phase
+        if (data.status === 'training' && Math.random() < 0.45) {
+            const task = DEMO.TASKS[Math.floor(Math.random() * DEMO.TASKS.length)];
+            addFeedMessage({
+                sender: `α${Math.floor(Math.random() * 3) + 1}`,
+                receiver: `β${Math.floor(Math.random() * 3) + 1}`,
+                tokenIds: Array.from({ length: 5 }, () => Math.floor(Math.random() * 256)),
+                tokenCount: data.avg_tokens,
+                success: Math.random() > 0.05,
+                fidelity: data.fidelity * 100,
+                task,
+            });
+        }
+
+        // Drive the full-state visualizer
+        handleFullState({
+            status: data.status,
+            episode: data.current_episode,
+            phase: data.phase,
+            phase_name: data.phase_name,
+            compression: data.compression,
+            fidelity: data.fidelity,
+            avg_tokens: data.avg_tokens,
+            budget: data.budget,
+            total_reward: 0,
+            ep_rate: 0,
+        });
+        pushHistory({ episode: data.current_episode, compression: data.compression, fidelity: data.fidelity * 100, budget: data.budget });
+
+        // Update job info bar
+        const setEl = (id, val, style) => { const el = $(id); if (el) { el.textContent = val; if (style) Object.assign(el.style, style); } };
+        setEl('#jobModel', data.model || '—');
+        setEl('#jobDataset', data.dataset || '—');
+        setEl('#jobStatus', (data.job_status || data.status || '—').toUpperCase(), {
+            color: data.job_status === 'completed' ? 'var(--green)' : data.job_status === 'failed' ? '#ff4060' : 'var(--cyan)'
+        });
+        setEl('#jobProgress', `${Math.round(data.progress_pct || 0)}%`);
+        const bar = $('#jobInfoBar');
+        if (bar) bar.style.display = 'flex';
+
+        // Stop polling when terminal state
+        if (['completed', 'failed', 'cancelled'].includes(data.status)) {
+            stopPolling();
+            updateConnectionUI();
+        }
+    }
+
+    function startPolling(key) {
+        stopPolling();
+        conn.pollTimer = setInterval(async () => {
+            if (document.hidden) return;
+            try { await pollDashboard(key); }
+            catch (e) { console.warn('[OGENTI] Poll error:', e.message); }
+        }, CONFIG.POLL_INTERVAL);
+    }
+
+    function stopPolling() {
+        if (conn.pollTimer) { clearInterval(conn.pollTimer); conn.pollTimer = null; }
+    }
+
+    function updateURL(key) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('key', key);
+        window.history.replaceState({}, '', url.toString());
     }
 
     function fallbackToDemo() {
         conn.mode = 'demo';
+        conn.connected = false;
         updateConnectionUI();
-        console.log('[OGENTI] No server — running in demo mode');
+        const overlay = $('#keyOverlay');
+        if (overlay) overlay.style.display = 'none';
         startDemoSimulation();
     }
 
-    function sendCommand(cmd) {
-        if (conn.ws && conn.ws.readyState === 1) {
-            conn.ws.send(JSON.stringify({ cmd }));
-        }
-    }
+    // No-op in REST mode
+    function sendCommand(cmd) {}
+
+    // Global submitKey called from HTML onclick
+    window.submitKey = function () {
+        const input = $('#keyInput');
+        const key = (input ? input.value : '').trim();
+        if (!key) { const el = $('#keyError'); if (el) el.textContent = 'ENTER A DASHBOARD KEY'; return; }
+        const el = $('#keyError'); if (el) el.textContent = '';
+        const btn = $('#keyBtn');
+        if (btn) { btn.disabled = true; btn.textContent = 'CONNECTING...'; }
+        connectWithKey(key).finally(() => { if (btn) { btn.disabled = false; btn.textContent = 'CONNECT →'; } });
+    };
 
     // ────────────────────────────────────────────────────────────
     // Server Event Handlers
@@ -288,17 +345,15 @@
     function updateConnectionUI() {
         const badge = $('#connectionBadge');
         if (!badge) return;
-
         badge.className = 'connection-badge ' + conn.mode;
-
         const labels = {
             live: '[*] LIVE',
             demo: '[ ] DEMO',
             connecting: '... CONNECTING',
-            reconnecting: '>>> RECONNECTING',
+            error: '[!] ERROR',
+            idle: '-- READY',
         };
-
-        badge.textContent = labels[conn.mode] || conn.mode;
+        badge.textContent = labels[conn.mode] || conn.mode.toUpperCase();
     }
 
     // ────────────────────────────────────────────────────────────
@@ -832,12 +887,9 @@
     // ────────────────────────────────────────────────────────────
 
     function togglePause() {
-        if (conn.mode === 'live') {
-            sendCommand(state.paused ? 'resume' : 'pause');
-        } else {
-            state.paused = !state.paused;
-            handleStatus({ status: state.paused ? 'paused' : 'training' });
-        }
+        // In REST mode just pause the local visualization
+        state.paused = !state.paused;
+        handleStatus({ status: state.paused ? 'paused' : 'training' });
     }
 
     // ────────────────────────────────────────────────────────────
@@ -1025,13 +1077,24 @@
         initCharts();
         setupInteractions();
 
-        // Try connecting to backend WebSocket
-        connectWebSocket();
+        // Enable Enter key on key input
+        const input = $('#keyInput');
+        if (input) {
+            input.addEventListener('keydown', (e) => { if (e.key === 'Enter') window.submitKey(); });
+            // Auto-uppercase
+            input.addEventListener('input', () => { input.value = input.value.toUpperCase(); });
+        }
 
-        // If not connected in 2s, fall back to demo
-        setTimeout(() => {
-            if (!conn.connected && conn.mode !== 'demo') fallbackToDemo();
-        }, 2000);
+        // Check URL for ?key= param
+        const urlKey = new URLSearchParams(window.location.search).get('key');
+        if (urlKey) {
+            if (input) input.value = urlKey.toUpperCase();
+            // Slight delay to let canvas init finish
+            setTimeout(() => connectWithKey(urlKey), 300);
+        } else {
+            conn.mode = 'idle';
+            updateConnectionUI();
+        }
 
         setTimeout(() => {
             const loader = $('#loader');

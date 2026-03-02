@@ -45,6 +45,11 @@ app.include_router(adapter_router)
 STATIC_DIR = Path(__file__).parent / "static"
 app.mount("/platform", StaticFiles(directory=str(STATIC_DIR), html=True), name="platform")
 
+# ── Dashboard monitor (web/ folder) ──
+WEB_DIR = Path(__file__).parent.parent / "web"
+if WEB_DIR.exists():
+    app.mount("/monitor", StaticFiles(directory=str(WEB_DIR), html=True), name="monitor")
+
 
 # ── Health ──
 @app.get("/api/health")

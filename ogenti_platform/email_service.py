@@ -22,7 +22,8 @@ def _build_email_html(code: str) -> str:
     """
     return f"""<!DOCTYPE html>
 <html><head><meta charset="utf-8">
-<style>@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen:wght@400;700&display=swap');</style>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 </head><body style="margin:0;padding:0;background:#0a0a1a;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a1a;padding:48px 16px;">
 <tr><td align="center">

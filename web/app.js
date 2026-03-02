@@ -405,7 +405,7 @@
         ctx.stroke();
         ctx.setLineDash([]);
 
-        const colors = ['0, 240, 255', '124, 92, 252'];
+        const colors = ['0, 240, 255', '176, 96, 255'];
         for (const p of particles) {
             const c = colors[p.hue];
             ctx.beginPath();
@@ -434,9 +434,9 @@
     let trainingChart, budgetChart;
 
     function initCharts() {
-        const fontMono = { family: "'JetBrains Mono', monospace", size: 10 };
-        const gridColor = 'rgba(255,255,255,0.03)';
-        const tickColor = '#444';
+        const fontMono = { family: "'Silkscreen', 'Press Start 2P', monospace", size: 10 };
+        const gridColor = 'rgba(26, 26, 58, 0.8)';
+        const tickColor = '#3a3a5a';
 
         trainingChart = new Chart($('#trainingChart'), {
             type: 'line',
@@ -445,13 +445,13 @@
                 datasets: [
                     {
                         label: 'Compression', data: [],
-                        borderColor: '#00f0ff', backgroundColor: 'rgba(0, 240, 255, 0.04)',
-                        fill: true, tension: 0.4, pointRadius: 0, borderWidth: 1.5,
+                        borderColor: '#00f0ff', backgroundColor: 'rgba(0, 240, 255, 0.06)',
+                        fill: true, tension: 0.1, pointRadius: 0, borderWidth: 2, stepped: false,
                     },
                     {
                         label: 'Fidelity', data: [],
-                        borderColor: '#00ff88', backgroundColor: 'rgba(0, 255, 136, 0.04)',
-                        fill: true, tension: 0.4, pointRadius: 0, borderWidth: 1.5,
+                        borderColor: '#00ff88', backgroundColor: 'rgba(0, 255, 136, 0.06)',
+                        fill: true, tension: 0.1, pointRadius: 0, borderWidth: 2, stepped: false,
                         yAxisID: 'yFidelity',
                     },
                 ],
@@ -462,9 +462,9 @@
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        backgroundColor: 'rgba(0,0,0,0.85)',
-                        borderColor: 'rgba(255,255,255,0.06)', borderWidth: 1,
-                        titleFont: fontMono, bodyFont: fontMono, padding: 10, cornerRadius: 8,
+                        backgroundColor: '#0a0a1a',
+                        borderColor: '#1a1a3a', borderWidth: 2,
+                        titleFont: fontMono, bodyFont: fontMono, padding: 10, cornerRadius: 0,
                         callbacks: {
                             label: (c) => c.datasetIndex === 0
                                 ? `Compression: ${c.parsed.y.toFixed(1)}x`
@@ -496,8 +496,8 @@
                 labels: [],
                 datasets: [{
                     label: 'Token Budget', data: [],
-                    borderColor: '#7c5cfc', backgroundColor: 'rgba(124, 92, 252, 0.08)',
-                    fill: true, tension: 0.3, pointRadius: 0, borderWidth: 1.5,
+                    borderColor: '#b060ff', backgroundColor: 'rgba(176, 96, 255, 0.08)',
+                    fill: true, tension: 0.1, pointRadius: 0, borderWidth: 2, stepped: false,
                 }],
             },
             options: {
@@ -506,9 +506,9 @@
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        backgroundColor: 'rgba(0,0,0,0.85)',
-                        borderColor: 'rgba(255,255,255,0.06)', borderWidth: 1,
-                        titleFont: fontMono, bodyFont: fontMono, padding: 10, cornerRadius: 8,
+                        backgroundColor: '#0a0a1a',
+                        borderColor: '#1a1a3a', borderWidth: 2,
+                        titleFont: fontMono, bodyFont: fontMono, padding: 10, cornerRadius: 0,
                         callbacks: { label: (c) => `Budget: ${c.parsed.y.toFixed(1)} tokens` },
                     },
                 },
@@ -602,10 +602,11 @@
             banner.id = 'adapterBanner';
             banner.style.cssText = `
                 position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
-                background: linear-gradient(135deg, #00f5d4 0%, #7b61ff 50%, #f72585 100%);
-                color: #fff; padding: 16px 24px; text-align: center;
-                font-family: 'Inter', sans-serif; font-size: 14px;
-                box-shadow: 0 4px 30px rgba(0,245,212,0.3);
+                background: #0a0a1a;
+                border-bottom: 4px solid #00f0ff;
+                color: #c8c8e0; padding: 16px 24px; text-align: center;
+                font-family: 'Silkscreen', 'Press Start 2P', monospace; font-size: 14px;
+                box-shadow: 0 4px 20px rgba(0,240,255,0.2);
                 animation: bannerSlide 0.5s ease-out;
                 cursor: pointer;
             `;
@@ -634,17 +635,17 @@
         const fileList = (data.files || []).join(' + ');
 
         banner.innerHTML = `
-            <div style="font-size:18px; font-weight:700; margin-bottom:6px;">⚡ Universal Adapter Exported</div>
-            <div style="font-size:13px; opacity:0.9; line-height:1.6;">
-                <span style="background:rgba(255,255,255,0.2); padding:2px 8px; border-radius:4px; margin:0 4px;">📦 ${data.path || 'checkpoints/universal_adapter'}</span>
-                <span style="background:rgba(255,255,255,0.2); padding:2px 8px; border-radius:4px; margin:0 4px;">🔢 ${((data.params || 0) / 1000).toFixed(0)}K params</span>
-                <span style="background:rgba(255,255,255,0.2); padding:2px 8px; border-radius:4px; margin:0 4px;">🎯 ${((metrics.distill_match || 0) * 100).toFixed(1)}% match</span>
-                <span style="background:rgba(255,255,255,0.2); padding:2px 8px; border-radius:4px; margin:0 4px;">📐 ${(metrics.compression || 0).toFixed(1)}x compression</span>
+            <div style="font-family:'Press Start 2P',monospace; font-size:0.6rem; margin-bottom:8px; color:#00f0ff; text-shadow:0 0 8px rgba(0,240,255,0.5);">>>> UNIVERSAL ADAPTER EXPORTED <<<</div>
+            <div style="font-size:0.7rem; line-height:2;">
+                <span style="background:#12122a; border:2px solid #1a1a3a; padding:3px 8px; margin:0 4px;">PATH: ${data.path || 'checkpoints/universal_adapter'}</span>
+                <span style="background:#12122a; border:2px solid #1a1a3a; padding:3px 8px; margin:0 4px;">PARAMS: ${((data.params || 0) / 1000).toFixed(0)}K</span>
+                <span style="background:#12122a; border:2px solid #1a1a3a; padding:3px 8px; margin:0 4px;">MATCH: ${((metrics.distill_match || 0) * 100).toFixed(1)}%</span>
+                <span style="background:#12122a; border:2px solid #1a1a3a; padding:3px 8px; margin:0 4px;">COMPRESS: ${(metrics.compression || 0).toFixed(1)}x</span>
             </div>
-            <div style="font-size:12px; opacity:0.75; margin-top:6px;">
-                Compatible: ${models.join(' · ')}
+            <div style="font-family:'Press Start 2P',monospace; font-size:0.35rem; color:#6a6a8a; margin-top:8px;">
+                COMPATIBLE: ${models.join(' / ')}
             </div>
-            <div style="font-size:11px; opacity:0.5; margin-top:4px;">Click to dismiss</div>
+            <div style="font-family:'Press Start 2P',monospace; font-size:0.3rem; color:#3a3a5a; margin-top:6px;">CLICK TO DISMISS</div>
         `;
 
         banner.onclick = () => {
@@ -663,12 +664,12 @@
         // Also add to feed
         const feedEl = document.createElement('div');
         feedEl.className = 'feed-message';
-        feedEl.style.cssText = 'border-left: 3px solid #00f5d4; background: rgba(0,245,212,0.08);';
+        feedEl.style.cssText = 'border-left: 4px solid #00f0ff; background: rgba(0,240,255,0.06);';
         const now = new Date();
         const ts = [now.getHours(), now.getMinutes(), now.getSeconds()].map(n => String(n).padStart(2, '0')).join(':');
         feedEl.innerHTML = `
             <span class="feed-time">${ts}</span>
-            <span class="feed-route" style="color:#00f5d4; font-weight:700;">⚡ ADAPTER</span>
+            <span class="feed-route" style="color:#00f0ff; font-weight:700;">>>> ADAPTER</span>
             <span class="feed-tokens">Universal adapter exported → ${fileList}</span>
             <span class="feed-status success">${models.length} models</span>
         `;

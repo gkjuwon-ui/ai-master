@@ -139,7 +139,7 @@ class OgentiEncoder(nn.Module):
 
         model = AutoModelForCausalLM.from_pretrained(
             enc_cfg.model_name,
-            torch_dtype=enc_cfg.torch_dtype,
+            dtype=enc_cfg.torch_dtype,
             device_map=enc_cfg.device,
             trust_remote_code=True,
         )
@@ -158,9 +158,9 @@ class OgentiEncoder(nn.Module):
 
         ckpt = Path(path)
 
-        with open(ckpt / "encoder_config.json") as f:
+        with open(ckpt / "encoder_config.json", encoding="utf-8") as f:
             enc_cfg = EncoderConfig(**json.load(f))
-        with open(ckpt / "protocol_config.json") as f:
+        with open(ckpt / "protocol_config.json", encoding="utf-8") as f:
             proto_cfg = ProtocolConfig.from_dict(json.load(f))
 
         tokenizer = AutoTokenizer.from_pretrained(
@@ -322,7 +322,7 @@ class OgentiEncoder(nn.Module):
         self.tokenizer.save_pretrained(str(out / "lora_adapter"))
 
         # Save configs
-        with open(out / "encoder_config.json", "w") as f:
+        with open(out / "encoder_config.json", "w", encoding="utf-8") as f:
             json.dump({
                 "model_name": self.config.model_name,
                 "lora_rank": self.config.lora_rank,
@@ -332,6 +332,6 @@ class OgentiEncoder(nn.Module):
                 "max_new_tokens": self.config.max_new_tokens,
                 "encode_prefix": self.config.encode_prefix,
                 "encode_suffix": self.config.encode_suffix,
-            }, f, indent=2)
-        with open(out / "protocol_config.json", "w") as f:
-            json.dump(self.protocol_config.to_dict(), f, indent=2)
+            }, f, indent=2, ensure_ascii=False)
+        with open(out / "protocol_config.json", "w", encoding="utf-8") as f:
+            json.dump(self.protocol_config.to_dict(), f, indent=2, ensure_ascii=False)

@@ -149,7 +149,7 @@ class OgentiDecoder(nn.Module):
 
         model = AutoModelForCausalLM.from_pretrained(
             dec_cfg.model_name,
-            torch_dtype=dec_cfg.torch_dtype,
+            dtype=dec_cfg.torch_dtype,
             device_map=dec_cfg.device,
             trust_remote_code=True,
         )
@@ -166,9 +166,9 @@ class OgentiDecoder(nn.Module):
 
         ckpt = Path(path)
 
-        with open(ckpt / "decoder_config.json") as f:
+        with open(ckpt / "decoder_config.json", encoding="utf-8") as f:
             dec_cfg = DecoderConfig(**json.load(f))
-        with open(ckpt / "protocol_config.json") as f:
+        with open(ckpt / "protocol_config.json", encoding="utf-8") as f:
             proto_cfg = ProtocolConfig.from_dict(json.load(f))
 
         tokenizer = AutoTokenizer.from_pretrained(
@@ -179,7 +179,7 @@ class OgentiDecoder(nn.Module):
 
         base_model = AutoModelForCausalLM.from_pretrained(
             dec_cfg.model_name,
-            torch_dtype=dec_cfg.torch_dtype,
+            dtype=dec_cfg.torch_dtype,
             device_map=dec_cfg.device,
             trust_remote_code=True,
         )
@@ -358,7 +358,7 @@ class OgentiDecoder(nn.Module):
         self.model.save_pretrained(str(out / "lora_adapter"))
         self.tokenizer.save_pretrained(str(out / "lora_adapter"))
 
-        with open(out / "decoder_config.json", "w") as f:
+        with open(out / "decoder_config.json", "w", encoding="utf-8") as f:
             json.dump({
                 "model_name": self.config.model_name,
                 "lora_rank": self.config.lora_rank,
@@ -368,6 +368,6 @@ class OgentiDecoder(nn.Module):
                 "max_decode_tokens": self.config.max_decode_tokens,
                 "decode_prefix": self.config.decode_prefix,
                 "decode_suffix": self.config.decode_suffix,
-            }, f, indent=2)
-        with open(out / "protocol_config.json", "w") as f:
-            json.dump(self.protocol_config.to_dict(), f, indent=2)
+            }, f, indent=2, ensure_ascii=False)
+        with open(out / "protocol_config.json", "w", encoding="utf-8") as f:
+            json.dump(self.protocol_config.to_dict(), f, indent=2, ensure_ascii=False)

@@ -48,6 +48,12 @@ from pathlib import Path
 logger = logging.getLogger("ogenti.production")
 
 
+# Force UTF-8 on Windows console
+if sys.platform == "win32":
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
+
 def check_environment() -> dict:
     """Pre-flight checks before launching training."""
     import torch
@@ -88,7 +94,7 @@ def print_banner(info: dict, config) -> None:
 ╠══════════════════════════════════════════════════════════════╣
 ║                                                              ║
 ║  Model:      {config.encoder.model_name:<44s}║
-║  LoRA:       rank={config.encoder.lora_rank}, α={config.encoder.lora_alpha:<35s}║
+║  LoRA:       rank={config.encoder.lora_rank}, α={str(config.encoder.lora_alpha):<35s}║
 ║  Episodes:   {config.total_episodes:<44,d}║
 ║  Phases:     {len(config.phases)} (warmup → simple → complex → gen → universal)  ║
 ║  GPU:        {gpu_str:<44s}║
@@ -151,7 +157,7 @@ def main():
         datefmt="%H:%M:%S",
         handlers=[
             logging.StreamHandler(sys.stdout),
-            logging.FileHandler("training.log", mode="a"),
+            logging.FileHandler("training.log", mode="a", encoding="utf-8"),
         ],
     )
 
@@ -193,6 +199,17 @@ def main():
         for phase in config.phases:
             phase.max_episodes = 25
             phase.min_episodes = 10
+        # CPU: auto-switch to smaller model
+        if not info["cuda"]:
+            small_model = "Qwen/Qwen2.5-0.5B-Instruct"
+            logger.info("CPU detected: switching to %s for faster testing", small_model)
+            config.encoder.model_name = small_model
+            config.decoder.model_name = small_model
+            config.encoder.dtype = "float32"
+            config.decoder.dtype = "float32"
+            config.encoder.device = "cpu"
+            config.decoder.device = "cpu"
+            config.infra.mixed_precision = "no"
         logger.info("Quick test mode: 100 episodes, shortened phases")
 
     if args.no_wandb:

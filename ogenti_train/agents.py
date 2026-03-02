@@ -354,6 +354,8 @@ class AgentPool:
     def build_pair(
         cls,
         protocol_config: Optional[ProtocolConfig] = None,
+        encoder_config: Optional[EncoderConfig] = None,
+        decoder_config: Optional[DecoderConfig] = None,
     ) -> AgentPool:
         """Build the default encoder-decoder pair."""
         pool = cls()
@@ -365,11 +367,13 @@ class AgentPool:
 
         encoder_agent = EncoderAgent.build(
             agent_config=AgentConfig(agent_id="encoder_0", role="encoder"),
+            encoder_config=encoder_config,
             protocol_config=proto_cfg,
             value_head=value_head,
         )
         decoder_agent = DecoderAgent.build(
             agent_config=AgentConfig(agent_id="decoder_0", role="decoder"),
+            decoder_config=decoder_config,
             protocol_config=proto_cfg,
             value_head=value_head,
         )

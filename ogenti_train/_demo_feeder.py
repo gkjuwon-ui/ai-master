@@ -136,8 +136,8 @@ def _write_adapter_files(
         "trained_on": "Qwen/Qwen2.5-3B-Instruct",
         "supported_hidden_sizes": [768, 1024, 1536, 2048, 2560, 3072, 3584, 4096, 5120, 8192],
     }
-    with open(os.path.join(export_dir, "adapter_config.json"), "w") as f:
-        json.dump(config, f, indent=2)
+    with open(os.path.join(export_dir, "adapter_config.json"), "w", encoding="utf-8") as f:
+        json.dump(config, f, indent=2, ensure_ascii=False)
 
     # 2. protocol_vocab.json
     vocab = {
@@ -156,8 +156,8 @@ def _write_adapter_files(
             for i, t in enumerate(vocab_pool)
         ],
     }
-    with open(os.path.join(export_dir, "protocol_vocab.json"), "w") as f:
-        json.dump(vocab, f, indent=2)
+    with open(os.path.join(export_dir, "protocol_vocab.json"), "w", encoding="utf-8") as f:
+        json.dump(vocab, f, indent=2, ensure_ascii=False)
 
     # 3. pph_weights.safetensors (demo placeholder — valid binary header)
     _write_placeholder_safetensors(

@@ -108,7 +108,11 @@ class OgentiTrainer:
 
         # 1. Agent pool
         logger.info("Building agent pool...")
-        self.agent_pool = AgentPool.build_pair(protocol_config=cfg.protocol)
+        self.agent_pool = AgentPool.build_pair(
+            protocol_config=cfg.protocol,
+            encoder_config=cfg.encoder,
+            decoder_config=cfg.decoder,
+        )
         trainable = self.agent_pool.trainable_parameter_count()
         logger.info("Trainable parameters: %s", f"{trainable:,}")
 
@@ -930,8 +934,8 @@ class OgentiTrainer:
         }
 
         import json
-        with open(ckpt_dir / f"state{suffix}.json", "w") as f:
-            json.dump(state, f, indent=2)
+        with open(ckpt_dir / f"state{suffix}.json", "w", encoding="utf-8") as f:
+            json.dump(state, f, indent=2, ensure_ascii=False)
 
         # Save config
         cfg.save(str(ckpt_dir / "config.json"))

@@ -104,14 +104,14 @@ class TrainConfig:
 
         # Custom serialization (handle non-JSON types)
         data = self._to_serializable()
-        with open(p, "w") as f:
-            json.dump(data, f, indent=2, default=str)
+        with open(p, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, default=str, ensure_ascii=False)
         logger.info("Config saved to %s", path)
 
     @classmethod
     def load(cls, path: str) -> TrainConfig:
         """Load config from JSON."""
-        with open(path) as f:
+        with open(path, encoding="utf-8") as f:
             data = json.load(f)
         return cls._from_serializable(data)
 

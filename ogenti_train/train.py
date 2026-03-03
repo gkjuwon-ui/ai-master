@@ -151,6 +151,70 @@ class OgentiTrainer:
 
         logger.info("Setup complete. Ready to train.")
 
+    def load_checkpoint(self, checkpoint_dir: str) -> None:
+        """Resume training from a saved checkpoint."""
+        import json
+        from pathlib import Path
+
+        ckpt = Path(checkpoint_dir)
+
+        # Find latest state file
+        state_files = sorted(ckpt.glob("state_*.json"), key=lambda f: f.stat().st_mtime)
+        if not state_files:
+            logger.warning("No state files found in %s, starting fresh", ckpt)
+            return
+
+        state_file = state_files[-1]
+        with open(state_file, encoding="utf-8") as f:
+            state = json.load(f)
+
+        # Restore global state
+        self.global_episode = state["global_episode"]
+        self.best_reward = state.get("best_reward", float("-inf"))
+        target_phase = state.get("phase", 0)
+
+        logger.info(
+            "Resuming from checkpoint: episode=%d, phase=%d, best_reward=%.4f",
+            self.global_episode, target_phase, self.best_reward,
+        )
+
+        # Advance scheduler to correct phase
+        while self.scheduler.current_phase_idx < target_phase:
+            self.scheduler.advance()
+
+        # Restore phase history
+        if "phase_history" in state:
+            self.scheduler._phase_history = state["phase_history"]
+
+        # Load LoRA weights
+        suffix = state_file.stem.replace("state", "")  # e.g. "_ep200"
+        enc_dir = ckpt / f"encoder{suffix}"
+        dec_dir = ckpt / f"decoder{suffix}"
+
+        if enc_dir.exists():
+            lora_path = enc_dir / "lora_adapter"
+            if lora_path.exists():
+                import safetensors.torch
+                weights_file = lora_path / "adapter_model.safetensors"
+                if weights_file.exists():
+                    weights = safetensors.torch.load_file(str(weights_file))
+                    enc = self.agent_pool.get_encoder()
+                    enc.encoder.model.load_state_dict(weights, strict=False)
+                    logger.info("Loaded encoder LoRA from %s", enc_dir)
+
+        if dec_dir.exists():
+            lora_path = dec_dir / "lora_adapter"
+            if lora_path.exists():
+                import safetensors.torch
+                weights_file = lora_path / "adapter_model.safetensors"
+                if weights_file.exists():
+                    weights = safetensors.torch.load_file(str(weights_file))
+                    dec = self.agent_pool.get_decoder()
+                    dec.decoder.model.load_state_dict(weights, strict=False)
+                    logger.info("Loaded decoder LoRA from %s", dec_dir)
+
+        logger.info("Checkpoint loaded. Resuming from episode %d", self.global_episode)
+
     def train(self) -> None:
         """Run the full training loop."""
         cfg = self.config
@@ -551,10 +615,23 @@ class OgentiTrainer:
 
         # 2. Teacher forward — get encoder hidden states + protocol output
         with torch.no_grad():
-            teacher_msg, teacher_scores = enc_agent.encoder.encode_for_training(
+            teacher_sequences, teacher_scores = enc_agent.encoder.encode_for_training(
                 task.instruction,
                 max_tokens=cfg.protocol.effective_budget(self.global_episode),
             )
+
+            # Extract generated token IDs (strip prompt tokens)
+            prompt_inputs = enc_agent.encoder.tokenizer(
+                f"{enc_agent.encoder.config.encode_prefix}{task.instruction}{enc_agent.encoder.config.encode_suffix}",
+                return_tensors="pt",
+            )
+            prompt_len = prompt_inputs.input_ids.shape[1]
+            generated_ids = teacher_sequences[0, prompt_len:].tolist()
+
+            # Strip special tokens
+            generated_ids = enc_agent.encoder._strip_special(generated_ids)
+            if not generated_ids:
+                generated_ids = [enc_agent.encoder.tokenizer.eos_token_id]
 
             # Teacher hidden states (last layer of Qwen)
             inputs = enc_agent.encoder.tokenizer(
@@ -567,15 +644,18 @@ class OgentiTrainer:
             teacher_out = enc_agent.encoder.model(**inputs, output_hidden_states=True)
             teacher_hidden = teacher_out.hidden_states[-1]  # (1, S, H)
 
-            # Teacher protocol token IDs
-            teacher_token_ids = torch.tensor(
-                [teacher_msg.token_ids], device=self.device
+            # Teacher protocol token IDs — map LM vocab → protocol vocab space
+            teacher_token_ids_lm = torch.tensor(
+                [generated_ids], device=self.device
             )
+            proto_vocab_size = adapter.config.protocol_vocab_size
+            teacher_token_ids = teacher_token_ids_lm % proto_vocab_size
 
             # Build teacher logits from score list
             if teacher_scores:
+                num_tokens = len(generated_ids)
                 teacher_logits = torch.stack(
-                    [s.squeeze(0) for s in teacher_scores[:len(teacher_msg.token_ids)]],
+                    [s.squeeze(0) for s in teacher_scores[:num_tokens]],
                     dim=0,
                 ).unsqueeze(0)  # (1, T, V_lm)
             else:
@@ -607,17 +687,22 @@ class OgentiTrainer:
             teacher_token_ids, teacher_hidden.shape[-1]
         )  # (1, T_proto, H)
 
-        # Pool teacher hidden for comparison (match temporal dims)
-        T_proto = teacher_token_ids.shape[1]
-        if teacher_hidden.shape[1] > T_proto:
-            # Chunk teacher hidden and mean-pool to match protocol length
-            chunks = torch.chunk(
-                teacher_hidden[:, :T_proto * (teacher_hidden.shape[1] // T_proto)],
-                T_proto, dim=1,
-            )
+        # Match temporal dimensions between reconstructed and teacher hidden
+        T_proto = reconstructed_hidden.shape[1]
+        T_hidden = teacher_hidden.shape[1]
+
+        if T_hidden > T_proto:
+            # Teacher has more tokens → chunk and pool to match protocol length
+            chunk_size = T_hidden // T_proto
+            usable = chunk_size * T_proto
+            chunks = torch.chunk(teacher_hidden[:, :usable], T_proto, dim=1)
             teacher_pooled = torch.stack([c.mean(dim=1) for c in chunks], dim=1)
+        elif T_hidden < T_proto:
+            # Teacher has fewer tokens → truncate reconstructed to match
+            reconstructed_hidden = reconstructed_hidden[:, :T_hidden]
+            teacher_pooled = teacher_hidden
         else:
-            teacher_pooled = teacher_hidden[:, :T_proto]
+            teacher_pooled = teacher_hidden
 
         prh_loss = F.mse_loss(reconstructed_hidden, teacher_pooled.detach())
 
@@ -635,7 +720,7 @@ class OgentiTrainer:
         with torch.no_grad():
             student_tokens = student_logits.argmax(dim=-1)  # (1, T)
             match = (student_tokens == teacher_token_ids).float().mean().item()
-            protocol_tokens = teacher_msg.token_count
+            protocol_tokens = len(generated_ids)
             compression = original_tokens / protocol_tokens if protocol_tokens > 0 else 0
 
         return {
@@ -966,7 +1051,7 @@ class OgentiTrainer:
                 dec_d = d.parent / d.name.replace("encoder", "decoder")
                 if dec_d.exists():
                     shutil.rmtree(dec_d, ignore_errors=True)
-                state_f = d.parent / d.name.replace("encoder", "state") + ".json"
+                state_f = d.parent / (d.name.replace("encoder", "state") + ".json")
 
     # ── Logging ──
 

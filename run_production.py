@@ -268,6 +268,10 @@ def main():
     trainer = OgentiTrainer(config, bridge=bridge)
     trainer.setup()
 
+    # Resume from checkpoint if requested
+    if args.resume:
+        trainer.load_checkpoint(args.resume)
+
     logger.info("═══ Starting training loop ═══")
     start = time.time()
 

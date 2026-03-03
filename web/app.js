@@ -195,6 +195,61 @@
     // No-op in REST mode
     function sendCommand(cmd) {}
 
+    // ────────────────────────────────────────────────────────────
+    // Local WebSocket Mode (direct connection for local training)
+    // ────────────────────────────────────────────────────────────
+
+    function connectWebSocketLocal() {
+        const wsUrl = CONFIG.WS_URL;
+        conn.mode = 'connecting';
+        updateConnectionUI();
+
+        try {
+            conn.ws = new WebSocket(wsUrl);
+        } catch (e) {
+            console.warn('[OGENTI] WS connect failed:', e);
+            setTimeout(() => connectWebSocketLocal(), CONFIG.WS_RECONNECT_INTERVAL);
+            return;
+        }
+
+        conn.ws.onopen = () => {
+            conn.connected = true;
+            conn.mode = 'live';
+            conn.retries = 0;
+            updateConnectionUI();
+            // Show bar with local info
+            const bar = $('#jobInfoBar');
+            if (bar) bar.style.display = 'flex';
+            const setEl = (id, val) => { const el = $(id); if (el) el.textContent = val; };
+            setEl('#jobModel', 'LOCAL');
+            setEl('#jobDataset', 'CPU');
+            setEl('#jobStatus', 'LIVE');
+        };
+
+        conn.ws.onmessage = (evt) => {
+            try {
+                const msg = JSON.parse(evt.data);
+                handleServerEvent(msg);
+            } catch (e) {
+                console.warn('[OGENTI] WS parse error:', e);
+            }
+        };
+
+        conn.ws.onclose = () => {
+            conn.connected = false;
+            conn.mode = 'reconnecting';
+            conn.retries++;
+            updateConnectionUI();
+            if (conn.retries <= CONFIG.WS_MAX_RETRIES) {
+                setTimeout(() => connectWebSocketLocal(), CONFIG.WS_RECONNECT_INTERVAL);
+            }
+        };
+
+        conn.ws.onerror = (err) => {
+            console.warn('[OGENTI] WS error:', err);
+        };
+    }
+
     // Global submitKey called from HTML onclick
     window.submitKey = function () {
         const input = $('#keyInput');
@@ -1085,9 +1140,17 @@
             input.addEventListener('input', () => { input.value = input.value.toUpperCase(); });
         }
 
-        // Check URL for ?key= param
-        const urlKey = new URLSearchParams(window.location.search).get('key');
-        if (urlKey) {
+        // Check URL for ?local (WebSocket mode) or ?key= (SaaS polling mode)
+        const params = new URLSearchParams(window.location.search);
+        const isLocal = params.has('local') || window.location.port === '8000';
+        const urlKey = params.get('key');
+
+        if (isLocal) {
+            // Local training mode — connect via WebSocket directly, no key needed
+            const overlay = $('#keyOverlay');
+            if (overlay) overlay.style.display = 'none';
+            setTimeout(() => connectWebSocketLocal(), 300);
+        } else if (urlKey) {
             if (input) input.value = urlKey.toUpperCase();
             // Slight delay to let canvas init finish
             setTimeout(() => connectWithKey(urlKey), 300);

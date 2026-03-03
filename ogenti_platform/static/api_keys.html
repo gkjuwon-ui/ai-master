@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OGENTI — API KEYS</title>
+    <title>O SERIES — API KEYS</title>
     <link rel="stylesheet" href="/platform/style.css">
 </head>
-<body data-page="api_keys">
+<body class="crt" data-page="api_keys">
     <nav id="main-nav" class="nav"></nav>
 
     <div class="page-wrap">
         <div class="page-title">API KEYS</div>
-        <div class="page-sub">MANAGE YOUR OGENTI API KEYS (MAX 5)</div>
+        <div class="page-sub">MANAGE YOUR O SERIES API KEYS (MAX 5)</div>
 
         <div id="msg" class="msg"></div>
 
@@ -71,18 +71,18 @@
         <div class="card">
             <div class="card-title">USAGE</div>
             <div style="background:var(--bg);border:2px solid var(--border);padding:16px;font-family:monospace;font-size:12px;color:var(--green);line-height:1.8;">
-                <span style="color:var(--text-dim)"># Install ogenti</span><br>
-                pip install ogenti<br><br>
+                <span style="color:var(--text-dim)"># Install oseries</span><br>
+                pip install oseries<br><br>
                 <span style="color:var(--text-dim)"># In your code</span><br>
-                <span style="color:var(--pink)">import</span> ogenti<br>
-                ogenti.api_key = <span style="color:var(--yellow)">"og_your_key_here"</span><br><br>
+                <span style="color:var(--pink)">import</span> oseries<br>
+                oseries.api_key = <span style="color:var(--yellow)">"og_your_key_here"</span><br><br>
                 <span style="color:var(--text-dim)"># Attach to your model</span><br>
-                ogenti.attach(your_model)
+                oseries.attach(your_model, adapter=<span style="color:var(--yellow)">"my_adapter.ogt"</span>)
             </div>
         </div>
     </div>
 
-    <div class="footer">OGENTI © 2025 — AI-TO-AI COMMUNICATION PROTOCOL</div>
+    <div class="footer">O SERIES © 2025 — OGENTI · OVISEN</div>
 
     <script src="/platform/app.js"></script>
     <script>

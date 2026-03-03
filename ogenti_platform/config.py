@@ -1,4 +1,4 @@
-"""Ogenti Platform Configuration"""
+"""O Series Platform Configuration — Ogenti (Text) + Ovisen (Image)"""
 import os
 import secrets
 
@@ -19,7 +19,7 @@ DATABASE_URL = os.getenv("DATABASE_URL", _default_db)
 
 # ── Resend (email) ──
 RESEND_API_KEY = os.getenv("RESEND_API_KEY", "re_test_xxxxxxxxxxxx")
-FROM_EMAIL = os.getenv("FROM_EMAIL", "noreply@ogenti.com")
+FROM_EMAIL = os.getenv("FROM_EMAIL", "noreply@oseries.io")
 
 # ── Stripe ──
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "sk_test_xxxxxxxxxxxx")
@@ -116,4 +116,74 @@ DATASET_HF_MAP = {
 # ── OGT Storage ──
 _default_ogt = "/data/ogt_adapters" if _ON_RAILWAY else "./ogt_adapters"
 OGT_STORAGE_DIR = os.getenv("OGT_STORAGE_DIR", _default_ogt)
+
+# ══════════════════════════════════════════════════════════════════
+# OVISEN — Image Embedding Compression (AI-to-AI Visual Protocol)
+# ══════════════════════════════════════════════════════════════════
+
+# ── Vision Model Pricing (credits per episode) ──
+OVISEN_MODEL_COSTS = {
+    "clip-vit-b32":    {"credits_per_episode": 2,  "label": "CLIP ViT-B/32",     "vram": "8GB",  "speed": "Fast"},
+    "clip-vit-l14":    {"credits_per_episode": 5,  "label": "CLIP ViT-L/14",     "vram": "16GB", "speed": "Medium"},
+    "siglip-so400m":   {"credits_per_episode": 4,  "label": "SigLIP SO-400M",    "vram": "12GB", "speed": "Medium"},
+    "dinov2-vit-b14":  {"credits_per_episode": 3,  "label": "DINOv2 ViT-B/14",   "vram": "10GB", "speed": "Fast"},
+    "dinov2-vit-l14":  {"credits_per_episode": 6,  "label": "DINOv2 ViT-L/14",   "vram": "20GB", "speed": "Slow"},
+    "eva02-vit-l":     {"credits_per_episode": 7,  "label": "EVA-02 ViT-L",      "vram": "24GB", "speed": "Slow"},
+    "custom-vision":   {"credits_per_episode": 3,  "label": "Custom (User)",      "vram": "Varies","speed": "Varies"},
+}
+
+# ── Ovisen Inference Pricing ──
+OVISEN_INFERENCE_COSTS = {
+    "clip-vit-b32":    {"credits_per_call": 2,  "label": "CLIP ViT-B/32"},
+    "clip-vit-l14":    {"credits_per_call": 3,  "label": "CLIP ViT-L/14"},
+    "siglip-so400m":   {"credits_per_call": 3,  "label": "SigLIP SO-400M"},
+    "dinov2-vit-b14":  {"credits_per_call": 2,  "label": "DINOv2 ViT-B/14"},
+    "dinov2-vit-l14":  {"credits_per_call": 4,  "label": "DINOv2 ViT-L/14"},
+    "eva02-vit-l":     {"credits_per_call": 5,  "label": "EVA-02 ViT-L"},
+    "custom-vision":   {"credits_per_call": 2,  "label": "Custom"},
+}
+
+# ── Ovisen Datasets ──
+OVISEN_DATASETS = [
+    {"id": "imagenet-1k-sample",  "label": "ImageNet-1K Sample (10K images)",  "images": 10_000, "categories": 100},
+    {"id": "coco-2017-val",       "label": "COCO 2017 Validation (5K images)", "images": 5_000,  "categories": 80},
+    {"id": "ovisen-synthetic",    "label": "Ovisen Synthetic (20K images)",     "images": 20_000, "categories": 50},
+    {"id": "custom-upload",       "label": "Custom Upload (Image Archive)",    "images": 0,      "categories": 0},
+]
+
+# ── Ovisen model → HuggingFace mapping ──
+OVISEN_MODEL_HF_MAP = {
+    "clip-vit-b32":    "openai/clip-vit-base-patch32",
+    "clip-vit-l14":    "openai/clip-vit-large-patch14",
+    "siglip-so400m":   "google/siglip-so400m-patch14-384",
+    "dinov2-vit-b14":  "facebook/dinov2-base",
+    "dinov2-vit-l14":  "facebook/dinov2-large",
+    "eva02-vit-l":     "Yuxin-CV/EVA-02/eva02_L_pt_m38m_p14to16",
+}
+
+# ── Ovisen Dataset → source mapping ──
+OVISEN_DATASET_MAP = {
+    "imagenet-1k-sample": {"type": "hf",    "path": "imagenet-1k"},
+    "coco-2017-val":      {"type": "hf",    "path": "detection-datasets/coco"},
+    "ovisen-synthetic":   {"type": "local",  "path": "data/ovisen_synthetic/"},
+    "custom-upload":      {"type": "upload"},
+}
+
+# ── Ovisen GPU mapping ──
+OVISEN_MODEL_GPU_MAP = {
+    "clip-vit-b32":    {"gpu": "NVIDIA RTX A4000", "gpu_count": 1},
+    "clip-vit-l14":    {"gpu": "NVIDIA RTX A5000", "gpu_count": 1},
+    "siglip-so400m":   {"gpu": "NVIDIA RTX A5000", "gpu_count": 1},
+    "dinov2-vit-b14":  {"gpu": "NVIDIA RTX A4000", "gpu_count": 1},
+    "dinov2-vit-l14":  {"gpu": "NVIDIA RTX A5000", "gpu_count": 1},
+    "eva02-vit-l":     {"gpu": "NVIDIA A100-SXM4-80GB", "gpu_count": 1},
+    "custom-vision":   {"gpu": "NVIDIA RTX A5000", "gpu_count": 1},
+}
+
+# ── OGE Storage ──
+_default_oge = "/data/oge_adapters" if _ON_RAILWAY else "./oge_adapters"
+OGE_STORAGE_DIR = os.getenv("OGE_STORAGE_DIR", _default_oge)
+
+# ── RunPod OVISEN Endpoint (separate serverless endpoint for vision) ──
+RUNPOD_OVISEN_ENDPOINT_ID = os.getenv("RUNPOD_OVISEN_ENDPOINT_ID", "")
 

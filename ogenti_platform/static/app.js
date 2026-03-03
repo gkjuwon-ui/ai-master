@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════
-   OGENTI PLATFORM — AUTH HELPERS
+   O SERIES PLATFORM — AUTH HELPERS
    ═══════════════════════════════════════════════ */
 
 const API = 'https://ogenti-api-production.up.railway.app';
@@ -100,16 +100,28 @@ function renderNav(activePage = '') {
 
     let links = '';
     if (loggedIn) {
-        const pages = [
-            ['account', 'ACCOUNT'],
-            ['training', 'TRAIN'],
-            ['api_keys', 'API KEYS'],
-            ['billing', 'BILLING'],
-            ['usage', 'USAGE']
-        ];
-        links = pages.map(([p, label]) =>
-            `<a href="/platform/${p}.html" class="nav-link${activePage === p ? ' active' : ''}">${label}</a>`
-        ).join('');
+        // OGENTI sub-menu (text compression)
+        links += `<div class="nav-group">
+            <span class="nav-group-label" style="color:var(--pink)">OGENTI</span>
+            <a href="/platform/training.html" class="nav-link${activePage === 'training' ? ' active' : ''}">TRAIN</a>
+            <a href="/monitor" class="nav-link${activePage === 'monitor' ? ' active' : ''}" title="Training Monitor">MONITOR</a>
+        </div>`;
+
+        // OVISEN sub-menu (image embedding compression)
+        links += `<div class="nav-group">
+            <span class="nav-group-label" style="color:var(--cyan)">OVISEN</span>
+            <a href="/platform/ovisen_training.html" class="nav-link${activePage === 'ovisen_training' ? ' active' : ''}">TRAIN</a>
+            <a href="/platform/ovisen_adapters.html" class="nav-link${activePage === 'ovisen_adapters' ? ' active' : ''}">ADAPTERS</a>
+        </div>`;
+
+        // Shared platform pages
+        links += `<div class="nav-group">
+            <span class="nav-group-label" style="color:var(--text-dim)">PLATFORM</span>
+            <a href="/platform/account.html" class="nav-link${activePage === 'account' ? ' active' : ''}">ACCOUNT</a>
+            <a href="/platform/api_keys.html" class="nav-link${activePage === 'api_keys' ? ' active' : ''}">API KEYS</a>
+            <a href="/platform/billing.html" class="nav-link${activePage === 'billing' ? ' active' : ''}">BILLING</a>
+            <a href="/platform/usage.html" class="nav-link${activePage === 'usage' ? ' active' : ''}">USAGE</a>
+        </div>`;
     }
 
     const userSection = loggedIn
@@ -125,7 +137,7 @@ function renderNav(activePage = '') {
 
     nav.innerHTML = `
         <a href="https://ogenti.com" class="nav-brand">
-            OGENTI <span class="nav-tag">PLATFORM</span>
+            O SERIES <span class="nav-tag">PLATFORM</span>
         </a>
         <div class="nav-links">${links}</div>
         ${userSection}

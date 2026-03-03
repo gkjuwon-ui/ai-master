@@ -66,7 +66,7 @@ def _build_email_html(code: str) -> str:
 </td></tr>
 </table>
 <br/>
-<img src="cid:bottom" alt="OGENTI.COM" style="height:14px;margin-top:16px;" />
+<img src="cid:bottom" alt="OSERIES.IO" style="height:14px;margin-top:16px;" />
 </td></tr></table>
 </body></html>"""
 

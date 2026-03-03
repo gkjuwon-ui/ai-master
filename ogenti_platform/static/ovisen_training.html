@@ -3,23 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>O SERIES — LAUNCH TRAINING</title>
+    <title>O SERIES — OVISEN TRAINING</title>
     <link rel="stylesheet" href="/platform/style.css">
 </head>
-<body class="crt" data-page="training">
+<body class="crt" data-page="ovisen_training">
     <nav id="main-nav" class="nav"></nav>
 
     <div class="page-wrap">
-        <div class="page-title">TRAINING</div>
-        <div class="page-sub">LAUNCH AN AI-TO-AI COMMUNICATION TRAINING RUN</div>
+        <div class="page-title" style="color:var(--cyan)">OVISEN TRAINING</div>
+        <div class="page-sub">TRAIN AN IMAGE → EMBEDDING COMPRESSION ADAPTER VIA MARL</div>
 
         <div id="msg" class="msg"></div>
 
-        <!-- Step 1: Model -->
+        <!-- Step 1: Vision Model -->
         <div class="card">
-            <div class="card-title">① SELECT MODEL</div>
+            <div class="card-title">① SELECT VISION MODEL</div>
             <p style="font-size:10px;color:var(--text-dim);margin-bottom:12px;">
-                CHOOSE A BASE MODEL. LARGER MODELS COST MORE CREDITS PER EPISODE BUT PRODUCE STRONGER ADAPTERS.
+                CHOOSE A BACKBONE VISION ENCODER. LARGER MODELS PRODUCE HIGHER-FIDELITY EMBEDDINGS BUT COST MORE CREDITS PER EPISODE.
             </p>
             <div class="model-grid" id="modelGrid">
                 <!-- filled by JS -->
@@ -28,7 +28,7 @@
 
         <!-- Step 2: Dataset -->
         <div class="card">
-            <div class="card-title">② SELECT DATASET</div>
+            <div class="card-title">② SELECT IMAGE DATASET</div>
             <div class="model-grid" id="datasetGrid">
                 <!-- filled by JS -->
             </div>
@@ -38,7 +38,7 @@
         <div class="card">
             <div class="card-title">③ SET EPISODES</div>
             <p style="font-size:10px;color:var(--text-dim);margin-bottom:12px;">
-                MORE EPISODES = BETTER CONVERGENCE. WE RECOMMEND 50-200 FOR MOST USE CASES.
+                MORE EPISODES = BETTER FIDELITY-COMPRESSION TRADE-OFF. WE RECOMMEND 50-200 FOR MOST USE CASES.
             </p>
             <div class="range-wrap">
                 <input type="range" id="episodeSlider" class="range-input" min="10" max="500" value="100" step="10" oninput="updateEstimate()">
@@ -50,22 +50,42 @@
             </div>
         </div>
 
+        <!-- Step 4: Compression Target -->
+        <div class="card">
+            <div class="card-title">④ COMPRESSION TARGET</div>
+            <p style="font-size:10px;color:var(--text-dim);margin-bottom:12px;">
+                TARGET EMBEDDING DIMENSION. LOWER = MORE COMPRESSION, HIGHER = MORE FIDELITY.
+            </p>
+            <div class="range-wrap">
+                <input type="range" id="dimSlider" class="range-input" min="32" max="512" value="256" step="32" oninput="updateDim()">
+                <div class="range-labels">
+                    <span>32D</span>
+                    <span id="dimValue" style="color:var(--green);font-family:'Press Start 2P',monospace;font-size:11px;">256D</span>
+                    <span>512D</span>
+                </div>
+            </div>
+        </div>
+
         <!-- Cost estimate -->
         <div class="estimate-box" id="estimateBox">
-            <div style="font-family:'Press Start 2P',monospace;font-size:9px;color:var(--pink);margin-bottom:12px;">
+            <div style="font-family:'Press Start 2P',monospace;font-size:9px;color:var(--cyan);margin-bottom:12px;">
                 COST ESTIMATE
             </div>
             <div class="estimate-row">
-                <span>MODEL</span>
-                <span id="estModel" style="color:var(--pink)">—</span>
+                <span>VISION MODEL</span>
+                <span id="estModel" style="color:var(--cyan)">—</span>
             </div>
             <div class="estimate-row">
                 <span>DATASET</span>
-                <span id="estDataset" style="color:var(--cyan)">—</span>
+                <span id="estDataset" style="color:var(--pink)">—</span>
             </div>
             <div class="estimate-row">
                 <span>EPISODES</span>
                 <span id="estEpisodes">—</span>
+            </div>
+            <div class="estimate-row">
+                <span>TARGET DIM</span>
+                <span id="estDim" style="color:var(--green)">256D</span>
             </div>
             <div class="estimate-row">
                 <span>COST PER EPISODE</span>
@@ -91,7 +111,7 @@
 
         <!-- Active jobs -->
         <div class="card" style="margin-top:32px">
-            <div class="card-title">YOUR TRAINING JOBS</div>
+            <div class="card-title">YOUR OVISEN JOBS</div>
             <div id="jobsList">
                 <div style="text-align:center;padding:20px;color:var(--text-dim);font-size:10px;">LOADING...</div>
             </div>
@@ -113,8 +133,8 @@
         async function loadTraining() {
             try {
                 const [models, datasets, bal, user] = await Promise.all([
-                    api('GET', '/api/billing/models'),
-                    api('GET', '/api/training/datasets'),
+                    api('GET', '/api/ovisen/training/models'),
+                    api('GET', '/api/ovisen/training/datasets'),
                     api('GET', '/api/billing/balance'),
                     Auth.fetchUser()
                 ]);
@@ -127,9 +147,9 @@
                 const grid = document.getElementById('modelGrid');
                 grid.innerHTML = models.map((m, i) => `
                     <div class="model-card" data-idx="${i}" onclick="selectModel(${i})">
-                        <div class="model-name">${m.name.toUpperCase()}</div>
+                        <div class="model-name" style="color:var(--cyan)">${m.name.toUpperCase()}</div>
                         <div class="model-detail">
-                            ${m.name.includes('3b') ? '3B params' : m.name.includes('7b') ? '7B params' : m.name.includes('8b') ? '8B params' : m.name.includes('14b') ? '14B params' : 'Custom'}
+                            ${m.input_dim ? m.input_dim + 'D → ' + (m.target_dim || 256) + 'D' : 'VISION ENCODER'}
                         </div>
                         <div class="model-cost">${m.credits_per_episode} CR/EPISODE</div>
                     </div>
@@ -139,7 +159,7 @@
                 const dGrid = document.getElementById('datasetGrid');
                 dGrid.innerHTML = datasets.map((d, i) => `
                     <div class="model-card" data-idx="${i}" onclick="selectDataset(${i})">
-                        <div class="model-name" style="color:var(--cyan)">${d.name.toUpperCase()}</div>
+                        <div class="model-name" style="color:var(--pink)">${d.name.toUpperCase()}</div>
                         <div class="model-detail">${d.description}</div>
                         <div class="model-detail" style="color:var(--yellow);margin-top:4px;">${d.size}</div>
                     </div>
@@ -167,6 +187,12 @@
                 c.classList.toggle('selected', i === idx);
             });
             updateEstimate();
+        }
+
+        function updateDim() {
+            const dim = parseInt(document.getElementById('dimSlider').value);
+            document.getElementById('dimValue').textContent = dim + 'D';
+            document.getElementById('estDim').textContent = dim + 'D';
         }
 
         function updateEstimate() {
@@ -215,26 +241,25 @@
             hideMsg('msg');
 
             const episodes = parseInt(document.getElementById('episodeSlider').value);
+            const targetDim = parseInt(document.getElementById('dimSlider').value);
             const model = modelsData[selectedModel];
             const dataset = datasetsData[selectedDataset];
 
             try {
-                const job = await api('POST', '/api/training/launch', {
+                const job = await api('POST', '/api/ovisen/training/launch', {
                     model: model.name,
                     dataset: dataset.id,
-                    episodes: episodes
+                    episodes: episodes,
+                    target_dim: targetDim
                 });
-                // Show dashboard key card
-                const monitorUrl = `/monitor?key=${job.dashboard_key}`;
                 document.getElementById('msg').innerHTML = `
-                    <div style="background:rgba(0,240,255,0.06);border:1px solid var(--accent,#00f0ff);border-radius:4px;padding:14px 18px;font-family:monospace;line-height:1.8;">
-                        <div style="color:var(--accent,#00f0ff);font-size:11px;letter-spacing:.15em;margin-bottom:6px;">&#9654; TRAINING JOB #${job.job_id} LAUNCHED</div>
+                    <div style="background:rgba(85,255,255,0.06);border:1px solid var(--cyan);border-radius:4px;padding:14px 18px;font-family:monospace;line-height:1.8;">
+                        <div style="color:var(--cyan);font-size:11px;letter-spacing:.15em;margin-bottom:6px;">&#9654; OVISEN JOB #${job.job_id} LAUNCHED</div>
                         <div style="color:#aaa;font-size:9px;letter-spacing:.1em;margin-bottom:4px;">${formatCredits(job.credits_used)} CREDITS DEDUCTED</div>
-                        <div style="border-top:1px solid rgba(0,240,255,0.15);margin:8px 0;"></div>
+                        <div style="border-top:1px solid rgba(85,255,255,0.15);margin:8px 0;"></div>
                         <div style="color:#aaa;font-size:9px;letter-spacing:.1em;">DASHBOARD KEY</div>
                         <div style="color:#fff;font-size:18px;letter-spacing:.25em;font-weight:700;margin:4px 0 10px;">${job.dashboard_key}</div>
-                        <a href="${monitorUrl}" target="_blank" style="display:inline-block;background:var(--accent,#00f0ff);color:#000;padding:6px 16px;font-size:9px;letter-spacing:.15em;text-decoration:none;border-radius:2px;font-weight:700;">OPEN MONITOR &#8594;</a>
-                        <button onclick="navigator.clipboard.writeText('${job.dashboard_key}')" style="margin-left:8px;background:transparent;border:1px solid rgba(0,240,255,0.3);color:var(--accent,#00f0ff);padding:6px 12px;font-size:9px;letter-spacing:.1em;cursor:pointer;border-radius:2px;">COPY KEY</button>
+                        <button onclick="navigator.clipboard.writeText('${job.dashboard_key}')" style="background:transparent;border:1px solid rgba(85,255,255,0.3);color:var(--cyan);padding:6px 12px;font-size:9px;letter-spacing:.1em;cursor:pointer;border-radius:2px;">COPY KEY</button>
                     </div>`;
                 document.getElementById('msg').style.display = 'block';
 
@@ -242,7 +267,7 @@
                 const bal = await api('GET', '/api/billing/balance');
                 userBalance = bal.credits;
                 await Auth.fetchUser();
-                renderNav('training');
+                renderNav('ovisen_training');
                 updateEstimate();
                 loadJobs();
             } catch (err) {
@@ -254,22 +279,15 @@
 
         async function loadJobs() {
             try {
-                const jobs = await api('GET', '/api/training/jobs');
+                const jobs = await api('GET', '/api/ovisen/training/jobs');
                 const div = document.getElementById('jobsList');
 
                 if (jobs.length === 0) {
-                    div.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-dim);font-size:10px;">NO JOBS YET — LAUNCH YOUR FIRST TRAINING ABOVE</div>';
+                    div.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-dim);font-size:10px;">NO OVISEN JOBS YET — LAUNCH YOUR FIRST TRAINING ABOVE</div>';
                     return;
                 }
 
                 div.innerHTML = jobs.map(j => {
-                    const statusColor = {
-                        'queued': 'var(--yellow)',
-                        'running': 'var(--cyan)',
-                        'completed': 'var(--green)',
-                        'failed': 'var(--red)'
-                    }[j.status] || 'var(--text)';
-
                     const statusBadge = {
                         'queued': 'badge-yellow',
                         'running': 'badge-cyan',
@@ -281,25 +299,29 @@
                         <div style="border:2px solid var(--border);padding:16px;margin-bottom:8px;background:var(--bg);">
                             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
                                 <div>
-                                    <span style="font-family:'Press Start 2P',monospace;font-size:9px;color:var(--pink);">
+                                    <span style="font-family:'Press Start 2P',monospace;font-size:9px;color:var(--cyan);">
                                         JOB #${j.id}
                                     </span>
                                     <span class="badge ${statusBadge}" style="margin-left:8px">${j.status.toUpperCase()}</span>
                                 </div>
                                 <span style="font-size:9px;color:var(--text-dim)">${formatDate(j.created_at)}</span>
                             </div>
-                            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:10px;">
+                            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;font-size:10px;">
                                 <div>
-                                    <div style="color:var(--text-dim);">MODEL</div>
-                                    <div style="color:var(--pink)">${j.model}</div>
+                                    <div style="color:var(--text-dim);">VISION MODEL</div>
+                                    <div style="color:var(--cyan)">${j.model}</div>
                                 </div>
                                 <div>
                                     <div style="color:var(--text-dim);">DATASET</div>
-                                    <div style="color:var(--cyan)">${j.dataset}</div>
+                                    <div style="color:var(--pink)">${j.dataset}</div>
                                 </div>
                                 <div>
                                     <div style="color:var(--text-dim);">EPISODES</div>
                                     <div>${j.episodes} (${formatCredits(j.credits_used)} CR)</div>
+                                </div>
+                                <div>
+                                    <div style="color:var(--text-dim);">TARGET DIM</div>
+                                    <div style="color:var(--green)">${j.target_dim || 256}D</div>
                                 </div>
                             </div>
                             ${j.status === 'running' ? `
@@ -315,8 +337,9 @@
                             ` : ''}
                             ${j.status === 'completed' ? `
                                 <div style="margin-top:10px;display:flex;gap:12px;font-size:10px;">
-                                    ${j.accuracy ? `<span style="color:var(--green)">ACC: ${(j.accuracy * 100).toFixed(1)}%</span>` : ''}
-                                    ${j.compression ? `<span style="color:var(--cyan)">COMP: ${j.compression}x</span>` : ''}
+                                    ${j.fidelity ? `<span style="color:var(--green)">FIDELITY: ${(j.fidelity * 100).toFixed(1)}%</span>` : ''}
+                                    ${j.compression_ratio ? `<span style="color:var(--cyan)">COMP: ${j.compression_ratio}x</span>` : ''}
+                                    <span style="color:var(--yellow)">FORMAT: .OGE</span>
                                 </div>
                             ` : ''}
                         </div>

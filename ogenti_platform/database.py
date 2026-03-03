@@ -1,4 +1,4 @@
-"""Ogenti Platform — Database Models"""
+"""O Series Platform — Database Models (Ogenti + Ovisen)"""
 from datetime import datetime, timezone
 from sqlalchemy import (
     Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text, LargeBinary, create_engine
@@ -26,6 +26,9 @@ class User(Base):
     transactions = relationship("Transaction", back_populates="user", cascade="all, delete-orphan")
     training_jobs = relationship("TrainingJob", back_populates="user", cascade="all, delete-orphan")
     adapters = relationship("Adapter", back_populates="user", cascade="all, delete-orphan")
+    # OVISEN relationships
+    ovisen_training_jobs = relationship("OVisenTrainingJob", back_populates="user", cascade="all, delete-orphan")
+    ovisen_adapters = relationship("OVisenAdapter", back_populates="user", cascade="all, delete-orphan")
 
 
 class VerificationCode(Base):
@@ -84,6 +87,7 @@ class TrainingJob(Base):
     accuracy = Column(Float, default=0.0)
     compression = Column(Float, default=0.0)
     adapter_url = Column(String(500), nullable=True)  # download URL when done
+    dashboard_key = Column(String(16), unique=True, nullable=True, index=True)  # public dashboard access key
     runpod_request_id = Column(String(100), nullable=True)  # RunPod serverless request ID
     runpod_error = Column(Text, nullable=True)  # error message from RunPod
     started_at = Column(DateTime, nullable=True)
@@ -111,6 +115,57 @@ class Adapter(Base):
 
     user = relationship("User", back_populates="adapters")
     training_job = relationship("TrainingJob", backref="adapter")
+
+
+# ══════════════════════════════════════════════════════════════
+# OVISEN — Image Embedding Compression (AI-to-AI visual protocol)
+# ══════════════════════════════════════════════════════════════
+
+class OVisenTrainingJob(Base):
+    """OVISEN training job — image embedding compression via MARL."""
+    __tablename__ = "ovisen_training_jobs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    status = Column(String(20), default="queued")  # queued / dispatched / running / completed / failed / cancelled
+    model = Column(String(50), nullable=False)  # vision model backbone
+    dataset = Column(String(50), nullable=False)
+    episodes = Column(Integer, nullable=False)
+    credits_used = Column(Integer, default=0)
+    credits_estimated = Column(Integer, default=0)
+    current_phase = Column(String(50), default="queued")
+    current_episode = Column(Integer, default=0)
+    fidelity = Column(Float, default=0.0)  # reconstruction fidelity (SSIM/LPIPS)
+    compression = Column(Float, default=0.0)  # image → embedding compression ratio
+    adapter_url = Column(String(500), nullable=True)
+    dashboard_key = Column(String(16), unique=True, nullable=True, index=True)
+    runpod_request_id = Column(String(100), nullable=True)
+    runpod_error = Column(Text, nullable=True)
+    started_at = Column(DateTime, nullable=True)
+    completed_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    user = relationship("User", back_populates="ovisen_training_jobs")
+
+
+class OVisenAdapter(Base):
+    """Encrypted .oge adapter — image embedding protocol adapter."""
+    __tablename__ = "ovisen_adapters"
+
+    id = Column(String(36), primary_key=True)  # UUID
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    name = Column(String(200), nullable=False)
+    base_model = Column(String(50), nullable=False)  # vision model backbone
+    encryption_key = Column(LargeBinary(32), nullable=False)  # AES-256 key
+    training_job_id = Column(Integer, ForeignKey("ovisen_training_jobs.id"), nullable=True)
+    file_size = Column(Integer, default=0)  # .oge file size in bytes
+    file_path = Column(String(500), nullable=True)
+    status = Column(String(20), default="active")  # active / disabled / deleted
+    inference_count = Column(Integer, default=0)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    user = relationship("User", back_populates="ovisen_adapters")
+    training_job = relationship("OVisenTrainingJob", backref="adapter")
 
 
 # ── Engine & Session ──

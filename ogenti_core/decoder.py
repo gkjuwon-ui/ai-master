@@ -55,6 +55,7 @@ class DecoderConfig:
     )
     device: str = "auto"
     dtype: str = "bfloat16"
+    quantization: Optional[str] = None  # None | "4bit" | "8bit"
     max_decode_tokens: int = 256  # NL reconstruction / action output budget
 
     # Prompt template
@@ -68,6 +69,26 @@ class DecoderConfig:
             "float16": torch.float16,
             "float32": torch.float32,
         }[self.dtype]
+
+    def get_quantization_config(self):
+        """Build BitsAndBytesConfig if quantization is requested."""
+        if self.quantization is None:
+            return None
+        try:
+            from transformers import BitsAndBytesConfig
+        except ImportError:
+            logger.warning("bitsandbytes not installed, skipping quantization")
+            return None
+        if self.quantization == "4bit":
+            return BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_compute_dtype=self.torch_dtype,
+                bnb_4bit_quant_type="nf4",
+                bnb_4bit_use_double_quant=True,
+            )
+        elif self.quantization == "8bit":
+            return BitsAndBytesConfig(load_in_8bit=True)
+        return None
 
 
 # ─────────────────────────────────────────────────────────────────
@@ -147,11 +168,17 @@ class OgentiDecoder(nn.Module):
         if tokenizer.pad_token is None:
             tokenizer.pad_token = tokenizer.eos_token
 
-        model = AutoModelForCausalLM.from_pretrained(
-            dec_cfg.model_name,
-            dtype=dec_cfg.torch_dtype,
+        load_kwargs = dict(
+            torch_dtype=dec_cfg.torch_dtype,
             device_map=dec_cfg.device,
             trust_remote_code=True,
+        )
+        quant_config = dec_cfg.get_quantization_config()
+        if quant_config is not None:
+            load_kwargs["quantization_config"] = quant_config
+            logger.info("Decoder: loading with %s quantization", dec_cfg.quantization)
+        model = AutoModelForCausalLM.from_pretrained(
+            dec_cfg.model_name, **load_kwargs
         )
 
         model = cls._apply_lora(model, dec_cfg)
@@ -177,11 +204,16 @@ class OgentiDecoder(nn.Module):
         if tokenizer.pad_token is None:
             tokenizer.pad_token = tokenizer.eos_token
 
-        base_model = AutoModelForCausalLM.from_pretrained(
-            dec_cfg.model_name,
-            dtype=dec_cfg.torch_dtype,
+        load_kwargs = dict(
+            torch_dtype=dec_cfg.torch_dtype,
             device_map=dec_cfg.device,
             trust_remote_code=True,
+        )
+        quant_config = dec_cfg.get_quantization_config()
+        if quant_config is not None:
+            load_kwargs["quantization_config"] = quant_config
+        base_model = AutoModelForCausalLM.from_pretrained(
+            dec_cfg.model_name, **load_kwargs
         )
         model = PeftModel.from_pretrained(base_model, str(ckpt / "lora_adapter"))
         return cls(model, tokenizer, dec_cfg, proto_cfg)

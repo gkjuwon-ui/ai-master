@@ -211,6 +211,7 @@ flush_print()
 
 from ogenti_train.config import TrainConfig
 from ogenti_train.train import OgentiTrainer
+from ogenti_train.server import TrainerBridge, start_server_background
 
 config = TrainConfig.load("configs/a100_scout.json")
 
@@ -220,14 +221,38 @@ flush_print(f"  Phases:   {len(config.phases)}")
 flush_print(f"  LoRA:     r={config.encoder.lora_rank}, α={config.encoder.lora_alpha}")
 flush_print(f"  Quant:    {config.encoder.quantization or 'pre-quantized (bnb-4bit)'}")
 flush_print()
+
+# ── Start Dashboard Server ──
+flush_print("  🖥️ Starting live dashboard server...")
+bridge = TrainerBridge()
+server_thread = start_server_background(bridge, host="0.0.0.0", port=8000)
+time.sleep(1)
+
+# Colab proxy URL for dashboard access
+try:
+    from google.colab.output import serve_kernel_port_as_iframe
+    flush_print("  ✅ Dashboard server running on port 8000")
+    flush_print("  📊 Dashboard will open below after model loads!")
+except ImportError:
+    flush_print("  ✅ Dashboard: http://localhost:8000")
+
+flush_print()
 flush_print("  ⏳ Loading model (60GB download, ~5 min)...")
 flush_print()
 
-trainer = OgentiTrainer(config, bridge=None)
+trainer = OgentiTrainer(config, bridge=bridge)
 trainer.setup()
 
 flush_print()
 flush_print("  ✅ Model loaded! Starting training loop...")
+
+# Open dashboard in Colab iframe
+try:
+    from google.colab.output import serve_kernel_port_as_iframe
+    serve_kernel_port_as_iframe(8000, height=600)
+    flush_print("  📊 Dashboard opened above ↑↑↑")
+except ImportError:
+    flush_print("  📊 Dashboard: http://localhost:8000")
 flush_print()
 
 start_time = time.time()

@@ -12,7 +12,7 @@
     "error_rate": 0.0
   },
   "encoder": {
-    "model_name": "unsloth/Llama-4-Scout-17B-16E-Instruct-bnb-4bit",
+    "model_name": "unsloth/Llama-4-Scout-17B-16E-Instruct-unsloth-bnb-4bit",
     "lora_rank": 16,
     "lora_alpha": 32,
     "lora_dropout": 0.05,
@@ -25,7 +25,7 @@
     "device": "auto"
   },
   "decoder": {
-    "model_name": "unsloth/Llama-4-Scout-17B-16E-Instruct-bnb-4bit",
+    "model_name": "unsloth/Llama-4-Scout-17B-16E-Instruct-unsloth-bnb-4bit",
     "lora_rank": 16,
     "lora_alpha": 32,
     "lora_dropout": 0.05,

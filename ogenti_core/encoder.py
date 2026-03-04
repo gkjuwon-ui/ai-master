@@ -168,7 +168,7 @@ class OgentiEncoder(nn.Module):
             load_kwargs["quantization_config"] = quant_config
             logger.info("Encoder: loading with %s quantization", enc_cfg.quantization)
         model = AutoModelForCausalLM.from_pretrained(
-            enc_cfg.model_name, **load_kwargs
+            enc_cfg.model_name, ignore_mismatched_sizes=True, **load_kwargs
         )
 
         # Apply LoRA (QLoRA when quantized)

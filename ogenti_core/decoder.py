@@ -178,7 +178,7 @@ class OgentiDecoder(nn.Module):
             load_kwargs["quantization_config"] = quant_config
             logger.info("Decoder: loading with %s quantization", dec_cfg.quantization)
         model = AutoModelForCausalLM.from_pretrained(
-            dec_cfg.model_name, **load_kwargs
+            dec_cfg.model_name, ignore_mismatched_sizes=True, **load_kwargs
         )
 
         model = cls._apply_lora(model, dec_cfg)

@@ -196,6 +196,27 @@
     function sendCommand(cmd) {}
 
     // ────────────────────────────────────────────────────────────
+    // REST Polling Fallback (for Colab iframe where WS may not relay data)
+    // ────────────────────────────────────────────────────────────
+
+    let restPollTimer = null;
+
+    function startRestPolling() {
+        if (restPollTimer) return;
+        restPollTimer = setInterval(async () => {
+            if (document.hidden) return;
+            try {
+                const resp = await fetch(`${CONFIG.API_BASE}/api/snapshot`, { cache: 'no-store' });
+                if (!resp.ok) return;
+                const data = await resp.json();
+                handleFullState(data);
+            } catch (e) {
+                console.warn('[OGENTI] REST poll error:', e.message);
+            }
+        }, 2000);  // Poll every 2 seconds
+    }
+
+    // ────────────────────────────────────────────────────────────
     // Local WebSocket Mode (direct connection for local training)
     // ────────────────────────────────────────────────────────────
 
@@ -217,6 +238,8 @@
             conn.mode = 'live';
             conn.retries = 0;
             updateConnectionUI();
+            // Also start REST polling as fallback (Colab proxy may not relay WS data)
+            startRestPolling();
             // Show bar with local info
             const bar = $('#jobInfoBar');
             if (bar) bar.style.display = 'flex';
@@ -240,6 +263,8 @@
             conn.mode = 'reconnecting';
             conn.retries++;
             updateConnectionUI();
+            // Keep REST polling going as fallback
+            startRestPolling();
             if (conn.retries <= CONFIG.WS_MAX_RETRIES) {
                 setTimeout(() => connectWebSocketLocal(), CONFIG.WS_RECONNECT_INTERVAL);
             }
@@ -312,6 +337,7 @@
         }
 
         state.paused = data.status === 'paused';
+        handleStatus({ status: data.status || 'idle' });
         updateAllUI();
     }
 

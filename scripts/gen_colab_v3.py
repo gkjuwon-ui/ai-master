@@ -1,4 +1,4 @@
-"""Generate Colab v3 notebook — verbose output, dashboard, every-episode logging."""
+"""Generate Colab v3 notebook — real token, verbose output, REST-polled dashboard."""
 import nbformat as nbf
 import os
 
@@ -13,26 +13,24 @@ nb.metadata = {
 cells = []
 
 cells.append(nbf.v4.new_markdown_cell(
-    "# OGENTI A100 Scout Training v3\n"
-    "**양자화 모델 + 인라인 학습 + 실시간 대시보드**\n\n"
+    "# 🚀 OGENTI A100 Scout Training v3\n"
+    "**pre-quantized 4bit + inline training + REST-polled dashboard**\n\n"
     "| Spec | Value |\n"
     "|------|-------|\n"
     "| Model | unsloth/Llama-4-Scout-17B-16E-Instruct-unsloth-bnb-4bit (~60GB) |\n"
     "| GPU | A100 80GB |\n"
     "| Training | MAPPO 1200 episodes, 5 phases |\n"
-    "| Dashboard | iframe + proxy URL |\n"
+    "| Dashboard | iframe + REST polling 2s |\n"
 ))
 
-cells.append(nbf.v4.new_markdown_cell("## Run This One Cell — HF_TOKEN만 수정!"))
-
+# ═══════════════════════════════════════════
+# MAIN TRAINING CELL
+# ═══════════════════════════════════════════
 cells.append(nbf.v4.new_code_cell(r'''# ╔══════════════════════════════════════════════════════════════╗
-# ║  OGENTI A100 Scout — Training Pipeline v3                  ║
+# ║  OGENTI A100 Scout — All-in-One Training Cell v3           ║
 # ╚══════════════════════════════════════════════════════════════╝
 
-# ━━━━ 여기에 본인 HF 토큰 ━━━━
 HF_TOKEN = "hf_여기에_토큰_붙여넣기"
-# https://huggingface.co/settings/tokens
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 import os, sys, time, shutil, subprocess, glob, json
 os.environ["PYTHONUNBUFFERED"] = "1"
@@ -55,7 +53,7 @@ t, u, f_ = shutil.disk_usage("/content")
 fp(f"  💾 {f_/1e9:.0f} GB free / {t/1e9:.0f} GB total")
 
 # ══════════════════════════════════════════
-# 2. GPU
+# 2. GPU CHECK
 # ══════════════════════════════════════════
 banner("STEP 2", "🔍 GPU Check")
 import torch
@@ -65,7 +63,7 @@ gpu_mem = torch.cuda.get_device_properties(0).total_memory / 1e9
 fp(f"  ✅ {gpu_name} ({gpu_mem:.0f} GB)")
 
 # ══════════════════════════════════════════
-# 3. INSTALL (uvicorn for dashboard!)
+# 3. INSTALL
 # ══════════════════════════════════════════
 banner("STEP 3", "📦 Packages")
 subprocess.run([sys.executable, "-m", "pip", "install", "-q",
@@ -98,7 +96,7 @@ import ogenti_core, ogenti_train
 fp("  ✅ Cloned + imported")
 
 # ══════════════════════════════════════════
-# 6. LOGGING (real-time flush)
+# 6. LOGGING
 # ══════════════════════════════════════════
 import logging
 for h in logging.root.handlers[:]:
@@ -122,18 +120,16 @@ for n in ["ogenti", "ogenti_core", "ogenti_train", "ogenti.production"]:
     logging.getLogger(n).setLevel(logging.INFO)
 
 # ══════════════════════════════════════════
-# 7. DASHBOARD + LOAD + TRAIN
+# 7. DASHBOARD SERVER
 # ══════════════════════════════════════════
-banner("STEP 6", "🖥️ Dashboard")
+banner("STEP 6", "🖥️ Dashboard Server")
 
 from ogenti_train.config import TrainConfig
 from ogenti_train.train import OgentiTrainer
 from ogenti_train.server import TrainerBridge, start_server_background
 
 config = TrainConfig.load("configs/a100_scout.json")
-
-# Force log every episode so user sees output
-config.infra.log_every = 1
+config.infra.log_every = 1  # 매 에피소드 출력
 
 bridge = TrainerBridge()
 try:
@@ -143,39 +139,42 @@ try:
 except Exception as e:
     fp(f"  ⚠️ Dashboard failed: {e}")
 
-# Show dashboard via Colab proxy
+# Colab iframe
 try:
     from google.colab import output
     output.serve_kernel_port_as_iframe(8000, height=600)
     fp("  📊 Dashboard iframe opened above ↑↑↑")
 except Exception as e:
     fp(f"  ⚠️ Iframe: {e}")
-    # Fallback: print proxy URL
     try:
         from google.colab import output as _o
         proxy = _o.eval_js('"https://"+google.colab.kernel.proxyPort(8000, {"cache": false})')
-        fp(f"  📊 Dashboard URL (open in new tab): {proxy}")
+        fp(f"  📊 Dashboard URL: {proxy}")
     except:
-        fp("  📊 Dashboard: localhost:8000 (터미널에서 curl)")
+        fp("  📊 Dashboard: http://localhost:8000")
 
+# ══════════════════════════════════════════
+# 8. TRAINING
+# ══════════════════════════════════════════
 banner("STEP 7", "🚀 TRAINING")
 fp(f"  Model:    {config.encoder.model_name}")
 fp(f"  Episodes: {config.total_episodes}")
 fp(f"  Phases:   {len(config.phases)}")
-fp(f"  log_every: {config.infra.log_every} (매 에피소드 출력)")
+fp(f"  Decode tokens: {config.decoder.max_decode_tokens}")
+fp(f"  log_every: {config.infra.log_every}")
 fp()
 fp("  ⏳ 7a: Creating trainer...")
 trainer = OgentiTrainer(config, bridge=bridge)
 
-fp("  ⏳ 7b: Loading model (~60GB download)...")
-fp("       HuggingFace progress bars will appear below:")
+fp("  ⏳ 7b: Loading model (~60GB, 13 shards)...")
+fp("       👇 Progress bars below 👇")
 fp()
 trainer.setup()
 fp()
 fp(f"  ✅ Model loaded! GPU: {torch.cuda.memory_allocated()/1e9:.1f} GB used")
 fp()
 
-# Monkey-patch _log_metrics to force flush
+# Monkey-patch _log_metrics for forced flush
 _orig = trainer._log_metrics
 def _patched(metrics):
     _orig(metrics)
@@ -183,14 +182,15 @@ def _patched(metrics):
     sys.stderr.flush()
 trainer._log_metrics = _patched
 
-fp("  🏁 Training loop starting... (every episode logs below)")
+fp("  🏁 Training loop START!")
+fp("  ⚡ 매 에피소드 로그가 아래에 찍힙니다...")
 fp()
 
 start = time.time()
 try:
     trainer.train()
 except KeyboardInterrupt:
-    fp("\n⚠️ Interrupted")
+    fp("\n⚠️ Interrupted by user")
 except Exception as e:
     fp(f"\n❌ Error: {e}")
     import traceback; traceback.print_exc()
@@ -201,61 +201,62 @@ except Exception as e:
 elapsed = time.time() - start
 fp()
 fp("=" * 60)
-fp(f"  ✅ DONE! {trainer.global_episode} eps in {elapsed/60:.1f}m")
+fp(f"  🎉 DONE! {trainer.global_episode} episodes in {elapsed/60:.1f}m")
 fp(f"  Best Reward: {trainer.best_reward:.4f}")
 if elapsed > 0: fp(f"  Speed: {trainer.global_episode/elapsed:.2f} ep/s")
 fp("=" * 60)
 
 # ══════════════════════════════════════════
-# 8. SAVE
+# 9. SAVE RESULTS
 # ══════════════════════════════════════════
-banner("STEP 8", "💾 Save")
+banner("STEP 8", "💾 Save Results")
 results = {"model": config.encoder.model_name, "episodes": trainer.global_episode,
            "elapsed_min": round(elapsed/60,2), "best_reward": round(trainer.best_reward,4),
            "gpu": gpu_name, "vram_gb": round(gpu_mem,1)}
 with open("training_results.json", "w") as f:
     json.dump(results, f, indent=2)
-fp(f"  📊 Results saved")
+fp(f"  📊 Results: {json.dumps(results, indent=2)}")
 
 if os.path.exists("training.log"):
     with open("training.log") as f: lines = f.readlines()
     fp(f"  📋 Log: {len(lines)} lines")
-    fp("\n  --- Last 20 ---")
-    for l in lines[-20:]: fp(f"  {l.rstrip()}")
+    fp("\n  --- Last 30 lines ---")
+    for l in lines[-30:]: fp(f"  {l.rstrip()}")
 
-fp("\n🎉 DONE! 다음 셀 → 다운로드")
+fp("\n🎉 ALL DONE!")
 '''))
 
 # Download cell
-cells.append(nbf.v4.new_markdown_cell("## 결과 다운로드"))
+cells.append(nbf.v4.new_markdown_cell("## 📦 결과 다운로드"))
 cells.append(nbf.v4.new_code_cell('''import shutil, os
 os.chdir("/content/ai-master")
 if os.path.exists("checkpoints/a100_scout"):
     shutil.make_archive("/content/ogenti_results", "zip", "checkpoints/a100_scout")
-    print("✅ Zipped", flush=True)
+    print("✅ Zipped checkpoints", flush=True)
 for f in ["training.log", "training_results.json"]:
     if os.path.exists(f): shutil.copy(f, f"/content/{f}")
 try:
     from google.colab import files
-    for f in ["/content/ogenti_results.zip", "/content/training_results.json"]:
+    for f in ["/content/ogenti_results.zip", "/content/training_results.json", "/content/training.log"]:
         if os.path.exists(f): files.download(f)
-except: print("📁 File browser에서 다운로드", flush=True)
+except: print("📁 File browser에서 다운로드하세요", flush=True)
 '''))
 
 # Monitor cell
-cells.append(nbf.v4.new_markdown_cell(
-    "## 모니터링\n"
-    "학습 중에는 셀 실행 불가 → **터미널**에서:\n"
-    "```\ntail -f /content/ai-master/training.log\n```"
-))
-cells.append(nbf.v4.new_code_cell('''import os, torch
+cells.append(nbf.v4.new_markdown_cell("## 🔍 모니터링 (학습 중 다른 셀에서 실행)"))
+cells.append(nbf.v4.new_code_cell('''import os, torch, json
 os.chdir("/content/ai-master")
 if torch.cuda.is_available():
-    print(f"GPU: {torch.cuda.memory_allocated()/1e9:.1f}/{torch.cuda.get_device_properties(0).total_memory/1e9:.0f}GB", flush=True)
+    alloc = torch.cuda.memory_allocated()/1e9
+    total = torch.cuda.get_device_properties(0).total_memory/1e9
+    print(f"🖥️ GPU: {alloc:.1f}/{total:.0f}GB ({alloc/total*100:.0f}%)", flush=True)
 if os.path.exists("training.log"):
     with open("training.log") as f: lines = f.readlines()
-    print(f"Log: {len(lines)} lines", flush=True)
-    for l in lines[-20:]: print(f"  {l.rstrip()}", flush=True)
+    print(f"📋 Log: {len(lines)} lines", flush=True)
+    print("--- Last 30 ---", flush=True)
+    for l in lines[-30:]: print(f"  {l.rstrip()}", flush=True)
+if os.path.exists("training_results.json"):
+    with open("training_results.json") as f: print(f"📊 Results: {f.read()}", flush=True)
 '''))
 
 nb.cells = cells

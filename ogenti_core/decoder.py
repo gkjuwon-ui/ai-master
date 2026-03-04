@@ -141,12 +141,19 @@ class OgentiDecoder(nn.Module):
         tokenizer: PreTrainedTokenizerBase,
         config: DecoderConfig,
         protocol_config: ProtocolConfig,
+        adapter_name: Optional[str] = None,
     ):
         super().__init__()
         self.model = model
         self.tokenizer = tokenizer
         self.config = config
         self.protocol_config = protocol_config
+        self.adapter_name = adapter_name
+
+    def _activate(self):
+        """Activate this module's LoRA adapter (for shared-model mode)."""
+        if self.adapter_name and hasattr(self.model, 'set_adapter'):
+            self.model.set_adapter(self.adapter_name)
 
     # ── Factory ──
 
@@ -241,6 +248,7 @@ class OgentiDecoder(nn.Module):
         -------
         DecodedAction
         """
+        self._activate()
         self.model.eval()
 
         # Build decoder input: <decode_prefix> protocol_tokens <decode_suffix>
@@ -280,6 +288,7 @@ class OgentiDecoder(nn.Module):
 
         Returns (sequences, scores) for policy gradient computation.
         """
+        self._activate()
         proto_text = self.tokenizer.decode(
             message.token_ids, skip_special_tokens=False
         )
@@ -309,6 +318,7 @@ class OgentiDecoder(nn.Module):
         the target NL text. Used as an auxiliary supervised signal
         during early training phases.
         """
+        self._activate()
         # Build input
         proto_text = self.tokenizer.decode(
             message.token_ids, skip_special_tokens=False
@@ -395,6 +405,9 @@ class OgentiDecoder(nn.Module):
 
         out = P(path)
         out.mkdir(parents=True, exist_ok=True)
+
+        # Activate adapter before saving (for shared-model mode)
+        self._activate()
 
         self.model.save_pretrained(str(out / "lora_adapter"))
         self.tokenizer.save_pretrained(str(out / "lora_adapter"))

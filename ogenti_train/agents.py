@@ -343,6 +343,7 @@ class AgentPool:
         self.encoders: dict[str, EncoderAgent] = {}
         self.decoders: dict[str, DecoderAgent] = {}
         self.shared_value_head: Optional[ValueHead] = None
+        self._shared_model: bool = False
 
     def add_encoder(self, agent: EncoderAgent) -> None:
         self.encoders[agent.config.agent_id] = agent
@@ -357,26 +358,131 @@ class AgentPool:
         encoder_config: Optional[EncoderConfig] = None,
         decoder_config: Optional[DecoderConfig] = None,
     ) -> AgentPool:
-        """Build the default encoder-decoder pair."""
+        """Build the default encoder-decoder pair.
+
+        When encoder and decoder use the same base model, loads it
+        only ONCE and uses PEFT multi-adapter LoRA to avoid OOM.
+        """
         pool = cls()
         proto_cfg = protocol_config or ProtocolConfig()
+        enc_cfg = encoder_config or EncoderConfig()
+        dec_cfg = decoder_config or DecoderConfig()
 
         # Shared value head (centralized critic)
         value_head = ValueHead()
         pool.shared_value_head = value_head
 
-        encoder_agent = EncoderAgent.build(
-            agent_config=AgentConfig(agent_id="encoder_0", role="encoder"),
-            encoder_config=encoder_config,
-            protocol_config=proto_cfg,
-            value_head=value_head,
-        )
-        decoder_agent = DecoderAgent.build(
-            agent_config=AgentConfig(agent_id="decoder_0", role="decoder"),
-            decoder_config=decoder_config,
-            protocol_config=proto_cfg,
-            value_head=value_head,
-        )
+        # ── Check whether encoder & decoder share the same base model ──
+        same_model = enc_cfg.model_name == dec_cfg.model_name
+
+        if same_model:
+            # ═══════════════════════════════════════════════════
+            #  SHARED MODEL MODE  — load once, multi-adapter LoRA
+            #  Saves ~50% VRAM (critical for 109B @ 4-bit)
+            # ═══════════════════════════════════════════════════
+            from transformers import AutoTokenizer, AutoModelForCausalLM
+            from peft import LoraConfig, get_peft_model, TaskType
+
+            logger.info(
+                "🔗 Shared-model mode: loading %s ONCE for encoder+decoder",
+                enc_cfg.model_name,
+            )
+
+            tokenizer = AutoTokenizer.from_pretrained(
+                enc_cfg.model_name, trust_remote_code=True,
+            )
+            if tokenizer.pad_token is None:
+                tokenizer.pad_token = tokenizer.eos_token
+
+            load_kwargs = dict(
+                torch_dtype=enc_cfg.torch_dtype,
+                device_map=enc_cfg.device,
+                trust_remote_code=True,
+            )
+            quant_config = enc_cfg.get_quantization_config()
+            if quant_config is not None:
+                load_kwargs["quantization_config"] = quant_config
+                logger.info("Loading with %s quantization", enc_cfg.quantization)
+
+            model = AutoModelForCausalLM.from_pretrained(
+                enc_cfg.model_name,
+                ignore_mismatched_sizes=True,
+                **load_kwargs,
+            )
+
+            # Prepare for k-bit training (QLoRA / pre-quantized)
+            try:
+                from peft import prepare_model_for_kbit_training
+                if getattr(model, "is_quantized", False) or enc_cfg.quantization:
+                    model = prepare_model_for_kbit_training(model)
+                    logger.info("Prepared model for k-bit training")
+            except Exception as e:
+                logger.warning("Could not prepare for k-bit training: %s", e)
+
+            # Apply encoder LoRA adapter
+            encoder_lora = LoraConfig(
+                task_type=TaskType.CAUSAL_LM,
+                r=enc_cfg.lora_rank,
+                lora_alpha=enc_cfg.lora_alpha,
+                lora_dropout=enc_cfg.lora_dropout,
+                target_modules=enc_cfg.lora_target_modules,
+                bias="none",
+            )
+            model = get_peft_model(model, encoder_lora, adapter_name="encoder")
+
+            # Add decoder LoRA adapter (separate weights, same base)
+            decoder_lora = LoraConfig(
+                task_type=TaskType.CAUSAL_LM,
+                r=dec_cfg.lora_rank,
+                lora_alpha=dec_cfg.lora_alpha,
+                lora_dropout=dec_cfg.lora_dropout,
+                target_modules=dec_cfg.lora_target_modules,
+                bias="none",
+            )
+            model.add_adapter("decoder", decoder_lora)
+
+            trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
+            total = sum(p.numel() for p in model.parameters())
+            logger.info(
+                "Shared-model LoRA — trainable: %s / %s (%.2f%%)",
+                f"{trainable:,}", f"{total:,}", 100 * trainable / total,
+            )
+
+            # Build encoder & decoder with the SAME model reference
+            encoder = OgentiEncoder(
+                model, tokenizer, enc_cfg, proto_cfg, adapter_name="encoder",
+            )
+            decoder = OgentiDecoder(
+                model, tokenizer, dec_cfg, proto_cfg, adapter_name="decoder",
+            )
+
+            encoder_agent = EncoderAgent(
+                encoder, value_head,
+                AgentConfig(agent_id="encoder_0", role="encoder"),
+            )
+            decoder_agent = DecoderAgent(
+                decoder, value_head,
+                AgentConfig(agent_id="decoder_0", role="decoder"),
+            )
+            pool._shared_model = True
+
+        else:
+            # ═══════════════════════════════════════════════════
+            #  SEPARATE MODEL MODE — original behaviour
+            # ═══════════════════════════════════════════════════
+            encoder_agent = EncoderAgent.build(
+                agent_config=AgentConfig(agent_id="encoder_0", role="encoder"),
+                encoder_config=enc_cfg,
+                protocol_config=proto_cfg,
+                value_head=value_head,
+            )
+            decoder_agent = DecoderAgent.build(
+                agent_config=AgentConfig(agent_id="decoder_0", role="decoder"),
+                decoder_config=dec_cfg,
+                protocol_config=proto_cfg,
+                value_head=value_head,
+            )
+            pool._shared_model = False
 
         pool.add_encoder(encoder_agent)
         pool.add_decoder(decoder_agent)
@@ -390,11 +496,20 @@ class AgentPool:
         return self.decoders[agent_id]
 
     def all_parameters(self):
-        """Yield all trainable parameters across all agents + value head."""
-        for enc in self.encoders.values():
+        """Yield all trainable parameters across all agents + value head.
+
+        In shared-model mode the base model params are yielded only
+        once to avoid duplicates in the optimizer.
+        """
+        if self._shared_model:
+            # Shared model: yield model params once (includes both adapters)
+            enc = next(iter(self.encoders.values()))
             yield from enc.encoder.parameters()
-        for dec in self.decoders.values():
-            yield from dec.decoder.parameters()
+        else:
+            for enc in self.encoders.values():
+                yield from enc.encoder.parameters()
+            for dec in self.decoders.values():
+                yield from dec.decoder.parameters()
         if self.shared_value_head is not None:
             yield from self.shared_value_head.parameters()
 
@@ -406,5 +521,6 @@ class AgentPool:
     def __repr__(self) -> str:
         return (
             f"AgentPool(encoders={list(self.encoders.keys())}, "
-            f"decoders={list(self.decoders.keys())})"
+            f"decoders={list(self.decoders.keys())}, "
+            f"shared_model={self._shared_model})"
         )

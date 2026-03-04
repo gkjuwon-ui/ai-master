@@ -117,12 +117,14 @@ class OgentiEncoder(nn.Module):
         tokenizer: PreTrainedTokenizerBase,
         config: EncoderConfig,
         protocol_config: ProtocolConfig,
+        adapter_name: Optional[str] = None,
     ):
         super().__init__()
         self.model = model
         self.tokenizer = tokenizer
         self.config = config
         self.protocol_config = protocol_config
+        self.adapter_name = adapter_name
 
         # Cache special token IDs
         self._end_token_id = self._resolve_token_id(protocol_config.end_token)
@@ -131,6 +133,11 @@ class OgentiEncoder(nn.Module):
         # Set protocol vocab size from tokenizer
         if protocol_config.vocab_size == 0:
             protocol_config.vocab_size = len(tokenizer)
+
+    def _activate(self):
+        """Activate this module's LoRA adapter (for shared-model mode)."""
+        if self.adapter_name and hasattr(self.model, 'set_adapter'):
+            self.model.set_adapter(self.adapter_name)
 
     # ── Factory ──
 
@@ -240,6 +247,7 @@ class OgentiEncoder(nn.Module):
         -------
         ProtocolMessage
         """
+        self._activate()
         self.model.eval()
         budget = max_tokens or self.config.max_new_tokens
 
@@ -281,6 +289,7 @@ class OgentiEncoder(nn.Module):
         Returns (input_ids, logits) so the trainer can compute
         log-probabilities for policy gradient.
         """
+        self._activate()
         budget = max_tokens or self.config.max_new_tokens
         prompt = f"{self.config.encode_prefix}{natural_language}{self.config.encode_suffix}"
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.model.device)
@@ -357,6 +366,9 @@ class OgentiEncoder(nn.Module):
 
         out = Path(path)
         out.mkdir(parents=True, exist_ok=True)
+
+        # Activate adapter before saving (for shared-model mode)
+        self._activate()
 
         # Save LoRA weights
         self.model.save_pretrained(str(out / "lora_adapter"))

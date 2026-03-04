@@ -203,6 +203,7 @@ class OgentiTrainer:
                 if weights_file.exists():
                     weights = safetensors.torch.load_file(str(weights_file))
                     enc = self.agent_pool.get_encoder()
+                    enc.encoder._activate()  # switch to encoder adapter
                     enc.encoder.model.load_state_dict(weights, strict=False)
                     logger.info("Loaded encoder LoRA from %s", enc_dir)
 
@@ -214,6 +215,7 @@ class OgentiTrainer:
                 if weights_file.exists():
                     weights = safetensors.torch.load_file(str(weights_file))
                     dec = self.agent_pool.get_decoder()
+                    dec.decoder._activate()  # switch to decoder adapter
                     dec.decoder.model.load_state_dict(weights, strict=False)
                     logger.info("Loaded decoder LoRA from %s", dec_dir)
 

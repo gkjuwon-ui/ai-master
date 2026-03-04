@@ -304,8 +304,17 @@ class OgentiEncoder(nn.Module):
 
     @staticmethod
     def _apply_lora(model: PreTrainedModel, config: EncoderConfig) -> PreTrainedModel:
-        """Apply LoRA adapters to the base model."""
+        """Apply LoRA adapters to the base model (supports QLoRA / pre-quantized)."""
         from peft import LoraConfig, get_peft_model, TaskType
+
+        # Prepare for k-bit training if model is quantized (QLoRA or pre-quantized)
+        try:
+            from peft import prepare_model_for_kbit_training
+            if getattr(model, 'is_quantized', False) or config.quantization:
+                model = prepare_model_for_kbit_training(model)
+                logger.info("Encoder: prepared model for k-bit training")
+        except Exception as e:
+            logger.warning("Could not prepare for k-bit training: %s", e)
 
         lora_config = LoraConfig(
             task_type=TaskType.CAUSAL_LM,

@@ -12,7 +12,7 @@
     "error_rate": 0.0
   },
   "encoder": {
-    "model_name": "meta-llama/Llama-4-Scout-17B-16E-Instruct",
+    "model_name": "unsloth/Llama-4-Scout-17B-16E-Instruct-bnb-4bit",
     "lora_rank": 16,
     "lora_alpha": 32,
     "lora_dropout": 0.05,
@@ -21,11 +21,11 @@
     "encode_prefix": "<|encode|>",
     "encode_suffix": "<|proto|>",
     "dtype": "bfloat16",
-    "quantization": "4bit",
+    "quantization": null,
     "device": "auto"
   },
   "decoder": {
-    "model_name": "meta-llama/Llama-4-Scout-17B-16E-Instruct",
+    "model_name": "unsloth/Llama-4-Scout-17B-16E-Instruct-bnb-4bit",
     "lora_rank": 16,
     "lora_alpha": 32,
     "lora_dropout": 0.05,
@@ -34,7 +34,7 @@
     "decode_prefix": "<|proto|>",
     "decode_suffix": "<|decode|>",
     "dtype": "bfloat16",
-    "quantization": "4bit",
+    "quantization": null,
     "device": "auto"
   },
   "reward": {

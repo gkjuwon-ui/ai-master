@@ -1145,18 +1145,15 @@
         const isLocal = params.has('local') || window.location.port === '8000';
         const urlKey = params.get('key');
 
-        if (isLocal) {
-            // Local training mode — connect via WebSocket directly, no key needed
-            const overlay = $('#keyOverlay');
-            if (overlay) overlay.style.display = 'none';
-            setTimeout(() => connectWebSocketLocal(), 300);
-        } else if (urlKey) {
+        if (urlKey) {
             if (input) input.value = urlKey.toUpperCase();
             // Slight delay to let canvas init finish
             setTimeout(() => connectWithKey(urlKey), 300);
         } else {
-            conn.mode = 'idle';
-            updateConnectionUI();
+            // Auto-connect via WebSocket (works for local, Colab iframe, any same-origin)
+            const overlay = $('#keyOverlay');
+            if (overlay) overlay.style.display = 'none';
+            setTimeout(() => connectWebSocketLocal(), 300);
         }
 
         setTimeout(() => {

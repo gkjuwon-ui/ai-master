@@ -30,7 +30,7 @@
     "lora_alpha": 32,
     "lora_dropout": 0.05,
     "lora_target_modules": ["q_proj", "k_proj", "v_proj", "o_proj"],
-    "max_decode_tokens": 256,
+    "max_decode_tokens": 64,
     "decode_prefix": "<|proto|>",
     "decode_suffix": "<|decode|>",
     "dtype": "bfloat16",

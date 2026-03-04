@@ -104,6 +104,10 @@ class OgentiTrainer:
         cfg = self.config
         logger.info("\n%s", cfg.summary())
 
+        # Notify dashboard that setup is starting
+        if self.bridge:
+            self.bridge.on_training_start(cfg._to_serializable())
+
         self._set_seed(cfg.infra.seed)
 
         # 1. Agent pool
@@ -221,10 +225,6 @@ class OgentiTrainer:
         logger.info("═══ Training started ═══")
         start_time = time.time()
 
-        # Notify dashboard
-        if self.bridge:
-            self.bridge.on_training_start(cfg._to_serializable())
-
         while not self.scheduler.is_training_complete:
             phase = self.scheduler.current_phase
 
@@ -323,14 +323,19 @@ class OgentiTrainer:
         channel.inject_noise_prob = phase.noise_prob
 
         # 1. Sample task
+        import time as _t
+        _t0 = _t.time()
         task = env.reset()
 
         # Count original NL tokens
         original_tokens = len(
             enc_agent.encoder.tokenizer.encode(task.instruction)
         )
+        logger.info("[Ep %d] Task: %s (%d tok) — encoding...",
+                     self.global_episode, task.category.value, original_tokens)
 
         # 2. Encode
+        _t1 = _t.time()
         if phase.use_rl:
             message, enc_log_probs = enc_agent.act(
                 task.instruction,
@@ -346,6 +351,8 @@ class OgentiTrainer:
             enc_log_probs = []
 
         protocol_tokens = message.token_count
+        logger.info("[Ep %d] Encoded → %d proto tokens (%.1fs) — channel...",
+                     self.global_episode, protocol_tokens, _t.time() - _t1)
 
         # 3. Channel (simulated — direct pass with noise)
         delivered = channel.send(
@@ -385,6 +392,8 @@ class OgentiTrainer:
             }
 
         # 4. Decode
+        _t2 = _t.time()
+        logger.info("[Ep %d] Decoding...", self.global_episode)
         if phase.use_rl:
             decoded_text, dec_log_probs = dec_agent.act(message)
         else:
@@ -392,6 +401,8 @@ class OgentiTrainer:
             action = dec_agent.decoder.decode(message)
             decoded_text = action.text
             dec_log_probs = []
+        logger.info("[Ep %d] Decoded → %d chars (%.1fs) — reward...",
+                     self.global_episode, len(decoded_text), _t.time() - _t2)
 
         # 5. Reward
         budget = cfg.protocol.effective_budget(self.global_episode)
@@ -444,6 +455,11 @@ class OgentiTrainer:
         # Track best
         if total_reward > self.best_reward:
             self.best_reward = total_reward
+
+        _elapsed = _t.time() - _t0
+        logger.info("[Ep %d] Done! reward=%.3f acc=%.3f comp=%.1f (%.1fs/ep)",
+                     self.global_episode, total_reward,
+                     reward_info["accuracy"], reward_info["compression_ratio"], _elapsed)
 
         return {
             "accuracy": reward_info["accuracy"],

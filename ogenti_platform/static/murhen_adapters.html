@@ -220,7 +220,7 @@
 
         async function downloadAdapter(id) {
             try {
-                const resp = await fetch(`${API_BASE}/api/murhen/adapters/${id}/download`, {
+                const resp = await fetch(`${API}/api/murhen/adapters/${id}/download`, {
                     headers: { 'Authorization': 'Bearer ' + Auth.getToken() }
                 });
                 if (!resp.ok) throw new Error('DOWNLOAD FAILED');

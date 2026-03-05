@@ -157,7 +157,7 @@ function renderNav(activePage = '') {
            </div>`;
 
     nav.innerHTML = `
-        <a href="https://series.so" class="nav-brand">
+        <a href="https://oseries.io" class="nav-brand">
             SERIES <span class="nav-tag">PLATFORM</span>
         </a>
         <div class="nav-links">${links}</div>

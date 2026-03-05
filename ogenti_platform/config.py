@@ -19,7 +19,7 @@ DATABASE_URL = os.getenv("DATABASE_URL", _default_db)
 
 # ── Resend (email) ──
 RESEND_API_KEY = os.getenv("RESEND_API_KEY", "re_test_xxxxxxxxxxxx")
-FROM_EMAIL = os.getenv("FROM_EMAIL", "noreply@series.so")
+FROM_EMAIL = os.getenv("FROM_EMAIL", "noreply@oseries.io")
 # Toggle email verification on/off (set "true" to enable, anything else = disabled)
 EMAIL_VERIFICATION_ENABLED = os.getenv("EMAIL_VERIFICATION_ENABLED", "false").lower() == "true"
 

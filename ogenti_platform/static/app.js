@@ -98,48 +98,29 @@ function renderNav(activePage = '') {
     const nav = document.getElementById('main-nav');
     if (!nav) return;
 
-    let links = '';
+    let productTabs = '';
+    let platformLinks = '';
     if (loggedIn) {
-        // OGENTI sub-menu (text compression)
-        links += `<div class="nav-group">
-            <span class="nav-group-label" style="color:var(--pink)">OGENTI</span>
-            <a href="/platform/training.html" class="nav-link${activePage === 'training' ? ' active' : ''}">TRAIN</a>
-            <a href="/monitor" class="nav-link${activePage === 'monitor' ? ' active' : ''}" title="Training Monitor">MONITOR</a>
-        </div>`;
+        const products = [
+            { id: 'ogenti', label: 'OGENTI', color: 'var(--pink)', trainPage: 'training', trainUrl: '/platform/training.html', monitorUrl: '/monitor?product=ogenti' },
+            { id: 'ovisen', label: 'OVISEN', color: 'var(--cyan)', trainPage: 'ovisen_training', trainUrl: '/platform/ovisen_training.html', monitorUrl: '/monitor?product=ovisen' },
+            { id: 'phiren', label: 'PHIREN', color: 'var(--green)', trainPage: 'phiren_training', trainUrl: '/platform/phiren_training.html', monitorUrl: '/monitor?product=phiren' },
+            { id: 'parhen', label: 'PARHEN', color: 'var(--orange)', trainPage: 'parhen_training', trainUrl: '/platform/parhen_training.html', monitorUrl: '/monitor?product=parhen' },
+            { id: 'murhen', label: 'MURHEN', color: 'var(--yellow)', trainPage: 'murhen_training', trainUrl: '/platform/murhen_training.html', monitorUrl: '/monitor?product=murhen' },
+        ];
 
-        // OVISEN sub-menu (image embedding compression)
-        links += `<div class="nav-group">
-            <span class="nav-group-label" style="color:var(--cyan)">OVISEN</span>
-            <a href="/platform/ovisen_training.html" class="nav-link${activePage === 'ovisen_training' ? ' active' : ''}">TRAIN</a>
-            <a href="/platform/ovisen_adapters.html" class="nav-link${activePage === 'ovisen_adapters' ? ' active' : ''}">ADAPTERS</a>
-        </div>`;
+        productTabs = products.map(p => {
+            const isActive = activePage === p.trainPage || activePage === p.id + '_monitor';
+            return `<div class="nav-product${isActive ? ' active' : ''}" style="--product-color:${p.color}">
+                <span class="nav-product-label">${p.label}</span>
+                <a href="${p.trainUrl}" class="nav-link${activePage === p.trainPage ? ' active' : ''}">TRAIN</a>
+                <a href="${p.monitorUrl}" class="nav-link${activePage === p.id + '_monitor' ? ' active' : ''}">MONITOR</a>
+            </div>`;
+        }).join('');
 
-        // PHIREN sub-menu (hallucination guard)
-        links += `<div class="nav-group">
-            <span class="nav-group-label" style="color:var(--green)">PHIREN</span>
-            <a href="/platform/phiren_training.html" class="nav-link${activePage === 'phiren_training' ? ' active' : ''}">TRAIN</a>
-            <a href="/platform/phiren_adapters.html" class="nav-link${activePage === 'phiren_adapters' ? ' active' : ''}">ADAPTERS</a>
-        </div>`;
-
-        // PARHEN sub-menu (anti-sycophancy)
-        links += `<div class="nav-group">
-            <span class="nav-group-label" style="color:var(--orange)">PARHEN</span>
-            <a href="/platform/parhen_training.html" class="nav-link${activePage === 'parhen_training' ? ' active' : ''}">TRAIN</a>
-            <a href="/platform/parhen_adapters.html" class="nav-link${activePage === 'parhen_adapters' ? ' active' : ''}">ADAPTERS</a>
-        </div>`;
-
-        // MURHEN sub-menu (position-agnostic recall)
-        links += `<div class="nav-group">
-            <span class="nav-group-label" style="color:var(--yellow)">MURHEN</span>
-            <a href="/platform/murhen_training.html" class="nav-link${activePage === 'murhen_training' ? ' active' : ''}">TRAIN</a>
-            <a href="/platform/murhen_adapters.html" class="nav-link${activePage === 'murhen_adapters' ? ' active' : ''}">ADAPTERS</a>
-        </div>`;
-
-        // Shared platform pages
-        links += `<div class="nav-group">
-            <span class="nav-group-label" style="color:var(--text-dim)">PLATFORM</span>
+        platformLinks = `<div class="nav-platform">
             <a href="/platform/account.html" class="nav-link${activePage === 'account' ? ' active' : ''}">ACCOUNT</a>
-            <a href="/platform/api_keys.html" class="nav-link${activePage === 'api_keys' ? ' active' : ''}">API KEYS</a>
+            <a href="/platform/api_keys.html" class="nav-link${activePage === 'api_keys' ? ' active' : ''}">API</a>
             <a href="/platform/billing.html" class="nav-link${activePage === 'billing' ? ' active' : ''}">BILLING</a>
             <a href="/platform/usage.html" class="nav-link${activePage === 'usage' ? ' active' : ''}">USAGE</a>
         </div>`;
@@ -157,11 +138,14 @@ function renderNav(activePage = '') {
            </div>`;
 
     nav.innerHTML = `
-        <a href="https://oseries.io" class="nav-brand">
-            SERIES <span class="nav-tag">PLATFORM</span>
-        </a>
-        <div class="nav-links">${links}</div>
-        ${userSection}
+        <div class="nav-top">
+            <a href="https://oseries.io" class="nav-brand">
+                SERIES <span class="nav-tag">PLATFORM</span>
+            </a>
+            ${platformLinks}
+            ${userSection}
+        </div>
+        ${loggedIn ? `<div class="nav-bottom">${productTabs}</div>` : ''}
     `;
 }
 

@@ -1,6 +1,6 @@
 /* ============================================================
    SERIES Training Monitor — Dashboard Engine v3
-   Multi-product: OGENTI / OVISEN / PHIREN
+   Multi-product: OGENTI / OVISEN / PHIREN / PARHEN / MURHEN
    REST polling + WebSocket fallback
    ============================================================ */
 
@@ -46,6 +46,28 @@
             chartColors: ['#00ff64', '#ffd700'],
             phases: ['Warmup', 'Fact Collection', 'Verification Training', 'Calibration Tuning', 'Distillation'],
             vizLabels: { a: 'Verifier α', aRole: 'Claim → Check', b: 'Calibrator β', bRole: 'Score → Guard' },
+        },
+        parhen: {
+            label: 'PARHEN',
+            color: '#ffaa55',
+            metric2: { label: 'CONSISTENCY', unit: '%', sub: 'answer stability under pressure', key: 'consistency' },
+            metric3: { label: 'INDEPENDENCE', unit: '%', sub: 'resistance to social pressure', key: 'independence' },
+            apiPath: '/api/parhen/training/dashboard/',
+            chartLabels: ['Consistency', 'Independence'],
+            chartColors: ['#ffaa55', '#ff5555'],
+            phases: ['Warmup', 'Baseline Calibration', 'Adversarial Pressure', 'Conviction Training', 'Distillation'],
+            vizLabels: { a: 'Anchor α', aRole: 'Stance → Hold', b: 'Persuader β', bRole: 'Pressure → Test' },
+        },
+        murhen: {
+            label: 'MURHEN',
+            color: '#ffff55',
+            metric2: { label: 'RECALL', unit: '%', sub: 'position-agnostic retrieval', key: 'recall' },
+            metric3: { label: 'UNIFORMITY', unit: '%', sub: 'position bias reduction', key: 'uniformity' },
+            apiPath: '/api/murhen/training/dashboard/',
+            chartLabels: ['Recall', 'Uniformity'],
+            chartColors: ['#ffff55', '#55ff55'],
+            phases: ['Warmup', 'Position Mapping', 'Scramble Training', 'Uniform Recall', 'Distillation'],
+            vizLabels: { a: 'Retainer α', aRole: 'Context → Recall', b: 'Scrambler β', bRole: 'Position → Test' },
         },
     };
 

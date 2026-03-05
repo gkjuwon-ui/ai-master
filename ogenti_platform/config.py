@@ -248,3 +248,129 @@ PHR_STORAGE_DIR = os.getenv("PHR_STORAGE_DIR", _default_phr)
 # ── RunPod PHIREN Endpoint ──
 RUNPOD_PHIREN_ENDPOINT_ID = os.getenv("RUNPOD_PHIREN_ENDPOINT_ID", "")
 
+# ════════════════════════════════════════════════════════════════
+# PARHEN — Anti-Sycophancy Adapter (P-Series)
+# ════════════════════════════════════════════════════════════════
+
+# ── PARHEN Model Pricing (credits per episode) ──
+PARHEN_MODEL_COSTS = {
+    "qwen2.5-3b":   {"credits_per_episode": 2,  "label": "Qwen2.5-3B",   "vram": "8GB",  "speed": "Fast"},
+    "qwen2.5-7b":   {"credits_per_episode": 4,  "label": "Qwen2.5-7B",   "vram": "16GB", "speed": "Medium"},
+    "llama3.2-3b":  {"credits_per_episode": 2,  "label": "LLaMA-3.2-3B", "vram": "8GB",  "speed": "Fast"},
+    "llama3.2-8b":  {"credits_per_episode": 5,  "label": "LLaMA-3.2-8B", "vram": "20GB", "speed": "Medium"},
+    "mistral-7b":   {"credits_per_episode": 4,  "label": "Mistral-7B",   "vram": "16GB", "speed": "Medium"},
+    "custom":       {"credits_per_episode": 3,  "label": "Custom (User)", "vram": "Varies","speed": "Varies"},
+}
+
+# ── PARHEN Inference Pricing ──
+PARHEN_INFERENCE_COSTS = {
+    "qwen2.5-3b":   {"credits_per_call": 2,  "label": "Qwen2.5-3B"},
+    "qwen2.5-7b":   {"credits_per_call": 3,  "label": "Qwen2.5-7B"},
+    "llama3.2-3b":  {"credits_per_call": 2,  "label": "LLaMA-3.2-3B"},
+    "llama3.2-8b":  {"credits_per_call": 3,  "label": "LLaMA-3.2-8B"},
+    "mistral-7b":   {"credits_per_call": 3,  "label": "Mistral-7B"},
+    "custom":       {"credits_per_call": 2,  "label": "Custom"},
+}
+
+# ── PARHEN Datasets ──
+PARHEN_DATASETS = [
+    {"id": "sycophancy-eval",       "label": "Sycophancy Eval (3K prompts)",           "tasks": 3_000,  "categories": 8},
+    {"id": "truthfulqa-pressure",   "label": "TruthfulQA Pressure (10K)",              "tasks": 10_000, "categories": 15},
+    {"id": "framing-pairs",         "label": "Framing Bias Pairs (20K)",               "tasks": 20_000, "categories": 12},
+    {"id": "backtrack-detect",      "label": "Backtrack Detection (15K)",               "tasks": 15_000, "categories": 10},
+    {"id": "multi-turn-pressure",   "label": "Multi-Turn Pressure (10K)",               "tasks": 10_000, "categories": 6},
+    {"id": "parhen-combined",       "label": "Parhen Combined (50K curated)",           "tasks": 50_000, "categories": 20},
+    {"id": "custom-upload",         "label": "Custom Upload (JSONL)",                   "tasks": 0,      "categories": 0},
+]
+
+# ── PARHEN Dataset → source mapping ──
+PARHEN_DATASET_MAP = {
+    "sycophancy-eval":      {"type": "hf", "path": "Anthropic/sycophancy-eval"},
+    "truthfulqa-pressure":  {"type": "hf", "path": "truthfulqa/truthful_qa"},
+    "framing-pairs":        {"type": "local", "path": "data/framing_pairs.jsonl"},
+    "backtrack-detect":     {"type": "local", "path": "data/backtrack_detect.jsonl"},
+    "multi-turn-pressure":  {"type": "local", "path": "data/multi_turn_pressure.jsonl"},
+    "parhen-combined":      {"type": "local", "path": "data/parhen_combined.jsonl"},
+    "custom-upload":        {"type": "upload"},
+}
+
+# ── PARHEN GPU mapping ──
+PARHEN_MODEL_GPU_MAP = {
+    "qwen2.5-3b":   {"gpu": "NVIDIA RTX A4000", "gpu_count": 1},
+    "qwen2.5-7b":   {"gpu": "NVIDIA RTX A5000", "gpu_count": 1},
+    "llama3.2-3b":  {"gpu": "NVIDIA RTX A4000", "gpu_count": 1},
+    "llama3.2-8b":  {"gpu": "NVIDIA RTX A5000", "gpu_count": 1},
+    "mistral-7b":   {"gpu": "NVIDIA RTX A5000", "gpu_count": 1},
+    "custom":       {"gpu": "NVIDIA RTX A5000", "gpu_count": 1},
+}
+
+# ── PRH Storage ──
+_default_prh = "/data/prh_adapters" if _ON_RAILWAY else "./prh_adapters"
+PRH_STORAGE_DIR = os.getenv("PRH_STORAGE_DIR", _default_prh)
+
+# ── RunPod PARHEN Endpoint ──
+RUNPOD_PARHEN_ENDPOINT_ID = os.getenv("RUNPOD_PARHEN_ENDPOINT_ID", "")
+
+# ════════════════════════════════════════════════════════════════
+# MURHEN — Position-Agnostic Recall Adapter (M-Series)
+# ════════════════════════════════════════════════════════════════
+
+# ── MURHEN Model Pricing (credits per episode) ──
+MURHEN_MODEL_COSTS = {
+    "qwen2.5-3b":   {"credits_per_episode": 2,  "label": "Qwen2.5-3B",   "vram": "8GB",  "speed": "Fast"},
+    "qwen2.5-7b":   {"credits_per_episode": 4,  "label": "Qwen2.5-7B",   "vram": "16GB", "speed": "Medium"},
+    "llama3.2-3b":  {"credits_per_episode": 2,  "label": "LLaMA-3.2-3B", "vram": "8GB",  "speed": "Fast"},
+    "llama3.2-8b":  {"credits_per_episode": 5,  "label": "LLaMA-3.2-8B", "vram": "20GB", "speed": "Medium"},
+    "mistral-7b":   {"credits_per_episode": 4,  "label": "Mistral-7B",   "vram": "16GB", "speed": "Medium"},
+    "custom":       {"credits_per_episode": 3,  "label": "Custom (User)", "vram": "Varies","speed": "Varies"},
+}
+
+# ── MURHEN Inference Pricing ──
+MURHEN_INFERENCE_COSTS = {
+    "qwen2.5-3b":   {"credits_per_call": 2,  "label": "Qwen2.5-3B"},
+    "qwen2.5-7b":   {"credits_per_call": 3,  "label": "Qwen2.5-7B"},
+    "llama3.2-3b":  {"credits_per_call": 2,  "label": "LLaMA-3.2-3B"},
+    "llama3.2-8b":  {"credits_per_call": 3,  "label": "LLaMA-3.2-8B"},
+    "mistral-7b":   {"credits_per_call": 3,  "label": "Mistral-7B"},
+    "custom":       {"credits_per_call": 2,  "label": "Custom"},
+}
+
+# ── MURHEN Datasets ──
+MURHEN_DATASETS = [
+    {"id": "multi-needle",          "label": "Multi-Needle Retrieval (15K)",            "tasks": 15_000, "categories": 10},
+    {"id": "position-shuffle-qa",   "label": "Position-Shuffle QA (25K)",               "tasks": 25_000, "categories": 15},
+    {"id": "long-doc",              "label": "Long Document Recall (10K)",              "tasks": 10_000, "categories": 8},
+    {"id": "cross-position",        "label": "Cross-Position Evidence (15K)",           "tasks": 15_000, "categories": 12},
+    {"id": "distractor-injection",  "label": "Distractor Injection (10K)",              "tasks": 10_000, "categories": 6},
+    {"id": "murhen-combined",       "label": "Murhen Combined (65K curated)",           "tasks": 65_000, "categories": 25},
+    {"id": "custom-upload",         "label": "Custom Upload (JSONL)",                   "tasks": 0,      "categories": 0},
+]
+
+# ── MURHEN Dataset → source mapping ──
+MURHEN_DATASET_MAP = {
+    "multi-needle":         {"type": "local", "path": "data/multi_needle.jsonl"},
+    "position-shuffle-qa":  {"type": "local", "path": "data/position_shuffle_qa.jsonl"},
+    "long-doc":             {"type": "local", "path": "data/long_doc.jsonl"},
+    "cross-position":       {"type": "local", "path": "data/cross_position.jsonl"},
+    "distractor-injection": {"type": "local", "path": "data/distractor_injection.jsonl"},
+    "murhen-combined":      {"type": "local", "path": "data/murhen_combined.jsonl"},
+    "custom-upload":        {"type": "upload"},
+}
+
+# ── MURHEN GPU mapping ──
+MURHEN_MODEL_GPU_MAP = {
+    "qwen2.5-3b":   {"gpu": "NVIDIA RTX A4000", "gpu_count": 1},
+    "qwen2.5-7b":   {"gpu": "NVIDIA RTX A5000", "gpu_count": 1},
+    "llama3.2-3b":  {"gpu": "NVIDIA RTX A4000", "gpu_count": 1},
+    "llama3.2-8b":  {"gpu": "NVIDIA RTX A5000", "gpu_count": 1},
+    "mistral-7b":   {"gpu": "NVIDIA RTX A5000", "gpu_count": 1},
+    "custom":       {"gpu": "NVIDIA RTX A5000", "gpu_count": 1},
+}
+
+# ── MRH Storage ──
+_default_mrh = "/data/mrh_adapters" if _ON_RAILWAY else "./mrh_adapters"
+MRH_STORAGE_DIR = os.getenv("MRH_STORAGE_DIR", _default_mrh)
+
+# ── RunPod MURHEN Endpoint ──
+RUNPOD_MURHEN_ENDPOINT_ID = os.getenv("RUNPOD_MURHEN_ENDPOINT_ID", "")
+

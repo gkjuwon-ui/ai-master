@@ -1,4 +1,4 @@
-"""Series Platform — Database Models (O-Series: Ogenti/Ovisen, P-Series: Phiren)"""
+"""Series Platform — Database Models (O-Series: Ogenti/Ovisen, P-Series: Phiren/Parhen, M-Series: Murhen)"""
 from datetime import datetime, timezone
 from sqlalchemy import (
     Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text, LargeBinary, create_engine
@@ -32,6 +32,12 @@ class User(Base):
     # PHIREN relationships
     phiren_training_jobs = relationship("PhirenTrainingJob", back_populates="user", cascade="all, delete-orphan")
     phiren_adapters = relationship("PhirenAdapter", back_populates="user", cascade="all, delete-orphan")
+    # PARHEN relationships
+    parhen_training_jobs = relationship("ParhenTrainingJob", back_populates="user", cascade="all, delete-orphan")
+    parhen_adapters = relationship("ParhenAdapter", back_populates="user", cascade="all, delete-orphan")
+    # MURHEN relationships
+    murhen_training_jobs = relationship("MurhenTrainingJob", back_populates="user", cascade="all, delete-orphan")
+    murhen_adapters = relationship("MurhenAdapter", back_populates="user", cascade="all, delete-orphan")
 
 
 class VerificationCode(Base):
@@ -220,6 +226,108 @@ class PhirenAdapter(Base):
 
     user = relationship("User", back_populates="phiren_adapters")
     training_job = relationship("PhirenTrainingJob", backref="adapter")
+
+
+# ══════════════════════════════════════════════════════════════
+# PARHEN — Anti-Sycophancy Adapter (P-Series)
+# ══════════════════════════════════════════════════════════════
+
+class ParhenTrainingJob(Base):
+    """PARHEN training job — anti-sycophancy adapter via MAPPO."""
+    __tablename__ = "parhen_training_jobs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    status = Column(String(20), default="queued")
+    model = Column(String(50), nullable=False)
+    dataset = Column(String(50), nullable=False)
+    episodes = Column(Integer, nullable=False)
+    credits_used = Column(Integer, default=0)
+    credits_estimated = Column(Integer, default=0)
+    current_phase = Column(String(50), default="queued")
+    current_episode = Column(Integer, default=0)
+    conviction = Column(Float, default=0.0)
+    independence = Column(Float, default=0.0)
+    adapter_url = Column(String(500), nullable=True)
+    dashboard_key = Column(String(16), unique=True, nullable=True, index=True)
+    runpod_request_id = Column(String(100), nullable=True)
+    runpod_error = Column(Text, nullable=True)
+    started_at = Column(DateTime, nullable=True)
+    completed_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    user = relationship("User", back_populates="parhen_training_jobs")
+
+
+class ParhenAdapter(Base):
+    """Encrypted .prh adapter — anti-sycophancy protocol adapter."""
+    __tablename__ = "parhen_adapters"
+
+    id = Column(String(36), primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    name = Column(String(200), nullable=False)
+    base_model = Column(String(50), nullable=False)
+    encryption_key = Column(LargeBinary(32), nullable=False)
+    training_job_id = Column(Integer, ForeignKey("parhen_training_jobs.id"), nullable=True)
+    file_size = Column(Integer, default=0)
+    file_path = Column(String(500), nullable=True)
+    status = Column(String(20), default="active")
+    inference_count = Column(Integer, default=0)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    user = relationship("User", back_populates="parhen_adapters")
+    training_job = relationship("ParhenTrainingJob", backref="adapter")
+
+
+# ══════════════════════════════════════════════════════════════
+# MURHEN — Position-Agnostic Recall Adapter (M-Series)
+# ══════════════════════════════════════════════════════════════
+
+class MurhenTrainingJob(Base):
+    """MURHEN training job — lost-in-the-middle fix via MAPPO."""
+    __tablename__ = "murhen_training_jobs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    status = Column(String(20), default="queued")
+    model = Column(String(50), nullable=False)
+    dataset = Column(String(50), nullable=False)
+    episodes = Column(Integer, nullable=False)
+    credits_used = Column(Integer, default=0)
+    credits_estimated = Column(Integer, default=0)
+    current_phase = Column(String(50), default="queued")
+    current_episode = Column(Integer, default=0)
+    recall_rate = Column(Float, default=0.0)
+    position_uniformity = Column(Float, default=0.0)
+    adapter_url = Column(String(500), nullable=True)
+    dashboard_key = Column(String(16), unique=True, nullable=True, index=True)
+    runpod_request_id = Column(String(100), nullable=True)
+    runpod_error = Column(Text, nullable=True)
+    started_at = Column(DateTime, nullable=True)
+    completed_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    user = relationship("User", back_populates="murhen_training_jobs")
+
+
+class MurhenAdapter(Base):
+    """Encrypted .mrh adapter — position-agnostic recall adapter."""
+    __tablename__ = "murhen_adapters"
+
+    id = Column(String(36), primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    name = Column(String(200), nullable=False)
+    base_model = Column(String(50), nullable=False)
+    encryption_key = Column(LargeBinary(32), nullable=False)
+    training_job_id = Column(Integer, ForeignKey("murhen_training_jobs.id"), nullable=True)
+    file_size = Column(Integer, default=0)
+    file_path = Column(String(500), nullable=True)
+    status = Column(String(20), default="active")
+    inference_count = Column(Integer, default=0)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    user = relationship("User", back_populates="murhen_adapters")
+    training_job = relationship("MurhenTrainingJob", backref="adapter")
 
 
 # ── Engine & Session ──

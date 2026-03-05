@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════
-   O SERIES PLATFORM — AUTH HELPERS
+   SERIES PLATFORM — AUTH HELPERS
    ═══════════════════════════════════════════════ */
 
 const API = 'https://ogenti-api-production.up.railway.app';
@@ -114,6 +114,27 @@ function renderNav(activePage = '') {
             <a href="/platform/ovisen_adapters.html" class="nav-link${activePage === 'ovisen_adapters' ? ' active' : ''}">ADAPTERS</a>
         </div>`;
 
+        // PHIREN sub-menu (hallucination guard)
+        links += `<div class="nav-group">
+            <span class="nav-group-label" style="color:var(--green)">PHIREN</span>
+            <a href="/platform/phiren_training.html" class="nav-link${activePage === 'phiren_training' ? ' active' : ''}">TRAIN</a>
+            <a href="/platform/phiren_adapters.html" class="nav-link${activePage === 'phiren_adapters' ? ' active' : ''}">ADAPTERS</a>
+        </div>`;
+
+        // PARHEN sub-menu (anti-sycophancy)
+        links += `<div class="nav-group">
+            <span class="nav-group-label" style="color:var(--orange)">PARHEN</span>
+            <a href="/platform/parhen_training.html" class="nav-link${activePage === 'parhen_training' ? ' active' : ''}">TRAIN</a>
+            <a href="/platform/parhen_adapters.html" class="nav-link${activePage === 'parhen_adapters' ? ' active' : ''}">ADAPTERS</a>
+        </div>`;
+
+        // MURHEN sub-menu (position-agnostic recall)
+        links += `<div class="nav-group">
+            <span class="nav-group-label" style="color:var(--yellow)">MURHEN</span>
+            <a href="/platform/murhen_training.html" class="nav-link${activePage === 'murhen_training' ? ' active' : ''}">TRAIN</a>
+            <a href="/platform/murhen_adapters.html" class="nav-link${activePage === 'murhen_adapters' ? ' active' : ''}">ADAPTERS</a>
+        </div>`;
+
         // Shared platform pages
         links += `<div class="nav-group">
             <span class="nav-group-label" style="color:var(--text-dim)">PLATFORM</span>
@@ -136,8 +157,8 @@ function renderNav(activePage = '') {
            </div>`;
 
     nav.innerHTML = `
-        <a href="https://ogenti.com" class="nav-brand">
-            O SERIES <span class="nav-tag">PLATFORM</span>
+        <a href="https://series.so" class="nav-brand">
+            SERIES <span class="nav-tag">PLATFORM</span>
         </a>
         <div class="nav-links">${links}</div>
         ${userSection}

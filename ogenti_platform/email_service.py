@@ -1,4 +1,4 @@
-"""Ogenti Platform — Email Service (Resend)"""
+"""Series Platform — Email Service (Resend)"""
 import httpx
 import random
 import string
@@ -99,9 +99,9 @@ async def send_verification_email(to_email: str, code: str) -> bool:
     try:
         async with httpx.AsyncClient() as client:
             payload = {
-                "from": f"Ogenti <{FROM_EMAIL}>",
+                "from": f"Series <{FROM_EMAIL}>",
                 "to": [to_email],
-                "subject": f"[OGENTI] Verification Code: {code}",
+                "subject": f"[SERIES] Verification Code: {code}",
                 "html": _build_email_html(code),
                 "attachments": _get_attachments(code),
             }

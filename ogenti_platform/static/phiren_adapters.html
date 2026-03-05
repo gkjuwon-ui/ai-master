@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SERIES — PHIREN ADAPTERS</title>
+    <link rel="stylesheet" href="/platform/style.css">
+</head>
+<body class="crt" data-page="phiren_adapters">
+    <nav id="main-nav" class="nav"></nav>
+
+    <div class="page-wrap">
+        <div class="page-title" style="color:var(--green)">PHIREN ADAPTERS</div>
+        <div class="page-sub">YOUR TRAINED HALLUCINATION GUARD ADAPTERS (.PHR FORMAT)</div>
+
+        <div id="msg" class="msg"></div>
+
+        <!-- Adapter list -->
+        <div class="card">
+            <div class="card-title">TRAINED ADAPTERS</div>
+            <div id="adaptersList">
+                <div style="text-align:center;padding:20px;color:var(--text-dim);font-size:10px;">LOADING...</div>
+            </div>
+        </div>
+
+        <!-- Inference test -->
+        <div class="card" style="margin-top:24px">
+            <div class="card-title">TEST HALLUCINATION CHECK</div>
+            <p style="font-size:10px;color:var(--text-dim);margin-bottom:12px;">
+                SELECT AN ADAPTER AND ENTER TEXT TO TEST FACTUALITY VERIFICATION.
+            </p>
+            <div style="display:flex;flex-direction:column;gap:16px;">
+                <div>
+                    <label style="font-size:9px;color:var(--text-dim);display:block;margin-bottom:6px;">ADAPTER</label>
+                    <select id="inferAdapter" class="input" style="width:100%">
+                        <option value="">SELECT ADAPTER...</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size:9px;color:var(--text-dim);display:block;margin-bottom:6px;">TEXT TO VERIFY</label>
+                    <textarea id="inferText" class="input" rows="4" style="width:100%;resize:vertical;font-family:monospace;font-size:11px;"
+                        placeholder="Enter text to check for hallucinations..."></textarea>
+                </div>
+                <div>
+                    <label style="font-size:9px;color:var(--text-dim);display:block;margin-bottom:6px;">CONTEXT (OPTIONAL)</label>
+                    <textarea id="inferContext" class="input" rows="3" style="width:100%;resize:vertical;font-family:monospace;font-size:11px;"
+                        placeholder="Optional grounding context for verification..."></textarea>
+                </div>
+                <div>
+                    <label style="font-size:9px;color:var(--text-dim);display:block;margin-bottom:6px;">MODE</label>
+                    <select id="inferMode" class="input" style="width:200px;">
+                        <option value="full">FULL (DETAILED)</option>
+                        <option value="quick">QUICK</option>
+                        <option value="strict">STRICT</option>
+                    </select>
+                </div>
+            </div>
+
+            <button onclick="runInference()" class="btn btn-primary" style="margin-top:16px;width:auto;">
+                RUN HALLUCINATION CHECK
+            </button>
+
+            <div id="inferResult" style="display:none;margin-top:16px;">
+                <div style="font-family:'Press Start 2P',monospace;font-size:9px;color:var(--green);margin-bottom:10px;">RESULT</div>
+
+                <!-- Scores -->
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;font-size:10px;margin-bottom:16px;" id="inferStats">
+                </div>
+
+                <!-- Claims -->
+                <div style="margin-top:12px;">
+                    <div style="font-size:9px;color:var(--text-dim);margin-bottom:6px;">CLAIM-LEVEL ANALYSIS</div>
+                    <div id="inferClaims" style="font-family:monospace;font-size:10px;background:var(--bg2);border:2px solid var(--border);padding:12px;max-height:300px;overflow-y:auto;">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pricing -->
+        <div class="card" style="margin-top:24px">
+            <div class="card-title">INFERENCE PRICING</div>
+            <div id="pricingGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">
+                <div style="text-align:center;padding:20px;color:var(--text-dim);font-size:10px;">LOADING...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">SERIES © 2025 — OGENTI · OVISEN · PHIREN · PARHEN · MURHEN</div>
+
+    <script src="/platform/app.js"></script>
+    <script>
+        if (!Auth.requireAuth()) {}
+
+        let adaptersData = [];
+
+        async function loadAdapters() {
+            try {
+                const [adapters, pricing] = await Promise.all([
+                    api('GET', '/api/phiren/adapters'),
+                    api('GET', '/api/phiren/adapters/pricing')
+                ]);
+
+                adaptersData = adapters;
+                renderAdapters(adapters);
+                renderPricing(pricing.pricing || pricing);
+                populateAdapterSelect(adapters);
+
+            } catch (err) {
+                showMsg('msg', 'FAILED TO LOAD: ' + err.message, 'error');
+            }
+        }
+
+        function renderAdapters(adapters) {
+            const div = document.getElementById('adaptersList');
+
+            if (adapters.length === 0) {
+                div.innerHTML = `
+                    <div style="text-align:center;padding:30px;color:var(--text-dim);font-size:10px;">
+                        NO ADAPTERS YET —
+                        <a href="/platform/phiren_training.html" style="color:var(--green)">TRAIN YOUR FIRST →</a>
+                    </div>`;
+                return;
+            }
+
+            div.innerHTML = adapters.map(a => `
+                <div style="border:2px solid var(--border);padding:16px;margin-bottom:8px;background:var(--bg);">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                        <div>
+                            <span style="font-family:'Press Start 2P',monospace;font-size:9px;color:var(--green);">
+                                ${a.name || 'ADAPTER #' + a.id}
+                            </span>
+                            <span class="badge badge-green" style="margin-left:8px">.PHR</span>
+                        </div>
+                        <div style="display:flex;gap:8px;">
+                            <button onclick="downloadAdapter('${a.id}')" class="btn" style="font-size:8px;padding:4px 10px;width:auto;border-color:var(--green);color:var(--green);">
+                                DOWNLOAD .PHR
+                            </button>
+                            <button onclick="deleteAdapter('${a.id}')" class="btn" style="font-size:8px;padding:4px 10px;width:auto;border-color:var(--red);color:var(--red);">
+                                DELETE
+                            </button>
+                        </div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;font-size:10px;">
+                        <div>
+                            <div style="color:var(--text-dim);">BASE MODEL</div>
+                            <div style="color:var(--green)">${a.base_model_label || a.base_model}</div>
+                        </div>
+                        <div>
+                            <div style="color:var(--text-dim);">FILE SIZE</div>
+                            <div style="color:var(--cyan)">${a.file_size ? Math.round(a.file_size / 1024) + ' KB' : '—'}</div>
+                        </div>
+                        <div>
+                            <div style="color:var(--text-dim);">INFERENCES</div>
+                            <div style="color:var(--yellow)">${a.inference_count || 0}</div>
+                        </div>
+                        <div>
+                            <div style="color:var(--text-dim);">CREATED</div>
+                            <div>${formatDate(a.created_at)}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderPricing(pricing) {
+            const div = document.getElementById('pricingGrid');
+            const items = Array.isArray(pricing) ? pricing : [];
+            div.innerHTML = items.map(p => `
+                <div style="border:2px solid var(--border);padding:12px;background:var(--bg2);text-align:center;">
+                    <div style="font-family:'Press Start 2P',monospace;font-size:9px;color:var(--green);margin-bottom:8px;">
+                        ${(p.label || p.model).toUpperCase()}
+                    </div>
+                    <div style="font-size:20px;color:var(--green);font-family:'Press Start 2P',monospace;margin-bottom:6px;">
+                        ${p.credits_per_call} CR
+                    </div>
+                    <div style="font-size:9px;color:var(--text-dim);">PER HALLUCINATION CHECK</div>
+                </div>
+            `).join('');
+        }
+
+        function populateAdapterSelect(adapters) {
+            const sel = document.getElementById('inferAdapter');
+            sel.innerHTML = '<option value="">SELECT ADAPTER...</option>' +
+                adapters.map(a => `<option value="${a.id}">${a.name || 'ADAPTER #' + a.id} — ${a.base_model_label || a.base_model}</option>`).join('');
+        }
+
+        async function downloadAdapter(id) {
+            try {
+                const res = await fetch(API + `/api/phiren/adapters/${id}/download`, {
+                    headers: Auth.headers()
+                });
+                if (!res.ok) throw new Error('Download failed');
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `phiren_adapter_${id}.phr`;
+                a.click();
+                URL.revokeObjectURL(url);
+            } catch (err) {
+                showMsg('msg', err.message, 'error');
+            }
+        }
+
+        async function deleteAdapter(id) {
+            if (!confirm('DELETE THIS ADAPTER? THIS CANNOT BE UNDONE.')) return;
+            try {
+                await api('DELETE', `/api/phiren/adapters/${id}`);
+                showMsg('msg', 'ADAPTER DELETED', 'success');
+                loadAdapters();
+            } catch (err) {
+                showMsg('msg', err.message, 'error');
+            }
+        }
+
+        async function runInference() {
+            const adapterId = document.getElementById('inferAdapter').value;
+            const text = document.getElementById('inferText').value.trim();
+            const context = document.getElementById('inferContext').value.trim();
+            const mode = document.getElementById('inferMode').value;
+
+            if (!adapterId) { showMsg('msg', 'SELECT AN ADAPTER', 'error'); return; }
+            if (!text) { showMsg('msg', 'ENTER TEXT TO VERIFY', 'error'); return; }
+
+            hideMsg('msg');
+
+            try {
+                const data = await api('POST', '/api/phiren/adapters/infer', {
+                    adapter_id: adapterId,
+                    text: text,
+                    context: context,
+                    mode: mode
+                });
+
+                const result = data.result;
+
+                // Verdict color
+                const verdictColor = {
+                    'reliable': 'var(--green)',
+                    'uncertain': 'var(--yellow)',
+                    'unreliable': 'var(--red)'
+                }[result.overall_verdict] || 'var(--text)';
+
+                // Show scores
+                const statsDiv = document.getElementById('inferStats');
+                statsDiv.innerHTML = `
+                    <div>
+                        <div style="color:var(--text-dim);">VERDICT</div>
+                        <div style="color:${verdictColor};font-family:'Press Start 2P',monospace;font-size:10px;">${result.overall_verdict.toUpperCase()}</div>
+                    </div>
+                    <div>
+                        <div style="color:var(--text-dim);">FACTUALITY</div>
+                        <div style="color:var(--green)">${(result.factuality_score * 100).toFixed(1)}%</div>
+                    </div>
+                    <div>
+                        <div style="color:var(--text-dim);">CALIBRATION</div>
+                        <div style="color:var(--cyan)">${(result.calibration_score * 100).toFixed(1)}%</div>
+                    </div>
+                    <div>
+                        <div style="color:var(--text-dim);">CREDITS USED</div>
+                        <div style="color:var(--pink)">${data.credits_used} CR</div>
+                    </div>
+                `;
+
+                // Show claims
+                const claimsDiv = document.getElementById('inferClaims');
+                if (result.claims && result.claims.length > 0) {
+                    claimsDiv.innerHTML = result.claims.map((c, i) => {
+                        const color = {
+                            'supported': 'var(--green)',
+                            'contradicted': 'var(--red)',
+                            'unverifiable': 'var(--yellow)'
+                        }[c.verdict] || 'var(--text-dim)';
+                        return `
+                            <div style="padding:8px 0;border-bottom:1px solid var(--border);">
+                                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                                    <span style="color:var(--text-dim);font-size:9px;">CLAIM ${i + 1}</span>
+                                    <span style="color:${color};font-size:9px;font-family:'Press Start 2P',monospace;">${c.verdict.toUpperCase()} (${(c.confidence * 100).toFixed(0)}%)</span>
+                                </div>
+                                <div style="color:var(--text);font-size:10px;">${c.claim}</div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    claimsDiv.textContent = 'No claims extracted.';
+                }
+
+                document.getElementById('inferResult').style.display = 'block';
+
+                // Refresh balance
+                await Auth.fetchUser();
+                renderNav('phiren_adapters');
+
+            } catch (err) {
+                showMsg('msg', err.message, 'error');
+            }
+        }
+
+        loadAdapters();
+    </script>
+</body>
+</html>

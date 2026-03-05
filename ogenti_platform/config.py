@@ -1,4 +1,4 @@
-"""O Series Platform Configuration — Ogenti (Text) + Ovisen (Image)"""
+"""Series Platform Configuration — O-Series (Ogenti/Ovisen) + P-Series (Phiren)"""
 import os
 import secrets
 
@@ -19,7 +19,9 @@ DATABASE_URL = os.getenv("DATABASE_URL", _default_db)
 
 # ── Resend (email) ──
 RESEND_API_KEY = os.getenv("RESEND_API_KEY", "re_test_xxxxxxxxxxxx")
-FROM_EMAIL = os.getenv("FROM_EMAIL", "noreply@oseries.io")
+FROM_EMAIL = os.getenv("FROM_EMAIL", "noreply@series.so")
+# Toggle email verification on/off (set "true" to enable, anything else = disabled)
+EMAIL_VERIFICATION_ENABLED = os.getenv("EMAIL_VERIFICATION_ENABLED", "false").lower() == "true"
 
 # ── Stripe ──
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "sk_test_xxxxxxxxxxxx")
@@ -186,4 +188,63 @@ OGE_STORAGE_DIR = os.getenv("OGE_STORAGE_DIR", _default_oge)
 
 # ── RunPod OVISEN Endpoint (separate serverless endpoint for vision) ──
 RUNPOD_OVISEN_ENDPOINT_ID = os.getenv("RUNPOD_OVISEN_ENDPOINT_ID", "")
+
+# ════════════════════════════════════════════════════════════════
+# PHIREN — Hallucination Guard Adapter (P-Series)
+# ════════════════════════════════════════════════════════════════
+
+# ── P-Series Model Pricing (credits per episode) ──
+PHIREN_MODEL_COSTS = {
+    "qwen2.5-3b":   {"credits_per_episode": 2,  "label": "Qwen2.5-3B",   "vram": "8GB",  "speed": "Fast"},
+    "qwen2.5-7b":   {"credits_per_episode": 4,  "label": "Qwen2.5-7B",   "vram": "16GB", "speed": "Medium"},
+    "llama3.2-3b":  {"credits_per_episode": 2,  "label": "LLaMA-3.2-3B", "vram": "8GB",  "speed": "Fast"},
+    "llama3.2-8b":  {"credits_per_episode": 5,  "label": "LLaMA-3.2-8B", "vram": "20GB", "speed": "Medium"},
+    "mistral-7b":   {"credits_per_episode": 4,  "label": "Mistral-7B",   "vram": "16GB", "speed": "Medium"},
+    "custom":       {"credits_per_episode": 3,  "label": "Custom (User)", "vram": "Varies","speed": "Varies"},
+}
+
+# ── P-Series Inference Pricing ──
+PHIREN_INFERENCE_COSTS = {
+    "qwen2.5-3b":   {"credits_per_call": 2,  "label": "Qwen2.5-3B"},
+    "qwen2.5-7b":   {"credits_per_call": 3,  "label": "Qwen2.5-7B"},
+    "llama3.2-3b":  {"credits_per_call": 2,  "label": "LLaMA-3.2-3B"},
+    "llama3.2-8b":  {"credits_per_call": 3,  "label": "LLaMA-3.2-8B"},
+    "mistral-7b":   {"credits_per_call": 3,  "label": "Mistral-7B"},
+    "custom":       {"credits_per_call": 2,  "label": "Custom"},
+}
+
+# ── P-Series Datasets ──
+PHIREN_DATASETS = [
+    {"id": "truthfulqa",      "label": "TruthfulQA (817 questions)",        "tasks": 817,   "categories": 38},
+    {"id": "fever",           "label": "FEVER Fact Verification (185K)",     "tasks": 185_000,"categories": 3},
+    {"id": "halueval",        "label": "HaluEval Hallucination (35K)",       "tasks": 35_000, "categories": 6},
+    {"id": "phiren-combined", "label": "Phiren Combined (50K curated)",      "tasks": 50_000, "categories": 12},
+    {"id": "custom-upload",   "label": "Custom Upload (JSONL)",              "tasks": 0,      "categories": 0},
+]
+
+# ── P-Series Dataset → source mapping ──
+PHIREN_DATASET_MAP = {
+    "truthfulqa":      {"type": "hf", "path": "truthfulqa/truthful_qa"},
+    "fever":           {"type": "hf", "path": "fever/fever"},
+    "halueval":        {"type": "hf", "path": "pminervini/HaluEval"},
+    "phiren-combined": {"type": "local", "path": "data/phiren_combined.jsonl"},
+    "custom-upload":   {"type": "upload"},
+}
+
+# ── P-Series GPU mapping ──
+PHIREN_MODEL_GPU_MAP = {
+    "qwen2.5-3b":   {"gpu": "NVIDIA RTX A4000", "gpu_count": 1},
+    "qwen2.5-7b":   {"gpu": "NVIDIA RTX A5000", "gpu_count": 1},
+    "llama3.2-3b":  {"gpu": "NVIDIA RTX A4000", "gpu_count": 1},
+    "llama3.2-8b":  {"gpu": "NVIDIA RTX A5000", "gpu_count": 1},
+    "mistral-7b":   {"gpu": "NVIDIA RTX A5000", "gpu_count": 1},
+    "custom":       {"gpu": "NVIDIA RTX A5000", "gpu_count": 1},
+}
+
+# ── PHR Storage ──
+_default_phr = "/data/phr_adapters" if _ON_RAILWAY else "./phr_adapters"
+PHR_STORAGE_DIR = os.getenv("PHR_STORAGE_DIR", _default_phr)
+
+# ── RunPod PHIREN Endpoint ──
+RUNPOD_PHIREN_ENDPOINT_ID = os.getenv("RUNPOD_PHIREN_ENDPOINT_ID", "")
 

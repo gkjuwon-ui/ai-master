@@ -1,4 +1,4 @@
-"""Ogenti Platform — Auth Routes"""
+"""Series Platform — Auth Routes"""
 import secrets
 import hashlib
 from datetime import datetime, timezone
@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from .database import get_db, User, VerificationCode, ApiKey
 from .email_service import send_verification_email, generate_code, get_code_expiry
-from .config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, TIERS
+from .config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, TIERS, EMAIL_VERIFICATION_ENABLED
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -91,6 +91,24 @@ async def signup(req: SignupRequest, db: Session = Depends(get_db)):
     db.add(user)
     db.commit()
 
+    if not EMAIL_VERIFICATION_ENABLED:
+        # Dev mode: auto-verify, generate API key, return JWT immediately
+        user.email_verified = True
+        db.commit()
+        full_key, prefix, key_hash = generate_api_key()
+        api_key = ApiKey(user_id=user.id, key_hash=key_hash, key_prefix=prefix, name="Default Key")
+        db.add(api_key)
+        db.commit()
+        token = create_token(user.id, user.email)
+        return {
+            "message": "Account created (verification skipped)",
+            "email": req.email,
+            "verified": True,
+            "token": token,
+            "api_key": full_key,
+            "user": {"id": user.id, "email": user.email, "name": user.name, "tier": user.tier, "credits": user.credits},
+        }
+
     # Generate and save verification code
     code = generate_code()
     vc = VerificationCode(email=req.email, code=code, expires_at=get_code_expiry())
@@ -160,7 +178,7 @@ async def login(req: LoginRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == req.email).first()
     if not user or not pwd_context.verify(req.password, user.password_hash):
         raise HTTPException(401, "Invalid email or password")
-    if not user.email_verified:
+    if EMAIL_VERIFICATION_ENABLED and not user.email_verified:
         raise HTTPException(403, "Email not verified. Check your inbox.")
 
     token = create_token(user.id, user.email)

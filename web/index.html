@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OGENTI — Protocol Monitor</title>
-    <meta name="description" content="Real-time monitoring dashboard for Ogenti's AI-to-AI communication protocol training.">
-    <meta property="og:title" content="OGENTI — Protocol Monitor">
-    <meta property="og:description" content="Watch your AI training run in real-time with Ogenti's Protocol Monitor.">
+    <title>SERIES — Training Monitor</title>
+    <meta name="description" content="Real-time monitoring dashboard for Series AI training.">
+    <meta property="og:title" content="SERIES — Training Monitor">
+    <meta property="og:description" content="Watch your AI training run in real-time with the Series Training Monitor.">
     <meta property="og:type" content="website">
     <meta name="theme-color" content="#0a0a1a">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='4' y='4' width='8' height='8' fill='%2300f0ff'/%3E%3Crect x='6' y='6' width='4' height='4' fill='%230a0a1a'/%3E%3C/svg%3E">
@@ -36,7 +36,7 @@
             <rect x="16" y="36" width="16" height="4" fill="#00f0ff"/>
             <rect x="20" y="20" width="8" height="8" fill="#00f0ff"/>
         </svg>
-        <span class="loader-text">OGENTI</span>
+        <span class="loader-text">SERIES</span>
         <span class="loader-sub">SYSTEM BOOT...</span>
     </div>
 
@@ -54,7 +54,7 @@
                 <rect x="16" y="36" width="16" height="4" fill="#00f0ff"/>
                 <rect x="20" y="20" width="8" height="8" fill="#00f0ff"/>
             </svg>
-            <h1 class="key-title">PROTOCOL MONITOR</h1>
+            <h1 class="key-title">TRAINING MONITOR</h1>
             <p class="key-subtitle">ENTER YOUR DASHBOARD KEY TO VIEW TRAINING PROGRESS</p>
             <div class="key-input-wrap">
                 <input type="text" id="keyInput" class="key-input" placeholder="ENTER DASHBOARD KEY" maxlength="12" autocomplete="off" spellcheck="false">
@@ -94,8 +94,8 @@
                 <rect x="8" y="18" width="8" height="2" fill="#00f0ff"/>
                 <rect x="10" y="10" width="4" height="4" fill="#00f0ff"/>
             </svg>
-            <span class="nav-brand">OGENTI</span>
-            <span class="nav-tag">PROTOCOL MONITOR</span>
+            <span class="nav-brand">SERIES</span>
+            <span class="nav-tag">TRAINING MONITOR</span>
         </div>
         <div class="nav-right">
             <span class="connection-badge connecting" id="connectionBadge">... CONNECTING</span>
@@ -124,20 +124,20 @@
                 <span class="metric-sub" id="metricPhaseName">Warmup</span>
             </div>
             <div class="metric-card pixel-border">
-                <span class="metric-label">COMPRESSION</span>
+                <span class="metric-label" id="metric2Label">COMPRESSION</span>
                 <div class="metric-value-row">
                     <span class="metric-value" id="metricCompression">1.0</span>
-                    <span class="metric-unit">x</span>
+                    <span class="metric-unit" id="metric2Unit">x</span>
                 </div>
-                <span class="metric-sub">NL / protocol tokens</span>
+                <span class="metric-sub" id="metric2Sub">NL / protocol tokens</span>
             </div>
             <div class="metric-card pixel-border">
-                <span class="metric-label">FIDELITY</span>
+                <span class="metric-label" id="metric3Label">FIDELITY</span>
                 <div class="metric-value-row">
                     <span class="metric-value" id="metricFidelity">0.0</span>
                     <span class="metric-unit">%</span>
                 </div>
-                <span class="metric-sub">semantic accuracy</span>
+                <span class="metric-sub" id="metric3Sub">semantic accuracy</span>
             </div>
             <div class="metric-card pixel-border">
                 <span class="metric-label">EPISODES</span>
@@ -219,8 +219,8 @@
                 <div class="card-header">
                     <h2 class="card-title">Training Progress</h2>
                     <div class="card-legend">
-                        <span class="legend-item"><span class="legend-dot" style="background:#00f0ff"></span>Compression</span>
-                        <span class="legend-item"><span class="legend-dot" style="background:#00ff88"></span>Fidelity</span>
+                        <span class="legend-item"><span class="legend-dot" id="legend1Dot" style="background:#00f0ff"></span><span id="legend1Text">Compression</span></span>
+                        <span class="legend-item"><span class="legend-dot" id="legend2Dot" style="background:#00ff88"></span><span id="legend2Text">Fidelity</span></span>
                     </div>
                 </div>
                 <div class="chart-container">
@@ -262,11 +262,11 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="footer-inner">
-            <span>OGENTI v0.1</span>
+            <span>SERIES v0.3</span>
             <span class="footer-dot">/</span>
-            <span>AI-to-AI Protocol</span>
+            <span>OGENTI · OVISEN · PHIREN</span>
             <span class="footer-dot">/</span>
-            <span>MARL + Qwen2.5 + LoRA</span>
+            <span>MAPPO + LoRA</span>
         </div>
         <div class="footer-sub">
             Press <kbd>SPACE</kbd> to pause simulation

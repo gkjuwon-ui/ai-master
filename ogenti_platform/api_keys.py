@@ -1,4 +1,4 @@
-"""Ogenti Platform — API Key Management Routes"""
+"""Series Platform — API Key Management Routes"""
 import hashlib
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException

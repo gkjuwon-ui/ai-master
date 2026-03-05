@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>O SERIES — SIGN UP</title>
+    <title>SERIES — SIGN UP</title>
     <link rel="stylesheet" href="/platform/style.css">
 </head>
 <body class="crt" data-page="signup">
@@ -11,8 +11,8 @@
 
     <div class="auth-wrap">
         <div class="auth-box">
-            <div class="auth-logo">O SERIES</div>
-            <div class="auth-subtitle">AI-TO-AI COMMUNICATION PROTOCOL</div>
+            <div class="auth-logo">SERIES</div>
+            <div class="auth-subtitle">AI TRAINING PROTOCOL</div>
             <div class="auth-title">— CREATE ACCOUNT —</div>
 
             <div id="msg" class="msg"></div>
@@ -65,14 +65,25 @@
             btn.textContent = 'CREATING...';
 
             try {
-                await api('POST', '/api/auth/signup', {
+                const data = await api('POST', '/api/auth/signup', {
                     email: document.getElementById('email').value.trim(),
                     password: pw,
                     name: document.getElementById('name').value.trim()
                 });
-                // Save email for verify page
-                localStorage.setItem('og_verify_email', document.getElementById('email').value.trim());
-                window.location.href = '/platform/verify.html';
+
+                if (data.verified && data.token) {
+                    // Email verification disabled — auto-verified
+                    Auth.setToken(data.token);
+                    await Auth.fetchUser();
+                    if (data.api_key) {
+                        localStorage.setItem('og_first_key', data.api_key);
+                    }
+                    window.location.href = '/platform/account.html';
+                } else {
+                    // Email verification enabled — go to verify page
+                    localStorage.setItem('og_verify_email', document.getElementById('email').value.trim());
+                    window.location.href = '/platform/verify.html';
+                }
             } catch (err) {
                 showMsg('msg', err.message, 'error');
                 btn.disabled = false;

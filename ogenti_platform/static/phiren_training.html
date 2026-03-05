@@ -3,23 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SERIES — OVISEN TRAINING</title>
+    <title>SERIES — PHIREN TRAINING</title>
     <link rel="stylesheet" href="/platform/style.css">
 </head>
-<body class="crt" data-page="ovisen_training">
+<body class="crt" data-page="phiren_training">
     <nav id="main-nav" class="nav"></nav>
 
     <div class="page-wrap">
-        <div class="page-title" style="color:var(--cyan)">OVISEN TRAINING</div>
-        <div class="page-sub">TRAIN AN IMAGE → EMBEDDING COMPRESSION ADAPTER VIA MARL</div>
+        <div class="page-title" style="color:var(--green)">PHIREN TRAINING</div>
+        <div class="page-sub">TRAIN A HALLUCINATION GUARD ADAPTER VIA MAPPO</div>
 
         <div id="msg" class="msg"></div>
 
-        <!-- Step 1: Vision Model -->
+        <!-- Step 1: Model -->
         <div class="card">
-            <div class="card-title">① SELECT VISION MODEL</div>
+            <div class="card-title">① SELECT BASE MODEL</div>
             <p style="font-size:10px;color:var(--text-dim);margin-bottom:12px;">
-                CHOOSE A BACKBONE VISION ENCODER. LARGER MODELS PRODUCE HIGHER-FIDELITY EMBEDDINGS BUT COST MORE CREDITS PER EPISODE.
+                CHOOSE A BACKBONE LLM FOR HALLUCINATION DETECTION. LARGER MODELS ARE MORE ACCURATE BUT COST MORE CREDITS PER EPISODE.
             </p>
             <div class="model-grid" id="modelGrid">
                 <!-- filled by JS -->
@@ -28,7 +28,7 @@
 
         <!-- Step 2: Dataset -->
         <div class="card">
-            <div class="card-title">② SELECT IMAGE DATASET</div>
+            <div class="card-title">② SELECT FACTUALITY DATASET</div>
             <div class="model-grid" id="datasetGrid">
                 <!-- filled by JS -->
             </div>
@@ -38,42 +38,26 @@
         <div class="card">
             <div class="card-title">③ SET EPISODES</div>
             <p style="font-size:10px;color:var(--text-dim);margin-bottom:12px;">
-                MORE EPISODES = BETTER FIDELITY-COMPRESSION TRADE-OFF. WE RECOMMEND 50-200 FOR MOST USE CASES.
+                MORE EPISODES = BETTER FACTUALITY-CALIBRATION TRADE-OFF. WE RECOMMEND 50-200 FOR MOST USE CASES.
             </p>
             <div class="range-wrap">
                 <input type="range" id="episodeSlider" class="range-input" min="10" max="500" value="100" step="10" oninput="updateEstimate()">
                 <div class="range-labels">
                     <span>10</span>
-                    <span id="episodeValue" style="color:var(--cyan);font-family:'Press Start 2P',monospace;font-size:11px;">100</span>
+                    <span id="episodeValue" style="color:var(--green);font-family:'Press Start 2P',monospace;font-size:11px;">100</span>
                     <span>500</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Step 4: Compression Target -->
-        <div class="card">
-            <div class="card-title">④ COMPRESSION TARGET</div>
-            <p style="font-size:10px;color:var(--text-dim);margin-bottom:12px;">
-                TARGET EMBEDDING DIMENSION. LOWER = MORE COMPRESSION, HIGHER = MORE FIDELITY.
-            </p>
-            <div class="range-wrap">
-                <input type="range" id="dimSlider" class="range-input" min="32" max="512" value="256" step="32" oninput="updateDim()">
-                <div class="range-labels">
-                    <span>32D</span>
-                    <span id="dimValue" style="color:var(--green);font-family:'Press Start 2P',monospace;font-size:11px;">256D</span>
-                    <span>512D</span>
                 </div>
             </div>
         </div>
 
         <!-- Cost estimate -->
         <div class="estimate-box" id="estimateBox">
-            <div style="font-family:'Press Start 2P',monospace;font-size:9px;color:var(--cyan);margin-bottom:12px;">
+            <div style="font-family:'Press Start 2P',monospace;font-size:9px;color:var(--green);margin-bottom:12px;">
                 COST ESTIMATE
             </div>
             <div class="estimate-row">
-                <span>VISION MODEL</span>
-                <span id="estModel" style="color:var(--cyan)">—</span>
+                <span>BASE MODEL</span>
+                <span id="estModel" style="color:var(--green)">—</span>
             </div>
             <div class="estimate-row">
                 <span>DATASET</span>
@@ -82,10 +66,6 @@
             <div class="estimate-row">
                 <span>EPISODES</span>
                 <span id="estEpisodes">—</span>
-            </div>
-            <div class="estimate-row">
-                <span>TARGET DIM</span>
-                <span id="estDim" style="color:var(--green)">256D</span>
             </div>
             <div class="estimate-row">
                 <span>COST PER EPISODE</span>
@@ -111,7 +91,7 @@
 
         <!-- Active jobs -->
         <div class="card" style="margin-top:32px">
-            <div class="card-title">YOUR OVISEN JOBS</div>
+            <div class="card-title">YOUR PHIREN JOBS</div>
             <div id="jobsList">
                 <div style="text-align:center;padding:20px;color:var(--text-dim);font-size:10px;">LOADING...</div>
             </div>
@@ -132,26 +112,34 @@
 
         async function loadTraining() {
             try {
-                const [models, datasets, bal, user] = await Promise.all([
-                    api('GET', '/api/ovisen/training/models'),
-                    api('GET', '/api/ovisen/training/datasets'),
+                const [datasets, bal, user] = await Promise.all([
+                    api('GET', '/api/phiren/training/datasets'),
                     api('GET', '/api/billing/balance'),
                     Auth.fetchUser()
                 ]);
 
-                modelsData = models;
                 datasetsData = datasets;
                 userBalance = bal.credits;
 
+                // Load model pricing from billing
+                try {
+                    const pricing = await api('GET', '/api/phiren/adapters/pricing');
+                    modelsData = pricing.pricing || [];
+                } catch {
+                    modelsData = [
+                        { model: 'llama-3.2-3b', label: 'LLAMA 3.2 3B', credits_per_episode: 2 },
+                        { model: 'llama-3.1-8b', label: 'LLAMA 3.1 8B', credits_per_episode: 5 },
+                        { model: 'mistral-7b', label: 'MISTRAL 7B', credits_per_episode: 4 },
+                    ];
+                }
+
                 // Render models
                 const grid = document.getElementById('modelGrid');
-                grid.innerHTML = models.map((m, i) => `
+                grid.innerHTML = modelsData.map((m, i) => `
                     <div class="model-card" data-idx="${i}" onclick="selectModel(${i})">
-                        <div class="model-name" style="color:var(--cyan)">${m.name.toUpperCase()}</div>
-                        <div class="model-detail">
-                            ${m.input_dim ? m.input_dim + 'D → ' + (m.target_dim || 256) + 'D' : 'VISION ENCODER'}
-                        </div>
-                        <div class="model-cost">${m.credits_per_episode} CR/EPISODE</div>
+                        <div class="model-name" style="color:var(--green)">${(m.label || m.model).toUpperCase()}</div>
+                        <div class="model-detail">HALLUCINATION GUARD</div>
+                        <div class="model-cost">${m.credits_per_call || m.credits_per_episode || '?'} CR/EPISODE</div>
                     </div>
                 `).join('');
 
@@ -165,7 +153,6 @@
                     </div>
                 `).join('');
 
-                // Load jobs
                 loadJobs();
 
             } catch (err) {
@@ -189,12 +176,6 @@
             updateEstimate();
         }
 
-        function updateDim() {
-            const dim = parseInt(document.getElementById('dimSlider').value);
-            document.getElementById('dimValue').textContent = dim + 'D';
-            document.getElementById('estDim').textContent = dim + 'D';
-        }
-
         function updateEstimate() {
             const episodes = parseInt(document.getElementById('episodeSlider').value);
             document.getElementById('episodeValue').textContent = episodes;
@@ -207,10 +188,10 @@
 
             const model = modelsData[selectedModel];
             const dataset = selectedDataset !== null ? datasetsData[selectedDataset] : null;
-            const costPer = model.credits_per_episode;
+            const costPer = model.credits_per_call || model.credits_per_episode || 2;
             const total = costPer * episodes;
 
-            document.getElementById('estModel').textContent = model.name.toUpperCase();
+            document.getElementById('estModel').textContent = (model.label || model.model).toUpperCase();
             document.getElementById('estDataset').textContent = dataset ? dataset.name.toUpperCase() : '—';
             document.getElementById('estEpisodes').textContent = episodes;
             document.getElementById('estCostPer').textContent = costPer + ' CR';
@@ -241,33 +222,32 @@
             hideMsg('msg');
 
             const episodes = parseInt(document.getElementById('episodeSlider').value);
-            const targetDim = parseInt(document.getElementById('dimSlider').value);
             const model = modelsData[selectedModel];
             const dataset = datasetsData[selectedDataset];
 
             try {
-                const job = await api('POST', '/api/ovisen/training/launch', {
-                    model: model.name,
+                const job = await api('POST', '/api/phiren/training/launch', {
+                    model: model.model || model.name,
                     dataset: dataset.id,
-                    episodes: episodes,
-                    target_dim: targetDim
+                    episodes: episodes
                 });
+                const monitorUrl = `/monitor?key=${job.dashboard_key}&product=phiren`;
                 document.getElementById('msg').innerHTML = `
-                    <div style="background:rgba(85,255,255,0.06);border:1px solid var(--cyan);border-radius:4px;padding:14px 18px;font-family:monospace;line-height:1.8;">
-                        <div style="color:var(--cyan);font-size:11px;letter-spacing:.15em;margin-bottom:6px;">&#9654; OVISEN JOB #${job.job_id} LAUNCHED</div>
+                    <div style="background:rgba(0,255,100,0.06);border:1px solid var(--green);border-radius:4px;padding:14px 18px;font-family:monospace;line-height:1.8;">
+                        <div style="color:var(--green);font-size:11px;letter-spacing:.15em;margin-bottom:6px;">▶ PHIREN JOB #${job.job_id} LAUNCHED</div>
                         <div style="color:#aaa;font-size:9px;letter-spacing:.1em;margin-bottom:4px;">${formatCredits(job.credits_used)} CREDITS DEDUCTED</div>
-                        <div style="border-top:1px solid rgba(85,255,255,0.15);margin:8px 0;"></div>
+                        <div style="border-top:1px solid rgba(0,255,100,0.15);margin:8px 0;"></div>
                         <div style="color:#aaa;font-size:9px;letter-spacing:.1em;">DASHBOARD KEY</div>
                         <div style="color:#fff;font-size:18px;letter-spacing:.25em;font-weight:700;margin:4px 0 10px;">${job.dashboard_key}</div>
-                        <button onclick="navigator.clipboard.writeText('${job.dashboard_key}')" style="background:transparent;border:1px solid rgba(85,255,255,0.3);color:var(--cyan);padding:6px 12px;font-size:9px;letter-spacing:.1em;cursor:pointer;border-radius:2px;">COPY KEY</button>
+                        <a href="${monitorUrl}" target="_blank" style="display:inline-block;background:var(--green);color:#000;padding:6px 16px;font-size:9px;letter-spacing:.15em;text-decoration:none;border-radius:2px;font-weight:700;">OPEN MONITOR →</a>
+                        <button onclick="navigator.clipboard.writeText('${job.dashboard_key}')" style="margin-left:8px;background:transparent;border:1px solid rgba(0,255,100,0.3);color:var(--green);padding:6px 12px;font-size:9px;letter-spacing:.1em;cursor:pointer;border-radius:2px;">COPY KEY</button>
                     </div>`;
                 document.getElementById('msg').style.display = 'block';
 
-                // Refresh balance
                 const bal = await api('GET', '/api/billing/balance');
                 userBalance = bal.credits;
                 await Auth.fetchUser();
-                renderNav('ovisen_training');
+                renderNav('phiren_training');
                 updateEstimate();
                 loadJobs();
             } catch (err) {
@@ -279,56 +259,54 @@
 
         async function loadJobs() {
             try {
-                const jobs = await api('GET', '/api/ovisen/training/jobs');
+                const jobs = await api('GET', '/api/phiren/training/jobs');
                 const div = document.getElementById('jobsList');
 
                 if (jobs.length === 0) {
-                    div.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-dim);font-size:10px;">NO OVISEN JOBS YET — LAUNCH YOUR FIRST TRAINING ABOVE</div>';
+                    div.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-dim);font-size:10px;">NO PHIREN JOBS YET — LAUNCH YOUR FIRST TRAINING ABOVE</div>';
                     return;
                 }
 
                 div.innerHTML = jobs.map(j => {
                     const statusBadge = {
                         'queued': 'badge-yellow',
+                        'dispatched': 'badge-yellow',
                         'running': 'badge-cyan',
                         'completed': 'badge-green',
-                        'failed': 'badge-red'
+                        'failed': 'badge-red',
+                        'cancelled': 'badge-red'
                     }[j.status] || 'badge-cyan';
 
                     return `
                         <div style="border:2px solid var(--border);padding:16px;margin-bottom:8px;background:var(--bg);">
                             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
                                 <div>
-                                    <span style="font-family:'Press Start 2P',monospace;font-size:9px;color:var(--cyan);">
+                                    <span style="font-family:'Press Start 2P',monospace;font-size:9px;color:var(--green);">
                                         JOB #${j.id}
                                     </span>
                                     <span class="badge ${statusBadge}" style="margin-left:8px">${j.status.toUpperCase()}</span>
                                 </div>
                                 <span style="font-size:9px;color:var(--text-dim)">${formatDate(j.created_at)}</span>
                             </div>
-                            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;font-size:10px;">
+                            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:10px;">
                                 <div>
-                                    <div style="color:var(--text-dim);">VISION MODEL</div>
-                                    <div style="color:var(--cyan)">${j.model}</div>
+                                    <div style="color:var(--text-dim);">BASE MODEL</div>
+                                    <div style="color:var(--green)">${j.model_label || j.model}</div>
                                 </div>
                                 <div>
                                     <div style="color:var(--text-dim);">DATASET</div>
-                                    <div style="color:var(--pink)">${j.dataset}</div>
+                                    <div style="color:var(--pink)">${j.dataset_label || j.dataset}</div>
                                 </div>
                                 <div>
                                     <div style="color:var(--text-dim);">EPISODES</div>
                                     <div>${j.episodes} (${formatCredits(j.credits_used)} CR)</div>
-                                </div>
-                                <div>
-                                    <div style="color:var(--text-dim);">TARGET DIM</div>
-                                    <div style="color:var(--green)">${j.target_dim || 256}D</div>
                                 </div>
                             </div>
                             ${j.status === 'running' ? `
                                 <div style="margin-top:10px;">
                                     <div class="progress-wrap">
                                         <div class="progress-bar" style="width:${j.progress || 0}%"></div>
-                                        <span class="progress-text">${j.progress || 0}%</span>
+                                        <span class="progress-text">${Math.round(j.progress || 0)}%</span>
                                     </div>
                                     <div style="font-size:9px;color:var(--text-dim);margin-top:4px;">
                                         PHASE: ${(j.current_phase || 'INITIALIZING').toUpperCase()}
@@ -337,9 +315,17 @@
                             ` : ''}
                             ${j.status === 'completed' ? `
                                 <div style="margin-top:10px;display:flex;gap:12px;font-size:10px;">
-                                    ${j.fidelity ? `<span style="color:var(--green)">FIDELITY: ${(j.fidelity * 100).toFixed(1)}%</span>` : ''}
-                                    ${j.compression_ratio ? `<span style="color:var(--cyan)">COMP: ${j.compression_ratio}x</span>` : ''}
-                                    <span style="color:var(--yellow)">FORMAT: .OGE</span>
+                                    ${j.factuality ? `<span style="color:var(--green)">FACTUALITY: ${(j.factuality * 100).toFixed(1)}%</span>` : ''}
+                                    ${j.calibration ? `<span style="color:var(--cyan)">CALIBRATION: ${(j.calibration * 100).toFixed(1)}%</span>` : ''}
+                                    <span style="color:var(--yellow)">FORMAT: .PHR</span>
+                                </div>
+                            ` : ''}
+                            ${j.dashboard_key ? `
+                                <div style="margin-top:8px;">
+                                    <a href="/monitor?key=${j.dashboard_key}&product=phiren" target="_blank"
+                                       style="font-size:9px;color:var(--green);text-decoration:underline;">
+                                        OPEN DASHBOARD →
+                                    </a>
                                 </div>
                             ` : ''}
                         </div>

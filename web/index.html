@@ -8,11 +8,11 @@
     <meta property="og:title" content="SERIES — Training Monitor">
     <meta property="og:description" content="Watch your AI training run in real-time with the Series Training Monitor.">
     <meta property="og:type" content="website">
-    <meta name="theme-color" content="#0a0a1a">
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='4' y='4' width='8' height='8' fill='%2300f0ff'/%3E%3Crect x='6' y='6' width='4' height='4' fill='%230a0a1a'/%3E%3C/svg%3E">
+    <meta name="theme-color" content="#0000aa">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='4' y='4' width='8' height='8' fill='%2355ffff'/%3E%3Crect x='6' y='6' width='4' height='4' fill='%230000aa'/%3E%3C/svg%3E">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
     <link rel="stylesheet" href="/monitor/style.css">
 </head>
@@ -26,15 +26,15 @@
     <!-- Loading Screen -->
     <div id="loader" class="loader">
         <svg class="loader-logo" viewBox="0 0 48 48" width="48" height="48" style="image-rendering:pixelated">
-            <rect x="16" y="8" width="16" height="4" fill="#00f0ff"/>
-            <rect x="12" y="12" width="4" height="4" fill="#00f0ff"/>
-            <rect x="32" y="12" width="4" height="4" fill="#00f0ff"/>
-            <rect x="8" y="16" width="4" height="16" fill="#00f0ff"/>
-            <rect x="36" y="16" width="4" height="16" fill="#00f0ff"/>
-            <rect x="12" y="32" width="4" height="4" fill="#00f0ff"/>
-            <rect x="32" y="32" width="4" height="4" fill="#00f0ff"/>
-            <rect x="16" y="36" width="16" height="4" fill="#00f0ff"/>
-            <rect x="20" y="20" width="8" height="8" fill="#00f0ff"/>
+            <rect x="16" y="8" width="16" height="4" fill="#55ffff"/>
+            <rect x="12" y="12" width="4" height="4" fill="#55ffff"/>
+            <rect x="32" y="12" width="4" height="4" fill="#55ffff"/>
+            <rect x="8" y="16" width="4" height="16" fill="#55ffff"/>
+            <rect x="36" y="16" width="4" height="16" fill="#55ffff"/>
+            <rect x="12" y="32" width="4" height="4" fill="#55ffff"/>
+            <rect x="32" y="32" width="4" height="4" fill="#55ffff"/>
+            <rect x="16" y="36" width="16" height="4" fill="#55ffff"/>
+            <rect x="20" y="20" width="8" height="8" fill="#55ffff"/>
         </svg>
         <span class="loader-text">SERIES</span>
         <span class="loader-sub">SYSTEM BOOT...</span>
@@ -44,15 +44,15 @@
     <div id="keyOverlay" class="key-overlay">
         <div class="key-modal">
             <svg class="key-logo" viewBox="0 0 48 48" width="64" height="64" style="image-rendering:pixelated">
-                <rect x="16" y="8" width="16" height="4" fill="#00f0ff"/>
-                <rect x="12" y="12" width="4" height="4" fill="#00f0ff"/>
-                <rect x="32" y="12" width="4" height="4" fill="#00f0ff"/>
-                <rect x="8" y="16" width="4" height="16" fill="#00f0ff"/>
-                <rect x="36" y="16" width="4" height="16" fill="#00f0ff"/>
-                <rect x="12" y="32" width="4" height="4" fill="#00f0ff"/>
-                <rect x="32" y="32" width="4" height="4" fill="#00f0ff"/>
-                <rect x="16" y="36" width="16" height="4" fill="#00f0ff"/>
-                <rect x="20" y="20" width="8" height="8" fill="#00f0ff"/>
+                <rect x="16" y="8" width="16" height="4" fill="#55ffff"/>
+                <rect x="12" y="12" width="4" height="4" fill="#55ffff"/>
+                <rect x="32" y="12" width="4" height="4" fill="#55ffff"/>
+                <rect x="8" y="16" width="4" height="16" fill="#55ffff"/>
+                <rect x="36" y="16" width="4" height="16" fill="#55ffff"/>
+                <rect x="12" y="32" width="4" height="4" fill="#55ffff"/>
+                <rect x="32" y="32" width="4" height="4" fill="#55ffff"/>
+                <rect x="16" y="36" width="16" height="4" fill="#55ffff"/>
+                <rect x="20" y="20" width="8" height="8" fill="#55ffff"/>
             </svg>
             <h1 class="key-title">TRAINING MONITOR</h1>
             <p class="key-subtitle">ENTER YOUR DASHBOARD KEY TO VIEW TRAINING PROGRESS</p>
@@ -84,15 +84,15 @@
     <nav class="nav" id="nav">
         <div class="nav-left">
             <svg class="nav-logo" viewBox="0 0 24 24" width="24" height="24" style="image-rendering:pixelated">
-                <rect x="8" y="4" width="8" height="2" fill="#00f0ff"/>
-                <rect x="6" y="6" width="2" height="2" fill="#00f0ff"/>
-                <rect x="16" y="6" width="2" height="2" fill="#00f0ff"/>
-                <rect x="4" y="8" width="2" height="8" fill="#00f0ff"/>
-                <rect x="18" y="8" width="2" height="8" fill="#00f0ff"/>
-                <rect x="6" y="16" width="2" height="2" fill="#00f0ff"/>
-                <rect x="16" y="16" width="2" height="2" fill="#00f0ff"/>
-                <rect x="8" y="18" width="8" height="2" fill="#00f0ff"/>
-                <rect x="10" y="10" width="4" height="4" fill="#00f0ff"/>
+                <rect x="8" y="4" width="8" height="2" fill="#55ffff"/>
+                <rect x="6" y="6" width="2" height="2" fill="#55ffff"/>
+                <rect x="16" y="6" width="2" height="2" fill="#55ffff"/>
+                <rect x="4" y="8" width="2" height="8" fill="#55ffff"/>
+                <rect x="18" y="8" width="2" height="8" fill="#55ffff"/>
+                <rect x="6" y="16" width="2" height="2" fill="#55ffff"/>
+                <rect x="16" y="16" width="2" height="2" fill="#55ffff"/>
+                <rect x="8" y="18" width="8" height="2" fill="#55ffff"/>
+                <rect x="10" y="10" width="4" height="4" fill="#55ffff"/>
             </svg>
             <span class="nav-brand">SERIES</span>
             <span class="nav-tag">TRAINING MONITOR</span>
@@ -264,7 +264,7 @@
         <div class="footer-inner">
             <span>SERIES v0.3</span>
             <span class="footer-dot">/</span>
-            <span>OGENTI · OVISEN · PHIREN</span>
+            <span>OGENTI · OVISEN · PHIREN · PARHEN · MURHEN</span>
             <span class="footer-dot">/</span>
             <span>MAPPO + LoRA</span>
         </div>

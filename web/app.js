@@ -7,7 +7,7 @@
 (() => {
     'use strict';
 
-    // ─── Product Detection ────────────────────────────────────
+    // ?�?�?� Product Detection ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
     const PRODUCT = (() => {
         const params = new URLSearchParams(window.location.search);
         return (params.get('product') || 'ogenti').toLowerCase();
@@ -16,12 +16,12 @@
     const PRODUCT_CONFIG = {
         ogenti: {
             label: 'OGENTI',
-            color: '#00f0ff',
+            color: '#55ffff',
             metric2: { label: 'COMPRESSION', unit: 'x', sub: 'NL / protocol tokens', key: 'compression' },
             metric3: { label: 'FIDELITY', unit: '%', sub: 'semantic accuracy', key: 'fidelity' },
             apiPath: '/api/training/dashboard/',
             chartLabels: ['Compression', 'Fidelity'],
-            chartColors: ['#00f0ff', '#00ff88'],
+            chartColors: ['#55ffff', '#55ff55'],
             phases: ['Warmup', 'Simple', 'Complex', 'Generalize', 'Universalize'],
             vizLabels: { a: 'Encoder α', aRole: 'NL → Protocol', b: 'Decoder β', bRole: 'Protocol → Action' },
         },
@@ -38,12 +38,12 @@
         },
         phiren: {
             label: 'PHIREN',
-            color: '#00ff64',
+            color: '#55ff55',
             metric2: { label: 'FACTUALITY', unit: '%', sub: 'claim verification accuracy', key: 'factuality' },
             metric3: { label: 'CALIBRATION', unit: '%', sub: 'confidence calibration', key: 'calibration' },
             apiPath: '/api/phiren/training/dashboard/',
             chartLabels: ['Factuality', 'Calibration'],
-            chartColors: ['#00ff64', '#ffd700'],
+            chartColors: ['#55ff55', '#ffd700'],
             phases: ['Warmup', 'Fact Collection', 'Verification Training', 'Calibration Tuning', 'Distillation'],
             vizLabels: { a: 'Verifier α', aRole: 'Claim → Check', b: 'Calibrator β', bRole: 'Score → Guard' },
         },
@@ -75,6 +75,15 @@
 
     // Apply product branding to DOM
     function applyProductBranding() {
+        // Apply product accent color to CSS variable
+        document.documentElement.style.setProperty('--accent', PC.color);
+        // Parse hex to RGB for rgba() usage
+        const hex = PC.color.replace('#', '');
+        const r = parseInt(hex.substring(0, 2), 16);
+        const g = parseInt(hex.substring(2, 4), 16);
+        const b = parseInt(hex.substring(4, 6), 16);
+        document.documentElement.style.setProperty('--accent-rgb', `${r}, ${g}, ${b}`);
+
         const m2l = document.getElementById('metric2Label'); if (m2l) m2l.textContent = PC.metric2.label;
         const m2u = document.getElementById('metric2Unit'); if (m2u) m2u.textContent = PC.metric2.unit;
         const m2s = document.getElementById('metric2Sub'); if (m2s) m2s.textContent = PC.metric2.sub;
@@ -102,9 +111,16 @@
         const l1t = document.getElementById('legend1Text'); if (l1t) l1t.textContent = PC.chartLabels[0];
         const l2d = document.getElementById('legend2Dot'); if (l2d) l2d.style.background = PC.chartColors[1];
         const l2t = document.getElementById('legend2Text'); if (l2t) l2t.textContent = PC.chartLabels[1];
+        // Update nav tag and page title
+        const navTag = document.querySelector('.nav-tag');
+        if (navTag) navTag.textContent = PC.label + ' MONITOR';
+        document.title = `${PC.label} — Training Monitor`;
+        // Update key overlay title
+        const keyTitle = document.querySelector('.key-title');
+        if (keyTitle) keyTitle.textContent = PC.label + ' MONITOR';
     }
 
-    // ─── Configuration ────────────────────────────────────────
+    // ?�?�?� Configuration ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
     const CONFIG = {
         WS_RECONNECT_INTERVAL: 3000,
         WS_MAX_RETRIES: Infinity,
@@ -128,7 +144,7 @@
         },
     };
 
-    // ─── Connection State ─────────────────────────────────────
+    // ?�?�?� Connection State ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
     const conn = {
         ws: null,
         connected: false,
@@ -137,7 +153,7 @@
         reconnectTimer: null,
     };
 
-    // ─── Dashboard State ──────────────────────────────────────
+    // ?�?�?� Dashboard State ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
     const state = {
         status: 'idle',
         episode: 0,
@@ -166,13 +182,13 @@
         epRate: 0,
     };
 
-    // ─── DOM Helpers ──────────────────────────────────────────
+    // ?�?�?� DOM Helpers ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
     const $ = (sel) => document.querySelector(sel);
     const $$ = (sel) => document.querySelectorAll(sel);
 
-    // ────────────────────────────────────────────────────────────
+    // ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
     // REST Polling Engine
-    // ────────────────────────────────────────────────────────────
+    // ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
 
     async function connectWithKey(key) {
         key = (key || '').trim().toUpperCase();
@@ -253,7 +269,7 @@
         setEl('#jobModel', data.model || '—');
         setEl('#jobDataset', data.dataset || '—');
         setEl('#jobStatus', (data.job_status || data.status || '—').toUpperCase(), {
-            color: data.job_status === 'completed' ? 'var(--green)' : data.job_status === 'failed' ? '#ff4060' : 'var(--cyan)'
+            color: data.job_status === 'completed' ? 'var(--green)' : data.job_status === 'failed' ? '#ff5555' : 'var(--cyan)'
         });
         setEl('#jobProgress', `${Math.round(data.progress_pct || 0)}%`);
         const bar = $('#jobInfoBar');
@@ -297,9 +313,9 @@
     // No-op in REST mode
     function sendCommand(cmd) {}
 
-    // ────────────────────────────────────────────────────────────
+    // ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
     // REST Polling Fallback (for Colab iframe where WS may not relay data)
-    // ────────────────────────────────────────────────────────────
+    // ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
 
     let restPollTimer = null;
 
@@ -318,9 +334,9 @@
         }, 2000);  // Poll every 2 seconds
     }
 
-    // ────────────────────────────────────────────────────────────
+    // ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
     // Local WebSocket Mode (direct connection for local training)
-    // ────────────────────────────────────────────────────────────
+    // ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
 
     function connectWebSocketLocal() {
         const wsUrl = CONFIG.WS_URL;
@@ -388,9 +404,9 @@
         connectWithKey(key).finally(() => { if (btn) { btn.disabled = false; btn.textContent = 'CONNECT →'; } });
     };
 
-    // ────────────────────────────────────────────────────────────
+    // ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
     // Server Event Handlers
-    // ────────────────────────────────────────────────────────────
+    // ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
 
     function handleServerEvent(msg) {
         const { type, data } = msg;
@@ -446,7 +462,7 @@
     function handleEpisode(data) {
         const newEp = data.episode || state.episode;
 
-        // Detect cycle reset — episode went backwards → clear history
+        // Detect cycle reset — episode went backwards — clear history
         if (newEp < state.episode - 100) {
             state.history = { episodes: [], compression: [], fidelity: [], budget: [] };
             state.vocab = [];
@@ -521,9 +537,9 @@
         }
     }
 
-    // ────────────────────────────────────────────────────────────
+    // ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
     // Connection Status UI
-    // ────────────────────────────────────────────────────────────
+    // ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
 
     function updateConnectionUI() {
         const badge = $('#connectionBadge');
@@ -539,9 +555,9 @@
         badge.textContent = labels[conn.mode] || conn.mode.toUpperCase();
     }
 
-    // ────────────────────────────────────────────────────────────
+    // ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
     // Canvas: 16-bit Pixel Agent Visualizer
-    // ────────────────────────────────────────────────────────────
+    // ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
 
     let canvas, ctx;
     let packets = [];
@@ -590,7 +606,7 @@
                 speed: px(1.5) + Math.random() * px(1.5),
                 size: px(2) + Math.random() * px(2 + cf * 2),
                 opacity: 0.8 + Math.random() * 0.2,
-                color: hueRng < 0.35 ? '#b060ff' : hueRng < 0.6 ? '#00ff88' : hueRng < 0.8 ? '#ffe040' : '#00f0ff',
+                color: hueRng < 0.35 ? '#ff55ff' : hueRng < 0.6 ? '#55ff55' : hueRng < 0.8 ? '#ffff55' : '#55ffff',
             });
         }
     }
@@ -677,7 +693,7 @@
 
         // Glow trail
         ctx.globalAlpha = baseAlpha * 0.2;
-        ctx.fillStyle = '#00f0ff';
+        ctx.fillStyle = '#55ffff';
         ctx.fillRect(x1, cy - px(1), x2 - x1, px(2));
         ctx.globalAlpha = 1;
 
@@ -691,14 +707,14 @@
             // Main wave pixel
             const alpha = 0.4 + Math.sin(phase + t * 0.5) * 0.2;
             ctx.globalAlpha = baseAlpha + alpha * 0.3;
-            ctx.fillStyle = '#00f0ff';
+            ctx.fillStyle = '#55ffff';
             ctx.fillRect(xPos, cy + yOff - segW / 2, segW - 1, segW);
 
             // Secondary harmonic (smaller, purple)
             if (i % 2 === 0) {
                 const yOff2 = Math.round(Math.sin(phase * 2.3 + 1.5) * amplitude * 0.5 / segW) * segW;
                 ctx.globalAlpha = baseAlpha * 0.5;
-                ctx.fillStyle = '#b060ff';
+                ctx.fillStyle = '#ff55ff';
                 ctx.fillRect(xPos, cy + yOff2 - segW / 4, segW - 1, segW / 2);
             }
 
@@ -706,7 +722,7 @@
             if (i % 4 === 0 && state.metrics.compression > 2) {
                 const yOff3 = Math.round(Math.sin(phase * 0.7 - 0.8) * amplitude * 0.7 / segW) * segW;
                 ctx.globalAlpha = baseAlpha * 0.3;
-                ctx.fillStyle = '#00ff88';
+                ctx.fillStyle = '#55ff55';
                 ctx.fillRect(xPos + segW / 4, cy + yOff3 - segW / 4, segW / 2, segW / 2);
             }
         }
@@ -742,8 +758,8 @@
 
         // Draw pixel robots
         const robotScale = Math.max(2, Math.min(3.5, canvasW / 280));
-        drawPixelRobot(agentA.x, agentA.y, robotScale, '#00f0ff', '#007088', t, true);
-        drawPixelRobot(agentB.x, agentB.y, robotScale, '#00ff88', '#007744', t, false);
+        drawPixelRobot(agentA.x, agentA.y, robotScale, '#55ffff', '#00aaaa', t, true);
+        drawPixelRobot(agentB.x, agentB.y, robotScale, '#55ff55', '#00aa00', t, false);
 
         // Spawn & update
         if (!state.paused && Math.random() < 0.3) spawnParticles();
@@ -751,16 +767,16 @@
         requestAnimationFrame(renderCanvas);
     }
 
-    // ────────────────────────────────────────────────────────────
+    // ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
     // Charts
-    // ────────────────────────────────────────────────────────────
+    // ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
 
     let trainingChart, budgetChart;
 
     function initCharts() {
-        const fontMono = { family: "'Silkscreen', 'Press Start 2P', monospace", size: 10 };
-        const gridColor = 'rgba(26, 26, 58, 0.8)';
-        const tickColor = '#3a3a5a';
+        const fontMono = { family: "'Press Start 2P', monospace", size: 8 };
+        const gridColor = 'rgba(255, 255, 255, 0.08)';
+        const tickColor = '#555555';
 
         trainingChart = new Chart($('#trainingChart'), {
             type: 'line',
@@ -786,8 +802,8 @@
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        backgroundColor: '#0a0a1a',
-                        borderColor: '#1a1a3a', borderWidth: 2,
+                        backgroundColor: '#000000',
+                        borderColor: '#ffffff', borderWidth: 2,
                         titleFont: fontMono, bodyFont: fontMono, padding: 10, cornerRadius: 0,
                         callbacks: {
                             label: (c) => c.datasetIndex === 0
@@ -820,7 +836,7 @@
                 labels: [],
                 datasets: [{
                     label: 'Token Budget', data: [],
-                    borderColor: '#b060ff', backgroundColor: 'rgba(176, 96, 255, 0.08)',
+                    borderColor: '#ff55ff', backgroundColor: 'rgba(176, 96, 255, 0.08)',
                     fill: true, tension: 0.1, pointRadius: 0, borderWidth: 2, stepped: false,
                 }],
             },
@@ -830,8 +846,8 @@
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        backgroundColor: '#0a0a1a',
-                        borderColor: '#1a1a3a', borderWidth: 2,
+                        backgroundColor: '#000000',
+                        borderColor: '#ffffff', borderWidth: 2,
                         titleFont: fontMono, bodyFont: fontMono, padding: 10, cornerRadius: 0,
                         callbacks: { label: (c) => `Budget: ${c.parsed.y.toFixed(1)} tokens` },
                     },
@@ -880,9 +896,9 @@
         budgetChart.update('none');
     }
 
-    // ────────────────────────────────────────────────────────────
+    // ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
     // Protocol Feed
-    // ────────────────────────────────────────────────────────────
+    // ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
 
     function addFeedMessage({ sender, receiver, tokenIds, tokenCount, success, fidelity, task }) {
         const el = document.createElement('div');
@@ -912,9 +928,9 @@
         while (feed.children.length > CONFIG.FEED_MAX) feed.removeChild(feed.lastChild);
     }
 
-    // ────────────────────────────────────────────────────────────
+    // ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
     // Adapter Export Notification
-    // ────────────────────────────────────────────────────────────
+    // ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
 
     function handleAdapterExported(data) {
         console.log('[SERIES] Universal Adapter Exported:', data);
@@ -926,11 +942,11 @@
             banner.id = 'adapterBanner';
             banner.style.cssText = `
                 position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
-                background: #0a0a1a;
-                border-bottom: 4px solid #00f0ff;
-                color: #c8c8e0; padding: 16px 24px; text-align: center;
-                font-family: 'Silkscreen', 'Press Start 2P', monospace; font-size: 14px;
-                box-shadow: 0 4px 20px rgba(0,240,255,0.2);
+                background: #0000aa;
+                border-bottom: 4px solid #ffffff;
+                color: #aaaaff; padding: 16px 24px; text-align: center;
+                font-family: 'Press Start 2P', monospace; font-size: 14px;
+                box-shadow: 0 4px 20px rgba(85,255,255,0.2);
                 animation: bannerSlide 0.5s ease-out;
                 cursor: pointer;
             `;
@@ -959,17 +975,17 @@
         const fileList = (data.files || []).join(' + ');
 
         banner.innerHTML = `
-            <div style="font-family:'Press Start 2P',monospace; font-size:0.6rem; margin-bottom:8px; color:#00f0ff; text-shadow:0 0 8px rgba(0,240,255,0.5);">>>> UNIVERSAL ADAPTER EXPORTED <<<</div>
+            <div style="font-family:'Press Start 2P',monospace; font-size:0.6rem; margin-bottom:8px; color:#55ffff; text-shadow:0 0 8px rgba(85,255,255,0.5);">>>> UNIVERSAL ADAPTER EXPORTED <<<</div>
             <div style="font-size:0.7rem; line-height:2;">
-                <span style="background:#12122a; border:2px solid #1a1a3a; padding:3px 8px; margin:0 4px;">PATH: ${data.path || 'checkpoints/universal_adapter'}</span>
-                <span style="background:#12122a; border:2px solid #1a1a3a; padding:3px 8px; margin:0 4px;">PARAMS: ${((data.params || 0) / 1000).toFixed(0)}K</span>
-                <span style="background:#12122a; border:2px solid #1a1a3a; padding:3px 8px; margin:0 4px;">MATCH: ${((metrics.distill_match || 0) * 100).toFixed(1)}%</span>
-                <span style="background:#12122a; border:2px solid #1a1a3a; padding:3px 8px; margin:0 4px;">COMPRESS: ${(metrics.compression || 0).toFixed(1)}x</span>
+                <span style="background:#000000; border:2px solid #ffffff; padding:3px 8px; margin:0 4px;">PATH: ${data.path || 'checkpoints/universal_adapter'}</span>
+                <span style="background:#000000; border:2px solid #ffffff; padding:3px 8px; margin:0 4px;">PARAMS: ${((data.params || 0) / 1000).toFixed(0)}K</span>
+                <span style="background:#000000; border:2px solid #ffffff; padding:3px 8px; margin:0 4px;">MATCH: ${((metrics.distill_match || 0) * 100).toFixed(1)}%</span>
+                <span style="background:#000000; border:2px solid #ffffff; padding:3px 8px; margin:0 4px;">COMPRESS: ${(metrics.compression || 0).toFixed(1)}x</span>
             </div>
-            <div style="font-family:'Press Start 2P',monospace; font-size:0.35rem; color:#6a6a8a; margin-top:8px;">
+            <div style="font-family:'Press Start 2P',monospace; font-size:0.35rem; color:#aaaaaa; margin-top:8px;">
                 COMPATIBLE: ${models.join(' / ')}
             </div>
-            <div style="font-family:'Press Start 2P',monospace; font-size:0.3rem; color:#3a3a5a; margin-top:6px;">CLICK TO DISMISS</div>
+            <div style="font-family:'Press Start 2P',monospace; font-size:0.3rem; color:#555555; margin-top:6px;">CLICK TO DISMISS</div>
         `;
 
         banner.onclick = () => {
@@ -988,12 +1004,12 @@
         // Also add to feed
         const feedEl = document.createElement('div');
         feedEl.className = 'feed-message';
-        feedEl.style.cssText = 'border-left: 4px solid #00f0ff; background: rgba(0,240,255,0.06);';
+        feedEl.style.cssText = 'border-left: 4px solid #55ffff; background: rgba(85,255,255,0.06);';
         const now = new Date();
         const ts = [now.getHours(), now.getMinutes(), now.getSeconds()].map(n => String(n).padStart(2, '0')).join(':');
         feedEl.innerHTML = `
             <span class="feed-time">${ts}</span>
-            <span class="feed-route" style="color:#00f0ff; font-weight:700;">>>> ADAPTER</span>
+            <span class="feed-route" style="color:#55ffff; font-weight:700;">>>> ADAPTER</span>
             <span class="feed-tokens">Universal adapter exported → ${fileList}</span>
             <span class="feed-status success">${models.length} models</span>
         `;
@@ -1001,9 +1017,9 @@
         if (feed) feed.insertBefore(feedEl, feed.firstChild);
     }
 
-    // ────────────────────────────────────────────────────────────
+    // ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
     // Vocabulary
-    // ────────────────────────────────────────────────────────────
+    // ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
 
     function renderVocabToken(token) {
         const maxFreq = Math.max(...state.vocab.map(t => t.freq || 1), 1);
@@ -1029,9 +1045,9 @@
         $('#vocabCount').textContent = `${state.vocab.length} tokens`;
     }
 
-    // ────────────────────────────────────────────────────────────
+    // ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
     // UI Updates
-    // ────────────────────────────────────────────────────────────
+    // ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
 
     function updateAllUI() {
         $('#metricPhase').textContent = state.phase;
@@ -1065,9 +1081,9 @@
         });
     }
 
-    // ────────────────────────────────────────────────────────────
+    // ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
     // Pause / Resume
-    // ────────────────────────────────────────────────────────────
+    // ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
 
     function togglePause() {
         // In REST mode just pause the local visualization
@@ -1075,9 +1091,9 @@
         handleStatus({ status: state.paused ? 'paused' : 'training' });
     }
 
-    // ────────────────────────────────────────────────────────────
+    // ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
     // Demo Mode (fallback when no server)
-    // ────────────────────────────────────────────────────────────
+    // ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
 
     let demoInterval = null;
 
@@ -1229,9 +1245,9 @@
         $$('.phase-connector').forEach(el => el.classList.remove('active'));
     }
 
-    // ────────────────────────────────────────────────────────────
+    // ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
     // Interactions
-    // ────────────────────────────────────────────────────────────
+    // ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
 
     function setupInteractions() {
         document.addEventListener('keydown', (e) => {
@@ -1243,17 +1259,17 @@
         canvas.addEventListener('click', () => { for (let i = 0; i < 15; i++) spawnParticles(); });
     }
 
-    // ────────────────────────────────────────────────────────────
+    // ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
     // Utilities
-    // ────────────────────────────────────────────────────────────
+    // ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
 
     function lerp(a, b, t) { return a + (b - a) * t; }
     function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
     function smoothstep(t) { return t * t * (3 - 2 * t); }
 
-    // ────────────────────────────────────────────────────────────
+    // ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
     // Init
-    // ────────────────────────────────────────────────────────────
+    // ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
 
     function init() {
         applyProductBranding();
@@ -1278,11 +1294,15 @@
             if (input) input.value = urlKey.toUpperCase();
             // Slight delay to let canvas init finish
             setTimeout(() => connectWithKey(urlKey), 300);
-        } else {
-            // Auto-connect via WebSocket (works for local, Colab iframe, any same-origin)
+        } else if (isLocal) {
+            // Local mode: hide key overlay, connect via WebSocket
             const overlay = $('#keyOverlay');
             if (overlay) overlay.style.display = 'none';
             setTimeout(() => connectWebSocketLocal(), 300);
+        } else {
+            // SaaS mode: show the key overlay for manual key entry
+            const overlay = $('#keyOverlay');
+            if (overlay) overlay.style.display = 'flex';
         }
 
         setTimeout(() => {

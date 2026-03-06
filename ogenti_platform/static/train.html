@@ -316,8 +316,12 @@
                 <span id="estProducts" style="color:var(--pink)">—</span>
             </div>
             <div class="estimate-row">
-                <span>MODEL</span>
+                <span>TEXT MODEL</span>
                 <span id="estModel" style="color:var(--cyan)">—</span>
+            </div>
+            <div class="estimate-row" id="estVisionRow" style="display:none">
+                <span>VISION MODEL</span>
+                <span id="estVisionModel" style="color:var(--cyan)">—</span>
             </div>
             <div class="estimate-row">
                 <span>EPISODES</span>
@@ -577,7 +581,8 @@
            STATE
            ══════════════════════════════════════ */
         let selectedProducts = [];
-        let selectedModel = null;
+        let selectedModel = null;        // LLM model index
+        let selectedVisionModel = null; // Vision model index (for OVISEN)
         let selectedTier = null;       // "starter" | "basic" | ... | "ultimate"
         let customDatasetId = null;    // from upload
         let modelsData = [];
@@ -840,72 +845,52 @@
             const onlyOvisen = hasOvisen && !hasLLM;
             const mixed = hasOvisen && hasLLM;
 
-            // Determine which models to show
-            let displayModels = [];
-
-            if (onlyOvisen) {
-                // Only vision models
-                displayModels = visionModelsData.map((m, i) => ({...m, _type: 'vision', _origIdx: i}));
-            } else if (mixed) {
-                // Both: LLM section + Vision section
-                displayModels = [
-                    ...modelsData.map((m, i) => ({...m, _type: 'llm', _origIdx: i})),
-                    ...visionModelsData.map((m, i) => ({...m, _type: 'vision', _origIdx: i})),
-                ];
-            } else {
-                // LLM only (default, or no products selected)
-                displayModels = modelsData.map((m, i) => ({...m, _type: 'llm', _origIdx: i}));
-            }
-
-            // Reset selection if current model type no longer valid
-            if (selectedModel !== null) {
-                const cur = selectedModel;
-                const allModels = getAllCurrentModels();
-                if (cur >= allModels.length) {
-                    selectedModel = null;
-                }
-            }
+            // Reset if model index out of range
+            if (selectedModel !== null && selectedModel >= modelsData.length) selectedModel = null;
+            if (selectedVisionModel !== null && selectedVisionModel >= visionModelsData.length) selectedVisionModel = null;
+            // Clear vision selection if OVISEN not selected
+            if (!hasOvisen) selectedVisionModel = null;
 
             let html = '';
 
-            if (mixed) {
-                // Show LLM section header
-                html += `<div style="grid-column:1/-1;font-family:var(--font-pixel);font-size:8px;color:var(--pink);letter-spacing:.15em;padding:8px 0 4px;border-bottom:2px solid rgba(255,85,255,.3);margin-bottom:4px;">▶ LLM MODELS — OGENTI / PHIREN / PARHEN / MURHEN / SYRHEN</div>`;
+            if (onlyOvisen) {
+                // OVISEN only → show LLM models + vision models (need both)
+                html += `<div style="grid-column:1/-1;font-family:var(--font-pixel);font-size:8px;color:var(--pink);letter-spacing:.15em;padding:8px 0 4px;border-bottom:2px solid rgba(255,85,255,.3);margin-bottom:4px;">▶ TEXT MODEL — BASE LLM</div>`;
                 modelsData.forEach((m, i) => {
-                    html += modelCardHtml(m, i, i === selectedModel);
+                    html += modelCardHtml(m, i, i === selectedModel, 'llm');
                 });
-                // Vision section header
-                html += `<div style="grid-column:1/-1;font-family:var(--font-pixel);font-size:8px;color:var(--cyan);letter-spacing:.15em;padding:12px 0 4px;border-bottom:2px solid rgba(0,240,255,.3);margin-bottom:4px;">▶ VISION MODELS — OVISEN</div>`;
+                html += `<div style="grid-column:1/-1;font-family:var(--font-pixel);font-size:8px;color:var(--cyan);letter-spacing:.15em;padding:12px 0 4px;border-bottom:2px solid rgba(0,240,255,.3);margin-bottom:4px;">▶ VISION MODEL — OVISEN</div>`;
                 visionModelsData.forEach((m, i) => {
-                    const idx = modelsData.length + i;
-                    html += modelCardHtml(m, idx, idx === selectedModel);
+                    html += modelCardHtml(m, i, i === selectedVisionModel, 'vision');
+                });
+            } else if (mixed) {
+                // Mixed → LLM section + Vision section (independent selections)
+                html += `<div style="grid-column:1/-1;font-family:var(--font-pixel);font-size:8px;color:var(--pink);letter-spacing:.15em;padding:8px 0 4px;border-bottom:2px solid rgba(255,85,255,.3);margin-bottom:4px;">▶ TEXT MODEL — OGENTI / PHIREN / PARHEN / MURHEN / SYRHEN</div>`;
+                modelsData.forEach((m, i) => {
+                    html += modelCardHtml(m, i, i === selectedModel, 'llm');
+                });
+                html += `<div style="grid-column:1/-1;font-family:var(--font-pixel);font-size:8px;color:var(--cyan);letter-spacing:.15em;padding:12px 0 4px;border-bottom:2px solid rgba(0,240,255,.3);margin-bottom:4px;">▶ VISION MODEL — OVISEN</div>`;
+                visionModelsData.forEach((m, i) => {
+                    html += modelCardHtml(m, i, i === selectedVisionModel, 'vision');
                 });
             } else {
-                displayModels.forEach((m, i) => {
-                    html += modelCardHtml(m, i, i === selectedModel);
+                // LLM only
+                modelsData.forEach((m, i) => {
+                    html += modelCardHtml(m, i, i === selectedModel, 'llm');
                 });
             }
 
             grid.innerHTML = html;
         }
 
-        function modelCardHtml(m, idx, isSelected) {
+        function modelCardHtml(m, idx, isSelected, type) {
             const sizeLabel = m.label || m.name.toUpperCase();
-            return `<div class="model-card${isSelected ? ' selected' : ''}" data-idx="${idx}" onclick="selectModel(${idx})">
+            const handler = type === 'vision' ? `selectVisionModel(${idx})` : `selectModel(${idx})`;
+            return `<div class="model-card${isSelected ? ' selected' : ''}" data-idx="${idx}" data-type="${type}" onclick="${handler}">
                 <div class="model-name">${sizeLabel}</div>
                 <div class="model-detail">${m.vram} · ${m.speed}</div>
                 <div class="model-cost">${m.credits_per_episode} CR/EP</div>
             </div>`;
-        }
-
-        function getAllCurrentModels() {
-            const hasOvisen = selectedProducts.includes('ovisen');
-            const hasLLM = selectedProducts.some(p => p !== 'ovisen');
-            const onlyOvisen = hasOvisen && !hasLLM;
-
-            if (onlyOvisen) return visionModelsData;
-            if (hasOvisen && hasLLM) return [...modelsData, ...visionModelsData];
-            return modelsData;
         }
 
         /* ══════════════════════════════════════
@@ -913,7 +898,15 @@
            ══════════════════════════════════════ */
         function selectModel(idx) {
             selectedModel = idx;
-            document.querySelectorAll('#modelGrid .model-card').forEach((c, i) => {
+            document.querySelectorAll('#modelGrid .model-card[data-type="llm"]').forEach(c => {
+                c.classList.toggle('selected', parseInt(c.dataset.idx) === idx);
+            });
+            updateEstimate();
+        }
+
+        function selectVisionModel(idx) {
+            selectedVisionModel = idx;
+            document.querySelectorAll('#modelGrid .model-card[data-type="vision"]').forEach(c => {
                 c.classList.toggle('selected', parseInt(c.dataset.idx) === idx);
             });
             updateEstimate();
@@ -924,25 +917,47 @@
             document.getElementById('episodeValue').textContent = episodes;
 
             const prodCount = selectedProducts.length;
-            const allModels = getAllCurrentModels();
+            const hasOvisen = selectedProducts.includes('ovisen');
             document.getElementById('estProducts').textContent = prodCount > 0
                 ? selectedProducts.map(p => PRODUCTS[p].name).join(' + ')
                 : '—';
 
-            const hasDataset = selectedTier || customDatasetId;
+            // Show/hide vision model row
+            document.getElementById('estVisionRow').style.display = hasOvisen ? '' : 'none';
 
-            if (selectedModel === null || selectedModel >= allModels.length || prodCount === 0 || !hasDataset) {
-                document.getElementById('estModel').textContent = selectedModel !== null && selectedModel < allModels.length ? allModels[selectedModel].name.toUpperCase() : '—';
+            const hasDataset = selectedTier || customDatasetId;
+            const needsVision = hasOvisen && selectedVisionModel === null;
+            const needsLLM = selectedModel === null;
+
+            if (needsLLM || (hasOvisen && needsVision) || prodCount === 0 || !hasDataset) {
+                document.getElementById('estModel').textContent = selectedModel !== null && selectedModel < modelsData.length ? modelsData[selectedModel].name.toUpperCase() : '—';
+                document.getElementById('estVisionModel').textContent = selectedVisionModel !== null && selectedVisionModel < visionModelsData.length ? visionModelsData[selectedVisionModel].name.toUpperCase() : '—';
                 document.getElementById('estDataset').textContent = selectedTier ? selectedTier.toUpperCase() : customDatasetId ? 'CUSTOM' : '—';
                 document.getElementById('estTotal').textContent = '—';
                 document.getElementById('launchBtn').disabled = true;
-                document.getElementById('launchBtn').textContent = 'SELECT PRODUCTS, DATASET & MODEL';
+                let missing = [];
+                if (prodCount === 0) missing.push('PRODUCTS');
+                if (!hasDataset) missing.push('DATASET');
+                if (needsLLM) missing.push('TEXT MODEL');
+                if (hasOvisen && needsVision) missing.push('VISION MODEL');
+                document.getElementById('launchBtn').textContent = 'SELECT ' + missing.join(' & ');
                 return;
             }
 
-            const model = allModels[selectedModel];
-            const costPer = model.credits_per_episode * prodCount;
-            const computeTotal = costPer * episodes;
+            const model = modelsData[selectedModel];
+            // LLM compute: per-episode cost × product count (exclude ovisen from LLM cost)
+            const llmProducts = selectedProducts.filter(p => p !== 'ovisen');
+            const llmProdCount = llmProducts.length || 1; // at least 1 even for OVISEN-only (text backbone)
+            const llmCostPer = model.credits_per_episode * llmProdCount;
+            let computeTotal = llmCostPer * episodes;
+
+            // Vision compute if OVISEN selected
+            let visionCostPer = 0;
+            if (hasOvisen && selectedVisionModel !== null) {
+                const vModel = visionModelsData[selectedVisionModel];
+                visionCostPer = vModel.credits_per_episode;
+                computeTotal += visionCostPer * episodes;
+            }
 
             // Dataset credits
             let datasetCredits = 0;
@@ -956,8 +971,13 @@
             const total = computeTotal + datasetCredits;
 
             document.getElementById('estModel').textContent = model.name.toUpperCase();
+            if (hasOvisen && selectedVisionModel !== null) {
+                document.getElementById('estVisionModel').textContent = visionModelsData[selectedVisionModel].name.toUpperCase();
+            }
             document.getElementById('estEpisodes').textContent = episodes;
-            document.getElementById('estCostPer').textContent = costPer + ' CR (' + model.credits_per_episode + ' × ' + prodCount + ' PRODUCTS)';
+            let costBreakdown = llmCostPer + ' CR (TEXT: ' + model.credits_per_episode + ' × ' + llmProdCount + ')';
+            if (hasOvisen) costBreakdown += ' + ' + visionCostPer + ' CR (VISION)';
+            document.getElementById('estCostPer').textContent = costBreakdown;
             document.getElementById('estDataset').textContent = datasetCredits === 0
                 ? (selectedTier ? selectedTier.toUpperCase() + ' (FREE)' : 'CUSTOM (FREE)')
                 : selectedTier.toUpperCase() + ' (' + datasetCredits + ' CR)';
@@ -982,6 +1002,8 @@
            ══════════════════════════════════════ */
         async function handleLaunch() {
             if (selectedProducts.length === 0 || selectedModel === null) return;
+            const hasOvisen = selectedProducts.includes('ovisen');
+            if (hasOvisen && selectedVisionModel === null) return;
             if (!selectedTier && !customDatasetId) return;
             const btn = document.getElementById('launchBtn');
             btn.disabled = true;
@@ -989,14 +1011,16 @@
             hideMsg('msg');
 
             const episodes = parseInt(document.getElementById('episodeSlider').value);
-            const allModels = getAllCurrentModels();
-            const model = allModels[selectedModel];
+            const model = modelsData[selectedModel];
 
             const payload = {
                 model: model.name,
                 products: selectedProducts,
                 episodes: episodes
             };
+            if (hasOvisen && selectedVisionModel !== null) {
+                payload.vision_model = visionModelsData[selectedVisionModel].name;
+            }
             if (customDatasetId) {
                 payload.custom_dataset_id = customDatasetId;
             } else {

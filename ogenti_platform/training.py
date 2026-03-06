@@ -21,7 +21,7 @@ from sqlalchemy.orm import Session
 
 from .database import get_db, User, TrainingJob, Transaction, Adapter
 from .auth import get_current_user
-from .config import MODEL_COSTS, DATASETS, TIERS, INFERENCE_COSTS, RUNPOD_WEBHOOK_TOKEN, PRODUCT_DATASETS, DATASET_TIERS, CUSTOM_DATASET_MAX_SIZE_MB, CUSTOM_DATASET_ALLOWED_EXTENSIONS
+from .config import MODEL_COSTS, DATASETS, TIERS, INFERENCE_COSTS, RUNPOD_WEBHOOK_TOKEN, PRODUCT_DATASETS, DATASET_TIERS, CUSTOM_DATASET_MAX_SIZE_MB, CUSTOM_DATASET_ALLOWED_EXTENSIONS, OVISEN_MODEL_COSTS
 from .runpod_client import dispatch_training_job, check_job_status, cancel_job, process_completed_job
 
 import json
@@ -32,6 +32,7 @@ router = APIRouter(prefix="/api/training", tags=["training"])
 
 class LaunchRequest(BaseModel):
     model: str
+    vision_model: Optional[str] = None   # Vision model for OVISEN
     dataset: str = "ogenti-default"
     dataset_tier: Optional[str] = None   # "starter" | "basic" | "advanced" | "premium" | "ultimate"
     custom_dataset_id: Optional[str] = None  # ID from upload
@@ -116,10 +117,23 @@ async def launch_training(req: LaunchRequest, request: Request, user: User = Dep
     if allowed_models != "all" and req.model not in allowed_models:
         raise HTTPException(403, f"Model {req.model} not available on {tier_info['label']} tier. Upgrade to access.")
 
+    # Validate vision model if OVISEN selected
+    vision_model_info = None
+    vision_compute = 0
+    products_list = req.products or ["ogenti"]
+    has_ovisen = "ovisen" in products_list
+
+    if has_ovisen:
+        if not req.vision_model:
+            raise HTTPException(400, "OVISEN requires a vision_model selection")
+        vision_model_info = OVISEN_MODEL_COSTS.get(req.vision_model)
+        if not vision_model_info:
+            raise HTTPException(400, f"Unknown vision model: {req.vision_model}")
+        vision_compute = req.episodes * vision_model_info["credits_per_episode"]
+
     # Validate dataset — support tiered product datasets, custom, and legacy
     dataset_credits = 0
     dataset_label = "Custom"
-    products_list = req.products or ["ogenti"]
 
     if req.custom_dataset_id:
         # Custom uploaded dataset — no extra credits
@@ -145,24 +159,25 @@ async def launch_training(req: LaunchRequest, request: Request, user: User = Dep
     if req.episodes > tier_info["max_episodes"]:
         raise HTTPException(403, f"Max {tier_info['max_episodes']} episodes on {tier_info['label']} tier")
 
-    # Calculate cost (training compute + dataset access fee)
+    # Calculate cost (training compute + vision compute + dataset access fee)
     compute_credits = req.episodes * model_info["credits_per_episode"]
-    credits_needed = compute_credits + dataset_credits
+    credits_needed = compute_credits + vision_compute + dataset_credits
     if user.credits < credits_needed:
         raise HTTPException(
             402,
-            f"Not enough credits. Need {credits_needed} (compute: {compute_credits} + dataset: {dataset_credits}), have {user.credits}. Buy more credits.",
+            f"Not enough credits. Need {credits_needed} (compute: {compute_credits} + vision: {vision_compute} + dataset: {dataset_credits}), have {user.credits}. Buy more credits.",
         )
 
     # Deduct credits
     user.credits -= credits_needed
 
     # Record usage transaction
+    vision_label = f" + {vision_model_info['label']}" if vision_model_info else ""
     txn = Transaction(
         user_id=user.id,
         type="training",
         credits=-credits_needed,
-        description=f"Training: {model_info['label']} × {req.episodes} eps | Dataset: {dataset_label}",
+        description=f"Training: {model_info['label']}{vision_label} × {req.episodes} eps | Dataset: {dataset_label}",
     )
     db.add(txn)
 
@@ -199,6 +214,7 @@ async def launch_training(req: LaunchRequest, request: Request, user: User = Dep
         episodes=req.episodes,
         user_id=user.id,
         callback_url=callback_url,
+        vision_model=req.vision_model,
     )
 
     if "error" in runpod_result:

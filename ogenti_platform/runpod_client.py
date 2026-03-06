@@ -53,6 +53,7 @@ def dispatch_training_job(
     episodes: int,
     user_id: int,
     callback_url: str = "",
+    vision_model: str = None,
 ) -> dict:
     """
     Dispatch a training job to RunPod Serverless.
@@ -97,6 +98,12 @@ def dispatch_training_job(
             "max_seq_length": 2048,
         }
     }
+
+    # Add vision model info if OVISEN training
+    if vision_model:
+        from .config import OVISEN_MODEL_HF_MAP
+        payload["input"]["vision_model_key"] = vision_model
+        payload["input"]["vision_model_id"] = OVISEN_MODEL_HF_MAP.get(vision_model, vision_model)
 
     try:
         url = f"{RUNPOD_API_BASE}/{endpoint_id}/run"

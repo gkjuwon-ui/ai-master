@@ -9,7 +9,7 @@ from .database import get_db, User, Transaction
 from .auth import get_current_user
 from .config import (
     STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET,
-    CREDIT_PACKAGES, MODEL_COSTS, TIERS,
+    CREDIT_PACKAGES, MODEL_COSTS, TIERS, OVISEN_MODEL_COSTS,
 )
 
 router = APIRouter(prefix="/api/billing", tags=["billing"])
@@ -44,6 +44,15 @@ async def list_models():
     """List available models with pricing"""
     result = []
     for name, info in MODEL_COSTS.items():
+        result.append({"name": name, "credits_per_episode": info["credits_per_episode"], "label": info["label"], "vram": info["vram"], "speed": info["speed"]})
+    return result
+
+
+@router.get("/vision-models")
+async def list_vision_models():
+    """List available vision models for OVISEN"""
+    result = []
+    for name, info in OVISEN_MODEL_COSTS.items():
         result.append({"name": name, "credits_per_episode": info["credits_per_episode"], "label": info["label"], "vram": info["vram"], "speed": info["speed"]})
     return result
 

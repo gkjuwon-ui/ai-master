@@ -573,6 +573,7 @@
         let selectedProducts = [];
         let selectedModel = null;
         let modelsData = [];
+        let visionModelsData = [];
         let userBalance = 0;
 
         /* ══════════════════════════════════════
@@ -595,6 +596,9 @@
                 const pid = card.dataset.product;
                 card.classList.toggle('selected', selectedProducts.includes(pid));
             });
+
+            // Re-render model grid based on selected products
+            renderModelGrid();
 
             // Update combo preview
             const empty = document.getElementById('comboEmpty');
@@ -651,12 +655,90 @@
         }
 
         /* ══════════════════════════════════════
+           MODEL GRID RENDERING
+           ══════════════════════════════════════ */
+        function renderModelGrid() {
+            const grid = document.getElementById('modelGrid');
+            const hasOvisen = selectedProducts.includes('ovisen');
+            const hasLLM = selectedProducts.some(p => p !== 'ovisen');
+            const onlyOvisen = hasOvisen && !hasLLM;
+            const mixed = hasOvisen && hasLLM;
+
+            // Determine which models to show
+            let displayModels = [];
+
+            if (onlyOvisen) {
+                // Only vision models
+                displayModels = visionModelsData.map((m, i) => ({...m, _type: 'vision', _origIdx: i}));
+            } else if (mixed) {
+                // Both: LLM section + Vision section
+                displayModels = [
+                    ...modelsData.map((m, i) => ({...m, _type: 'llm', _origIdx: i})),
+                    ...visionModelsData.map((m, i) => ({...m, _type: 'vision', _origIdx: i})),
+                ];
+            } else {
+                // LLM only (default, or no products selected)
+                displayModels = modelsData.map((m, i) => ({...m, _type: 'llm', _origIdx: i}));
+            }
+
+            // Reset selection if current model type no longer valid
+            if (selectedModel !== null) {
+                const cur = selectedModel;
+                const allModels = getAllCurrentModels();
+                if (cur >= allModels.length) {
+                    selectedModel = null;
+                }
+            }
+
+            let html = '';
+
+            if (mixed) {
+                // Show LLM section header
+                html += `<div style="grid-column:1/-1;font-family:var(--font-pixel);font-size:8px;color:var(--pink);letter-spacing:.15em;padding:8px 0 4px;border-bottom:2px solid rgba(255,85,255,.3);margin-bottom:4px;">▶ LLM MODELS — OGENTI / PHIREN / PARHEN / MURHEN / SYRHEN</div>`;
+                modelsData.forEach((m, i) => {
+                    html += modelCardHtml(m, i, i === selectedModel);
+                });
+                // Vision section header
+                html += `<div style="grid-column:1/-1;font-family:var(--font-pixel);font-size:8px;color:var(--cyan);letter-spacing:.15em;padding:12px 0 4px;border-bottom:2px solid rgba(0,240,255,.3);margin-bottom:4px;">▶ VISION MODELS — OVISEN</div>`;
+                visionModelsData.forEach((m, i) => {
+                    const idx = modelsData.length + i;
+                    html += modelCardHtml(m, idx, idx === selectedModel);
+                });
+            } else {
+                displayModels.forEach((m, i) => {
+                    html += modelCardHtml(m, i, i === selectedModel);
+                });
+            }
+
+            grid.innerHTML = html;
+        }
+
+        function modelCardHtml(m, idx, isSelected) {
+            const sizeLabel = m.label || m.name.toUpperCase();
+            return `<div class="model-card${isSelected ? ' selected' : ''}" data-idx="${idx}" onclick="selectModel(${idx})">
+                <div class="model-name">${sizeLabel}</div>
+                <div class="model-detail">${m.vram} · ${m.speed}</div>
+                <div class="model-cost">${m.credits_per_episode} CR/EP</div>
+            </div>`;
+        }
+
+        function getAllCurrentModels() {
+            const hasOvisen = selectedProducts.includes('ovisen');
+            const hasLLM = selectedProducts.some(p => p !== 'ovisen');
+            const onlyOvisen = hasOvisen && !hasLLM;
+
+            if (onlyOvisen) return visionModelsData;
+            if (hasOvisen && hasLLM) return [...modelsData, ...visionModelsData];
+            return modelsData;
+        }
+
+        /* ══════════════════════════════════════
            MODEL SELECTION & ESTIMATE
            ══════════════════════════════════════ */
         function selectModel(idx) {
             selectedModel = idx;
             document.querySelectorAll('#modelGrid .model-card').forEach((c, i) => {
-                c.classList.toggle('selected', i === idx);
+                c.classList.toggle('selected', parseInt(c.dataset.idx) === idx);
             });
             updateEstimate();
         }
@@ -666,19 +748,20 @@
             document.getElementById('episodeValue').textContent = episodes;
 
             const prodCount = selectedProducts.length;
+            const allModels = getAllCurrentModels();
             document.getElementById('estProducts').textContent = prodCount > 0
                 ? selectedProducts.map(p => PRODUCTS[p].name).join(' + ')
                 : '—';
 
-            if (selectedModel === null || prodCount === 0) {
-                document.getElementById('estModel').textContent = selectedModel !== null ? modelsData[selectedModel].name.toUpperCase() : '—';
+            if (selectedModel === null || selectedModel >= allModels.length || prodCount === 0) {
+                document.getElementById('estModel').textContent = selectedModel !== null && selectedModel < allModels.length ? allModels[selectedModel].name.toUpperCase() : '—';
                 document.getElementById('estTotal').textContent = '—';
                 document.getElementById('launchBtn').disabled = true;
                 document.getElementById('launchBtn').textContent = 'SELECT PRODUCTS & MODEL';
                 return;
             }
 
-            const model = modelsData[selectedModel];
+            const model = allModels[selectedModel];
             const costPer = model.credits_per_episode * prodCount; // each product multiplies cost
             const total = costPer * episodes;
 
@@ -712,7 +795,8 @@
             hideMsg('msg');
 
             const episodes = parseInt(document.getElementById('episodeSlider').value);
-            const model = modelsData[selectedModel];
+            const allModels = getAllCurrentModels();
+            const model = allModels[selectedModel];
 
             try {
                 const job = await api('POST', '/api/training/launch', {
@@ -807,20 +891,17 @@
            ══════════════════════════════════════ */
         async function init() {
             try {
-                const [models, bal] = await Promise.all([
+                const [models, visionModels, bal] = await Promise.all([
                     api('GET', '/api/billing/models'),
+                    api('GET', '/api/billing/vision-models'),
                     api('GET', '/api/billing/balance')
                 ]);
                 modelsData = models;
+                visionModelsData = visionModels;
                 userBalance = bal.credits;
 
-                document.getElementById('modelGrid').innerHTML = models.map((m, i) => `
-                    <div class="model-card" data-idx="${i}" onclick="selectModel(${i})">
-                        <div class="model-name">${m.name.toUpperCase()}</div>
-                        <div class="model-detail">${m.name.includes('3b')?'3B':m.name.includes('7b')?'7B':m.name.includes('8b')?'8B':m.name.includes('14b')?'14B':'Custom'} params</div>
-                        <div class="model-cost">${m.credits_per_episode} CR/EP</div>
-                    </div>
-                `).join('');
+                // Render default model grid (LLM models)
+                renderModelGrid();
 
                 loadJobs();
             } catch (err) {

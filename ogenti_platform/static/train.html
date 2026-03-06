@@ -581,8 +581,19 @@
         let selectedTier = null;       // "starter" | "basic" | ... | "ultimate"
         let customDatasetId = null;    // from upload
         let modelsData = [];
-        let visionModelsData = [];
         let userBalance = 0;
+
+        // Fallback vision models — mirrors config.py OVISEN_MODEL_COSTS
+        const VISION_MODELS_FALLBACK = [
+            {name:"clip-vit-b32",   label:"CLIP ViT-B/32",   vram:"8GB",    speed:"Fast",   credits_per_episode:2},
+            {name:"clip-vit-l14",   label:"CLIP ViT-L/14",   vram:"16GB",   speed:"Medium", credits_per_episode:5},
+            {name:"siglip-so400m",  label:"SigLIP SO-400M",  vram:"12GB",   speed:"Medium", credits_per_episode:4},
+            {name:"dinov2-vit-b14", label:"DINOv2 ViT-B/14", vram:"10GB",   speed:"Fast",   credits_per_episode:3},
+            {name:"dinov2-vit-l14", label:"DINOv2 ViT-L/14", vram:"20GB",   speed:"Slow",   credits_per_episode:6},
+            {name:"eva02-vit-l",    label:"EVA-02 ViT-L",    vram:"24GB",   speed:"Slow",   credits_per_episode:7},
+            {name:"custom-vision",  label:"Custom (User)",   vram:"Varies", speed:"Varies", credits_per_episode:3},
+        ];
+        let visionModelsData = [...VISION_MODELS_FALLBACK];
 
         // Fallback dataset definitions — mirrors config.py PRODUCT_DATASETS
         const DATASET_FALLBACK = {
@@ -1090,7 +1101,7 @@
 
                 // New endpoints — non-fatal if not deployed yet
                 try { const ds = await api('GET', '/api/billing/datasets'); if (ds && ds.tiers) datasetsData = ds; } catch (e) { /* keep DATASET_FALLBACK */ }
-                try { const vm = await api('GET', '/api/billing/vision-models'); visionModelsData = Array.isArray(vm) ? vm : []; } catch (e) { visionModelsData = []; }
+                try { const vm = await api('GET', '/api/billing/vision-models'); visionModelsData = Array.isArray(vm) ? vm : [...VISION_MODELS_FALLBACK]; } catch (e) { /* keep VISION_MODELS_FALLBACK */ }
 
                 renderModelGrid();
                 loadJobs();

@@ -582,8 +582,58 @@
         let customDatasetId = null;    // from upload
         let modelsData = [];
         let visionModelsData = [];
-        let datasetsData = {};         // from /api/billing/datasets
         let userBalance = 0;
+
+        // Fallback dataset definitions — mirrors config.py PRODUCT_DATASETS
+        const DATASET_FALLBACK = {
+            tiers: ["starter","basic","advanced","premium","ultimate"],
+            products: {
+                ogenti: {
+                    starter:  {id:"ogenti-starter",  label:"Agent Protocol Sampler", tasks:500,    credits:0,    desc:"500 basic agent-to-agent compression tasks. Free, good for smoke tests."},
+                    basic:    {id:"ogenti-basic",     label:"Protocol Baseline",      tasks:2000,   credits:50,   desc:"2K multi-step instruction compression pairs."},
+                    advanced: {id:"ogenti-advanced",  label:"Protocol Pro",           tasks:10000,  credits:200,  desc:"10K curated tasks — cross-domain, edge cases, multi-turn."},
+                    premium:  {id:"ogenti-premium",   label:"Protocol Master",        tasks:50000,  credits:500,  desc:"50K expert-annotated tasks. 40+ domains."},
+                    ultimate: {id:"ogenti-ultimate",  label:"Protocol Nexus",         tasks:200000, credits:1500, desc:"200K tasks. The FULL protocol dataset."},
+                },
+                ovisen: {
+                    starter:  {id:"ovisen-starter",  label:"Scene Sampler",           tasks:1000,   credits:0,    desc:"1K image-to-token compression tasks."},
+                    basic:    {id:"ovisen-basic",     label:"Scene Baseline",          tasks:5000,   credits:80,   desc:"5K diverse scenes — indoor, outdoor, objects, people."},
+                    advanced: {id:"ovisen-advanced",  label:"Scene Pro",               tasks:25000,  credits:300,  desc:"25K scenes with attribute labels."},
+                    premium:  {id:"ovisen-premium",   label:"Scene Master",            tasks:100000, credits:800,  desc:"100K scenes. Dense captions + structured tokens."},
+                    ultimate: {id:"ovisen-ultimate",  label:"Scene Nexus",             tasks:500000, credits:2000, desc:"500K scenes. The FULL visual protocol dataset."},
+                },
+                phiren: {
+                    starter:  {id:"phiren-starter",  label:"Fact-Check Sampler",      tasks:800,    credits:0,    desc:"800 claim-verification pairs from TruthfulQA."},
+                    basic:    {id:"phiren-basic",     label:"Fact-Check Baseline",     tasks:5000,   credits:60,   desc:"5K tasks — hallucination detection, source grounding."},
+                    advanced: {id:"phiren-advanced",  label:"Fact-Check Pro",          tasks:25000,  credits:250,  desc:"25K from TruthfulQA + FEVER + HaluEval."},
+                    premium:  {id:"phiren-premium",   label:"Fact-Check Master",       tasks:100000, credits:600,  desc:"100K expert-annotated with source chains."},
+                    ultimate: {id:"phiren-ultimate",  label:"Fact-Check Nexus",        tasks:300000, credits:1800, desc:"300K tasks. If it hallucinates after this, it's hopeless."},
+                },
+                parhen: {
+                    starter:  {id:"parhen-starter",  label:"Honesty Sampler",         tasks:500,    credits:0,    desc:"500 sycophancy detection tasks."},
+                    basic:    {id:"parhen-basic",     label:"Honesty Baseline",        tasks:3000,   credits:60,   desc:"3K tasks — opinion flip, framing bias, manipulation."},
+                    advanced: {id:"parhen-advanced",  label:"Honesty Pro",             tasks:15000,  credits:250,  desc:"15K curated anti-sycophancy tasks."},
+                    premium:  {id:"parhen-premium",   label:"Honesty Master",          tasks:50000,  credits:600,  desc:"50K expert-crafted manipulation patterns."},
+                    ultimate: {id:"parhen-ultimate",  label:"Honesty Nexus",           tasks:150000, credits:1500, desc:"150K tasks. Your AI will say NO to your face."},
+                },
+                murhen: {
+                    starter:  {id:"murhen-starter",  label:"Recall Sampler",          tasks:1000,   credits:0,    desc:"1K multi-needle retrieval tasks."},
+                    basic:    {id:"murhen-basic",     label:"Recall Baseline",         tasks:5000,   credits:70,   desc:"5K tasks — mid-position recall, distractor injection."},
+                    advanced: {id:"murhen-advanced",  label:"Recall Pro",              tasks:20000,  credits:280,  desc:"20K tasks. 32K context, multi-needle synthesis."},
+                    premium:  {id:"murhen-premium",   label:"Recall Master",           tasks:80000,  credits:700,  desc:"80K tasks. Position-shuffle across 64K context."},
+                    ultimate: {id:"murhen-ultimate",  label:"Recall Nexus",            tasks:250000, credits:1800, desc:"250K tasks. Your AI remembers EVERYTHING."},
+                },
+                syrhen: {
+                    starter:  {id:"syrhen-starter",  label:"Surgery Sampler",         tasks:500,    credits:0,    desc:"500 blame-attribution + repair tasks."},
+                    basic:    {id:"syrhen-basic",     label:"Surgery Baseline",        tasks:3000,   credits:80,   desc:"3K tasks — reasoning errors, knowledge gaps, coding failures."},
+                    advanced: {id:"syrhen-advanced",  label:"Surgery Pro",             tasks:15000,  credits:300,  desc:"15K multi-round surgery targets. Masked DPO ready."},
+                    premium:  {id:"syrhen-premium",   label:"Surgery Master",          tasks:50000,  credits:800,  desc:"50K expert-annotated neuron blame maps."},
+                    ultimate: {id:"syrhen-ultimate",  label:"Surgery Nexus",           tasks:200000, credits:2000, desc:"200K tasks. Find EVERY stupid neuron. Replace them ALL."},
+                },
+            }
+        };
+
+        let datasetsData = DATASET_FALLBACK;  // pre-loaded; overwritten by API if available
 
         const TIER_COLORS = {
             starter:  'var(--text-dim)',
@@ -1039,7 +1089,7 @@
                 userBalance = bal.credits;
 
                 // New endpoints — non-fatal if not deployed yet
-                try { datasetsData = await api('GET', '/api/billing/datasets'); } catch (e) { datasetsData = {}; }
+                try { const ds = await api('GET', '/api/billing/datasets'); if (ds && ds.tiers) datasetsData = ds; } catch (e) { /* keep DATASET_FALLBACK */ }
                 try { const vm = await api('GET', '/api/billing/vision-models'); visionModelsData = Array.isArray(vm) ? vm : []; } catch (e) { visionModelsData = []; }
 
                 renderModelGrid();

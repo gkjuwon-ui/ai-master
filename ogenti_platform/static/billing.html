@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SER1ES — BILLING</title>
+    <title>SERIES — BILLING</title>
     <link rel="stylesheet" href="/platform/style.css">
 </head>
 <body class="crt" data-page="billing">
@@ -36,6 +36,13 @@
             <div class="pricing-grid" id="packagesGrid">
                 <!-- Filled by JS -->
             </div>
+        </div>
+
+        <!-- Card input -->
+        <div class="card" id="cardSection" style="display:none;">
+            <div class="card-title">PAYMENT METHOD</div>
+            <div id="card-element" style="background:#111;border:2px solid #333;padding:14px;margin-bottom:8px;"></div>
+            <div id="card-errors" style="color:var(--red);font-size:10px;min-height:16px;"></div>
         </div>
 
         <!-- Purchase button -->
@@ -77,7 +84,7 @@
         </div>
     </div>
 
-    <div class="footer">SER1ES © 2025 — STRIPE TEST MODE ACTIVE</div>
+    <div class="footer">SERIES © 2025 — STRIPE TEST MODE ACTIVE</div>
 
     <script src="https://js.stripe.com/v3/"></script>
     <script src="/platform/app.js"></script>
@@ -85,6 +92,30 @@
         if (!Auth.requireAuth()) {}
 
         let selectedPackage = null;
+        let stripeInstance = null;
+        let cardElement = null;
+
+        async function initStripe() {
+            try {
+                const keyData = await api('GET', '/api/billing/stripe-key');
+                stripeInstance = Stripe(keyData.publishable_key);
+                const elements = stripeInstance.elements();
+                cardElement = elements.create('card', {
+                    style: {
+                        base: {
+                            color: '#fff',
+                            fontFamily: '"Courier New", monospace',
+                            fontSize: '14px',
+                            '::placeholder': { color: '#666' },
+                        },
+                        invalid: { color: '#ff5555' },
+                    },
+                });
+                cardElement.mount('#card-element');
+            } catch (e) {
+                console.warn('Stripe init failed:', e);
+            }
+        }
 
         async function loadBilling() {
             try {
@@ -141,20 +172,48 @@
             const btn = document.getElementById('buyBtn');
             btn.disabled = false;
             btn.textContent = `BUY ${formatCredits(pkg.credits)} CREDITS — $${(pkg.price_cents / 100).toFixed(0)}`;
+            document.getElementById('cardSection').style.display = '';
         }
 
         async function handlePurchase() {
-            if (selectedPackage === null) return;
+            if (selectedPackage === null || !stripeInstance || !cardElement) return;
             const pkg = window._packages[selectedPackage];
             const btn = document.getElementById('buyBtn');
             btn.disabled = true;
             btn.textContent = 'PROCESSING...';
             hideMsg('msg');
+            document.getElementById('card-errors').textContent = '';
 
             try {
-                const data = await api('POST', '/api/billing/purchase', {
+                // Step 1: Create PaymentIntent on backend
+                const intentData = await api('POST', '/api/billing/purchase', {
                     package_id: pkg.id
                 });
+
+                if (!intentData.client_secret) {
+                    throw new Error('Failed to create payment — no client_secret');
+                }
+
+                // Step 2: Confirm card payment with Stripe
+                const { error, paymentIntent } = await stripeInstance.confirmCardPayment(
+                    intentData.client_secret,
+                    { payment_method: { card: cardElement } }
+                );
+
+                if (error) {
+                    document.getElementById('card-errors').textContent = error.message;
+                    throw new Error(error.message);
+                }
+
+                if (paymentIntent.status !== 'succeeded') {
+                    throw new Error('Payment not completed: ' + paymentIntent.status);
+                }
+
+                // Step 3: Confirm on backend → credits added
+                const data = await api('POST', '/api/billing/confirm', {
+                    payment_intent_id: intentData.payment_intent_id
+                });
+
                 showMsg('msg',
                     `${formatCredits(data.credits_added)} CREDITS ADDED! BALANCE: ${formatCredits(data.new_balance)}` +
                     (data.tier_upgraded ? ` — TIER UPGRADED TO ${data.new_tier.toUpperCase()}!` : ''),
@@ -174,6 +233,7 @@
         }
 
         loadBilling();
+        initStripe();
     </script>
 </body>
 </html>

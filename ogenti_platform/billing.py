@@ -34,6 +34,14 @@ class EstimateRequest(BaseModel):
 
 
 # ── Routes ──
+@router.get("/stripe-key")
+async def get_stripe_key():
+    """Return Stripe publishable key for frontend"""
+    import os
+    pk = os.getenv("STRIPE_PUBLISHABLE_KEY", STRIPE_PUBLISHABLE_KEY)
+    return {"publishable_key": pk}
+
+
 @router.get("/packages")
 async def list_packages():
     """List available credit packages"""

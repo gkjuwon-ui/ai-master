@@ -34,19 +34,11 @@
             position: relative;
             box-shadow: 8px 8px 0 0 #333;
         }
-        .product-card:hover {
-            border-color: var(--product-color, var(--cyan));
+        .product-card:hover, .product-card.selected {
             transform: translate(-2px, -2px);
-            box-shadow: 10px 10px 0 0 #333;
-        }
-        .product-card:active {
-            transform: translate(2px, 2px) !important;
-            box-shadow: 4px 4px 0 0 #333 !important;
+            box-shadow: 8px 8px 0 0 #333;
         }
         .product-card.selected {
-            border-color: var(--purple);
-            transform: translate(2px, 2px);
-            box-shadow: 4px 4px 0 0 #333;
             background: var(--bg3);
         }
         .product-name {
@@ -1042,21 +1034,16 @@
            ══════════════════════════════════════ */
         async function init() {
             try {
-                const [models, bal, datasets] = await Promise.all([
+                const [models, bal] = await Promise.all([
                     api('GET', '/api/billing/models'),
-                    api('GET', '/api/billing/balance'),
-                    api('GET', '/api/billing/datasets')
+                    api('GET', '/api/billing/balance')
                 ]);
                 modelsData = models;
                 userBalance = bal.credits;
-                datasetsData = datasets;
 
-                // Vision models — non-fatal if not deployed yet
-                try {
-                    visionModelsData = await api('GET', '/api/billing/vision-models');
-                } catch (e) {
-                    visionModelsData = {};
-                }
+                // New endpoints — non-fatal if not deployed yet
+                try { datasetsData = await api('GET', '/api/billing/datasets'); } catch (e) { datasetsData = null; }
+                try { visionModelsData = await api('GET', '/api/billing/vision-models'); } catch (e) { visionModelsData = {}; }
 
                 renderModelGrid();
                 loadJobs();

@@ -790,7 +790,7 @@ tr:hover td { background: var(--bg3); }
     background: #000 !important;
 }
 
-.card:hover, .pricing-card:hover, .model-card:hover {
+.card:hover, .pricing-card:hover, .model-card:hover, .product-card:hover {
     box-shadow: 8px 8px 0 0 #333;
 }
 
@@ -820,19 +820,7 @@ tr:hover td { background: var(--bg3); }
     background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.8) 100%);
 }
 
-.card, .stat-item, .pricing-card, .model-card, .estimate-box, .console-wrapper {
-    background: #000 !important;
-    border: 4px solid #fff !important;
-    box-shadow: 8px 8px 0 0 #333 !important;
-}
-
-.auth-box {
-    background: #0000aa !important;
-    border: 4px solid #fff !important;
-    box-shadow: 8px 8px 0 0 #333 !important;
-}
-
-.card, .stat-item, .pricing-card, .model-card, .estimate-box, .console-wrapper {
+.card, .stat-item, .pricing-card, .model-card, .product-card, .estimate-box, .console-wrapper {
     background: #000 !important;
     border: 4px solid #fff !important;
     box-shadow: 8px 8px 0 0 #333 !important;
@@ -845,7 +833,7 @@ tr:hover td { background: var(--bg3); }
 }
 
 /* ═══════════════════════════════════════════════════
-   PHIREN (P-Ser1es) Accent Styles
+   PHIREN (P-Series) Accent Styles
    ═══════════════════════════════════════════════════ */
 
 .phiren-accent { color: var(--green) !important; }
@@ -917,7 +905,7 @@ tr:hover td { background: var(--bg3); }
 }
 
 /* ═══════════════════════════════════════════════════
-   PARHEN (P-Ser1es) Accent Styles — Anti-Sycophancy
+   PARHEN (P-Series) Accent Styles — Anti-Sycophancy
    Color: Amber / Gold (#ffaa55)
    ═══════════════════════════════════════════════════ */
 
@@ -968,7 +956,7 @@ tr:hover td { background: var(--bg3); }
 }
 
 /* ═══════════════════════════════════════════════════
-   MURHEN (M-Ser1es) Accent Styles — Lost-in-Middle
+   MURHEN (M-Series) Accent Styles — Lost-in-Middle
    Color: Yellow (#ffff55)
    ═══════════════════════════════════════════════════ */
 

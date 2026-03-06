@@ -14,6 +14,7 @@ import secrets
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
+from typing import Optional, List
 from sqlalchemy.orm import Session
 
 from .database import get_db, User, TrainingJob, Transaction, Adapter
@@ -21,6 +22,7 @@ from .auth import get_current_user
 from .config import MODEL_COSTS, DATASETS, TIERS, INFERENCE_COSTS, RUNPOD_WEBHOOK_TOKEN
 from .runpod_client import dispatch_training_job, check_job_status, cancel_job, process_completed_job
 
+import json
 logger = logging.getLogger("ogenti.training")
 
 router = APIRouter(prefix="/api/training", tags=["training"])
@@ -28,7 +30,8 @@ router = APIRouter(prefix="/api/training", tags=["training"])
 
 class LaunchRequest(BaseModel):
     model: str
-    dataset: str
+    dataset: str = "ogenti-default"
+    products: Optional[List[str]] = None
     episodes: int
 
 
@@ -87,10 +90,12 @@ async def launch_training(req: LaunchRequest, request: Request, user: User = Dep
 
     # Create job
     dash_key = secrets.token_hex(6).upper()  # 12-char hex key like "A3F2B1C9E4D7"
+    products_list = req.products or ["ogenti"]
     job = TrainingJob(
         user_id=user.id,
         model=req.model,
         dataset=req.dataset,
+        products=json.dumps(products_list),
         episodes=req.episodes,
         credits_used=credits_needed,
         credits_estimated=credits_needed,
@@ -130,6 +135,7 @@ async def launch_training(req: LaunchRequest, request: Request, user: User = Dep
             "status": "queued",
             "model": model_info["label"],
             "dataset": dataset["label"],
+            "products": products_list,
             "episodes": req.episodes,
             "credits_used": credits_needed,
             "remaining_credits": user.credits,
@@ -150,6 +156,7 @@ async def launch_training(req: LaunchRequest, request: Request, user: User = Dep
         "status": "dispatched",
         "model": model_info["label"],
         "dataset": dataset["label"],
+        "products": products_list,
         "episodes": req.episodes,
         "credits_used": credits_needed,
         "remaining_credits": user.credits,
@@ -209,6 +216,7 @@ async def list_jobs(user: User = Depends(get_current_user), db: Session = Depend
             "model_label": model_labels.get(j.model, j.model),
             "dataset": j.dataset,
             "dataset_label": dataset_labels.get(j.dataset, j.dataset),
+            "products": json.loads(j.products) if j.products else ["ogenti"],
             "episodes": j.episodes,
             "current_episode": j.current_episode,
             "current_phase": j.current_phase,
@@ -230,6 +238,7 @@ async def list_jobs(user: User = Depends(get_current_user), db: Session = Depend
 
 
 @router.get("/job/{job_id}")
+@router.get("/jobs/{job_id}")
 async def get_job(job_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Get single job details — polls RunPod if active."""
     job = db.query(TrainingJob).filter(TrainingJob.id == job_id, TrainingJob.user_id == user.id).first()
@@ -268,6 +277,7 @@ async def get_job(job_id: int, user: User = Depends(get_current_user), db: Sessi
         "model": job.model,
         "model_label": model_info.get("label", job.model),
         "dataset": job.dataset,
+        "products": json.loads(job.products) if job.products else ["ogenti"],
         "episodes": job.episodes,
         "current_episode": job.current_episode,
         "current_phase": job.current_phase,
@@ -529,6 +539,48 @@ async def get_dashboard(key: str, db: Session = Depends(get_db)):
         "budget": round(budget, 1),
         "adapter": adapter_info,
         "error": job.runpod_error,
+        "created_at": job.created_at.isoformat() if job.created_at else None,
+        "started_at": job.started_at.isoformat() if job.started_at else None,
+        "completed_at": job.completed_at.isoformat() if job.completed_at else None,
+    }
+
+
+@router.get("/jobs/by-key/{key}")
+async def get_job_by_key(key: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Look up a training job by dashboard key."""
+    job = db.query(TrainingJob).filter(
+        TrainingJob.dashboard_key == key.upper(),
+        TrainingJob.user_id == user.id
+    ).first()
+    if not job:
+        raise HTTPException(404, "Job not found for this key")
+
+    if job.runpod_request_id and job.status in ("dispatched", "running"):
+        try:
+            rp = check_job_status(job.runpod_request_id)
+            _sync_job_from_runpod(job, rp, db)
+            db.commit()
+        except Exception as e:
+            logger.warning(f"Failed to sync job {job.id}: {e}")
+
+    model_info = MODEL_COSTS.get(job.model, {})
+    progress = (job.current_episode / job.episodes * 100) if job.episodes > 0 else 0
+
+    return {
+        "id": job.id,
+        "status": job.status,
+        "model": job.model,
+        "model_label": model_info.get("label", job.model),
+        "dataset": job.dataset,
+        "products": json.loads(job.products) if job.products else ["ogenti"],
+        "episodes": job.episodes,
+        "current_episode": job.current_episode,
+        "current_phase": job.current_phase,
+        "progress": round(progress, 1),
+        "accuracy": job.accuracy,
+        "compression": job.compression,
+        "credits_used": job.credits_used,
+        "dashboard_key": job.dashboard_key,
         "created_at": job.created_at.isoformat() if job.created_at else None,
         "started_at": job.started_at.isoformat() if job.started_at else None,
         "completed_at": job.completed_at.isoformat() if job.completed_at else None,

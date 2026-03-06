@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 import uvicorn
 
-from .database import init_db, SessionLocal, TrainingJob, OVisenTrainingJob, PhirenTrainingJob, ParhenTrainingJob, MurhenTrainingJob
+from .database import init_db, SessionLocal, TrainingJob, OVisenTrainingJob, PhirenTrainingJob, ParhenTrainingJob, MurhenTrainingJob, SseriesTrainingJob
 from .auth import router as auth_router
 from .billing import router as billing_router
 from .api_keys import router as keys_router
@@ -22,19 +22,22 @@ from .parhen_training import router as parhen_training_router, _sync_parhen_from
 from .parhen_adapter import router as parhen_adapter_router
 from .murhen_training import router as murhen_training_router, _sync_murhen_from_runpod
 from .murhen_adapter import router as murhen_adapter_router
+from .sseries_training import router as sseries_training_router, _sync_sseries_from_runpod
+from .sseries_adapter import router as sseries_adapter_router
 from .runpod_client import check_job_status
 from .runpod_ovisen_client import check_ovisen_status
 from .runpod_phiren_client import check_phiren_status
 from .runpod_parhen_client import check_parhen_status
 from .runpod_murhen_client import check_murhen_status
+from .runpod_sseries_client import check_sseries_status
 
 logger = logging.getLogger("ser1es.server")
 
 # ── App ──
 app = FastAPI(
     title="Ser1es Platform",
-    description="AI Adapter Studio — O-Ser1es (OGENTI Text + OVISEN Image) · P-Ser1es (PHIREN Hallucination Guard + PARHEN Anti-Sycophancy) · M-Ser1es (MURHEN Position-Agnostic Recall)",
-    version="0.4.0",
+    description="AI Adapter Studio — O-Ser1es (OGENTI Text + OVISEN Image) · P-Ser1es (PHIREN Hallucination Guard + PARHEN Anti-Sycophancy) · M-Ser1es (MURHEN Position-Agnostic Recall) · S-Ser1es (Neural Surgery Engine)",
+    version="0.5.0",
 )
 
 # ── CORS ──
@@ -64,6 +67,9 @@ app.include_router(parhen_adapter_router)
 # MURHEN routes
 app.include_router(murhen_training_router)
 app.include_router(murhen_adapter_router)
+# S-SER1ES routes
+app.include_router(sseries_training_router)
+app.include_router(sseries_adapter_router)
 
 # ── Static files ──
 STATIC_DIR = Path(__file__).parent / "static"
@@ -78,7 +84,7 @@ if WEB_DIR.exists():
 # ── Health ──
 @app.get("/api/health")
 async def health():
-    return {"status": "ok", "service": "ser1es-platform", "version": "0.4.0", "products": {"o-ser1es": ["ogenti", "ovisen"], "p-ser1es": ["phiren", "parhen"], "m-ser1es": ["murhen"]}}
+    return {"status": "ok", "service": "ser1es-platform", "version": "0.5.0", "products": {"o-ser1es": ["ogenti", "ovisen"], "p-ser1es": ["phiren", "parhen"], "m-ser1es": ["murhen"], "s-ser1es": ["syrhen"]}}
 
 
 # ── Root redirect ──
@@ -169,6 +175,20 @@ async def _poll_runpod_jobs():
                 except Exception as e:
                     logger.warning(f"Poller: failed to sync MURHEN job {job.id}: {e}")
 
+            # Poll S-SER1ES jobs
+            sseries_jobs = (
+                db.query(SseriesTrainingJob)
+                .filter(SseriesTrainingJob.status.in_(["dispatched", "running"]))
+                .filter(SseriesTrainingJob.runpod_request_id.isnot(None))
+                .all()
+            )
+            for job in sseries_jobs:
+                try:
+                    rp = check_sseries_status(job.runpod_request_id)
+                    _sync_sseries_from_runpod(job, rp, db)
+                except Exception as e:
+                    logger.warning(f"Poller: failed to sync S-SER1ES job {job.id}: {e}")
+
             db.commit()
             db.close()
         except Exception as e:
@@ -184,6 +204,7 @@ async def startup():
     print("◆ O-Ser1es: OGENTI (text) + OVISEN (image)")
     print("◆ P-Ser1es: PHIREN (hallucination guard) + PARHEN (anti-sycophancy)")
     print("◆ M-Ser1es: MURHEN (position-agnostic recall)")
+    print("◆ S-Ser1es: SYRHEN (Neural Surgery Engine — Masked DPO)")
     print("◆ RunPod job poller started (30s interval)")
     print("Dashboard: http://localhost:8080/platform/")
 

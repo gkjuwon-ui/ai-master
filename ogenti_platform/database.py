@@ -38,6 +38,9 @@ class User(Base):
     # MURHEN relationships
     murhen_training_jobs = relationship("MurhenTrainingJob", back_populates="user", cascade="all, delete-orphan")
     murhen_adapters = relationship("MurhenAdapter", back_populates="user", cascade="all, delete-orphan")
+    # S-SER1ES relationships
+    sseries_training_jobs = relationship("SseriesTrainingJob", back_populates="user", cascade="all, delete-orphan")
+    sseries_adapters = relationship("SseriesAdapter", back_populates="user", cascade="all, delete-orphan")
 
 
 class VerificationCode(Base):
@@ -88,6 +91,7 @@ class TrainingJob(Base):
     status = Column(String(20), default="queued")  # queued / running / completed / failed / cancelled
     model = Column(String(50), nullable=False)
     dataset = Column(String(50), nullable=False)
+    products = Column(Text, nullable=True)  # JSON list of product IDs e.g. '["ogenti","phiren"]'
     episodes = Column(Integer, nullable=False)
     credits_used = Column(Integer, default=0)
     credits_estimated = Column(Integer, default=0)
@@ -328,6 +332,57 @@ class MurhenAdapter(Base):
 
     user = relationship("User", back_populates="murhen_adapters")
     training_job = relationship("MurhenTrainingJob", backref="adapter")
+
+
+# ══════════════════════════════════════════════════════════════
+# S-SER1ES — Neural Surgery Engine (Selective RL / Masked DPO)
+# ══════════════════════════════════════════════════════════════
+
+class SseriesTrainingJob(Base):
+    """S-SER1ES training job — neural surgery via Masked DPO."""
+    __tablename__ = "sseries_training_jobs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    status = Column(String(20), default="queued")
+    model = Column(String(50), nullable=False)
+    dataset = Column(String(50), nullable=False)
+    episodes = Column(Integer, nullable=False)
+    credits_used = Column(Integer, default=0)
+    credits_estimated = Column(Integer, default=0)
+    current_phase = Column(String(50), default="queued")
+    current_episode = Column(Integer, default=0)
+    neuron_efficiency = Column(Float, default=0.0)
+    surgery_precision = Column(Float, default=0.0)
+    adapter_url = Column(String(500), nullable=True)
+    dashboard_key = Column(String(16), unique=True, nullable=True, index=True)
+    runpod_request_id = Column(String(100), nullable=True)
+    runpod_error = Column(Text, nullable=True)
+    started_at = Column(DateTime, nullable=True)
+    completed_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    user = relationship("User", back_populates="sseries_training_jobs")
+
+
+class SseriesAdapter(Base):
+    """Encrypted .srs adapter — neural surgery adapter."""
+    __tablename__ = "sseries_adapters"
+
+    id = Column(String(36), primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    name = Column(String(200), nullable=False)
+    base_model = Column(String(50), nullable=False)
+    encryption_key = Column(LargeBinary(32), nullable=False)
+    training_job_id = Column(Integer, ForeignKey("sseries_training_jobs.id"), nullable=True)
+    file_size = Column(Integer, default=0)
+    file_path = Column(String(500), nullable=True)
+    status = Column(String(20), default="active")
+    inference_count = Column(Integer, default=0)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    user = relationship("User", back_populates="sseries_adapters")
+    training_job = relationship("SseriesTrainingJob", backref="adapter")
 
 
 # ── Engine & Session ──

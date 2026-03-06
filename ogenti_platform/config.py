@@ -374,3 +374,67 @@ MRH_STORAGE_DIR = os.getenv("MRH_STORAGE_DIR", _default_mrh)
 # ── RunPod MURHEN Endpoint ──
 RUNPOD_MURHEN_ENDPOINT_ID = os.getenv("RUNPOD_MURHEN_ENDPOINT_ID", "")
 
+# ════════════════════════════════════════════════════════════════
+# S-SER1ES — Neural Surgery Engine (Selective RL / Masked DPO)
+# ════════════════════════════════════════════════════════════════
+
+# ── S-SER1ES Model Pricing (credits per episode — surgery is expensive) ──
+SSERIES_MODEL_COSTS = {
+    "qwen2.5-3b":   {"credits_per_episode": 3,  "label": "Qwen2.5-3B",   "vram": "8GB",  "speed": "Fast"},
+    "qwen2.5-7b":   {"credits_per_episode": 6,  "label": "Qwen2.5-7B",   "vram": "16GB", "speed": "Medium"},
+    "qwen2.5-14b":  {"credits_per_episode": 12, "label": "Qwen2.5-14B",  "vram": "32GB", "speed": "Slow"},
+    "llama3.2-3b":  {"credits_per_episode": 3,  "label": "LLaMA-3.2-3B", "vram": "8GB",  "speed": "Fast"},
+    "llama3.2-8b":  {"credits_per_episode": 8,  "label": "LLaMA-3.2-8B", "vram": "24GB", "speed": "Medium"},
+    "mistral-7b":   {"credits_per_episode": 6,  "label": "Mistral-7B",   "vram": "16GB", "speed": "Medium"},
+    "custom":       {"credits_per_episode": 4,  "label": "Custom (User)", "vram": "Varies","speed": "Varies"},
+}
+
+# ── S-SER1ES Inference Pricing (surgery analysis is compute-heavy) ──
+SSERIES_INFERENCE_COSTS = {
+    "qwen2.5-3b":   {"credits_per_call": 2,  "label": "Qwen2.5-3B"},
+    "qwen2.5-7b":   {"credits_per_call": 3,  "label": "Qwen2.5-7B"},
+    "qwen2.5-14b":  {"credits_per_call": 5,  "label": "Qwen2.5-14B"},
+    "llama3.2-3b":  {"credits_per_call": 2,  "label": "LLaMA-3.2-3B"},
+    "llama3.2-8b":  {"credits_per_call": 4,  "label": "LLaMA-3.2-8B"},
+    "mistral-7b":   {"credits_per_call": 3,  "label": "Mistral-7B"},
+    "custom":       {"credits_per_call": 2,  "label": "Custom"},
+}
+
+# ── S-SER1ES Datasets (blame attribution + surgery-focused) ──
+SSERIES_DATASETS = [
+    {"id": "blame-attribution",   "label": "Blame Attribution (20K)",              "tasks": 20_000, "categories": 15},
+    {"id": "reasoning-surgery",   "label": "Reasoning Surgery (15K)",              "tasks": 15_000, "categories": 12},
+    {"id": "coding-surgery",      "label": "Coding Surgery (10K)",                 "tasks": 10_000, "categories": 8},
+    {"id": "knowledge-surgery",   "label": "Knowledge Surgery (12K)",              "tasks": 12_000, "categories": 10},
+    {"id": "sseries-combined",    "label": "S-SER1ES Combined (55K curated)",      "tasks": 55_000, "categories": 30},
+    {"id": "custom-upload",       "label": "Custom Upload (JSONL)",                "tasks": 0,      "categories": 0},
+]
+
+# ── S-SER1ES Dataset → source mapping ──
+SSERIES_DATASET_MAP = {
+    "blame-attribution":  {"type": "local", "path": "data/blame_attribution.jsonl"},
+    "reasoning-surgery":  {"type": "local", "path": "data/reasoning_surgery.jsonl"},
+    "coding-surgery":     {"type": "local", "path": "data/coding_surgery.jsonl"},
+    "knowledge-surgery":  {"type": "local", "path": "data/knowledge_surgery.jsonl"},
+    "sseries-combined":   {"type": "local", "path": "data/sseries_combined.jsonl"},
+    "custom-upload":      {"type": "upload"},
+}
+
+# ── S-SER1ES GPU mapping (surgery needs more VRAM for blame mapping) ──
+SSERIES_MODEL_GPU_MAP = {
+    "qwen2.5-3b":   {"gpu": "NVIDIA RTX A4000", "gpu_count": 1},
+    "qwen2.5-7b":   {"gpu": "NVIDIA RTX A5000", "gpu_count": 1},
+    "qwen2.5-14b":  {"gpu": "NVIDIA A100-SXM4-80GB", "gpu_count": 1},
+    "llama3.2-3b":  {"gpu": "NVIDIA RTX A4000", "gpu_count": 1},
+    "llama3.2-8b":  {"gpu": "NVIDIA RTX A5000", "gpu_count": 1},
+    "mistral-7b":   {"gpu": "NVIDIA RTX A5000", "gpu_count": 1},
+    "custom":       {"gpu": "NVIDIA RTX A5000", "gpu_count": 1},
+}
+
+# ── SRS Storage ──
+_default_srs = "/data/srs_adapters" if _ON_RAILWAY else "./srs_adapters"
+SRS_STORAGE_DIR = os.getenv("SRS_STORAGE_DIR", _default_srs)
+
+# ── RunPod S-SER1ES Endpoint ──
+RUNPOD_SSERIES_ENDPOINT_ID = os.getenv("RUNPOD_SSERIES_ENDPOINT_ID", "")
+

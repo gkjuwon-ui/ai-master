@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SER1ES ▸▸SSERIES TRAINING</title>
+    <link rel="stylesheet" href="/platform/style.css">
+</head>
+<body class="crt" data-page="sseries_training">
+    <nav id="main-nav" class="nav"></nav>
+
+    <div class="page-wrap">
+        <div class="page-title" style="color:var(--red)">S-SER1ES TRAINING</div>
+        <div class="page-sub">NEURAL SURGERY ENGINE — FIND DUMB NEURONS AND FIX THEM VIA MASKED DPO</div>
+
+        <div id="msg" class="msg"></div>
+
+        <!-- Step 1: Model -->
+        <div class="card">
+            <div class="card-title">▸▸SELECT BASE MODEL</div>
+            <p style="font-size:10px;color:var(--text-dim);margin-bottom:12px;">
+                CHOOSE THE MODEL TO OPERATE ON. S-SER1ES WILL MAP BLAME ACROSS ALL PARAMETERS, IDENTIFY THE TOP 1-5% OF "DUMB NEURONS", AND SURGICALLY RETRAIN ONLY THOSE VIA MASKED DPO.
+            </p>
+            <div class="model-grid" id="modelGrid">
+            </div>
+        </div>
+
+        <!-- Step 2: Dataset -->
+        <div class="card">
+            <div class="card-title">▸▸SELECT SURGERY DATASET</div>
+            <p style="font-size:10px;color:var(--text-dim);margin-bottom:12px;">
+                DATASETS FOR BLAME ATTRIBUTION AND SELECTIVE REINFORCEMENT LEARNING. EACH SAMPLE INCLUDES A WRONG ANSWER (BLAME TARGET) AND A CORRECT ANSWER (DPO CHOSEN).
+            </p>
+            <div class="model-grid" id="datasetGrid">
+            </div>
+        </div>
+
+        <!-- Step 3: Episodes -->
+        <div class="card">
+            <div class="card-title">▸▸SET SURGERY EPISODES</div>
+            <p style="font-size:10px;color:var(--text-dim);margin-bottom:12px;">
+                MORE EPISODES = MORE SURGERY ITERATIONS. EACH EPISODE: BLAME MAP → SELECT NEURONS → MASKED DPO → VERIFY. TYPICAL: 50-200 FOR TARGETED SURGERY.
+            </p>
+            <div class="range-wrap">
+                <input type="range" id="episodeSlider" class="range-input" min="10" max="500" value="100" step="10" oninput="updateEstimate()">
+                <div class="range-labels">
+                    <span>10</span>
+                    <span id="episodeValue" style="color:var(--red);font-size:11px;">100</span>
+                    <span>500</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cost estimate -->
+        <div class="estimate-box" id="estimateBox">
+            <div style="font-size:9px;color:var(--red);margin-bottom:12px;">
+                SURGERY COST ESTIMATE
+            </div>
+            <div class="estimate-row">
+                <span>BASE MODEL</span>
+                <span id="estModel" style="color:var(--red)">—</span>
+            </div>
+            <div class="estimate-row">
+                <span>DATASET</span>
+                <span id="estDataset" style="color:var(--pink)">—</span>
+            </div>
+            <div class="estimate-row">
+                <span>EPISODES</span>
+                <span id="estEpisodes">—</span>
+            </div>
+            <div class="estimate-row">
+                <span>COST PER EPISODE</span>
+                <span id="estCostPer">—</span>
+            </div>
+            <div class="estimate-row estimate-total">
+                <span>TOTAL CREDITS</span>
+                <span id="estTotal">—</span>
+            </div>
+            <div class="estimate-row" style="margin-top:8px">
+                <span style="color:var(--text-dim)">YOUR BALANCE</span>
+                <span id="estBalance" style="color:var(--green)">—</span>
+            </div>
+            <div id="estWarning" style="display:none;margin-top:8px;font-size:9px;color:var(--red);">
+                ⚠ NOT ENOUGH CREDITS — <a href="/platform/billing.html" style="color:var(--yellow)">BUY MORE →</a>
+            </div>
+        </div>
+
+        <!-- Launch button -->
+        <button id="launchBtn" onclick="handleLaunch()" class="btn btn-primary" disabled>
+            CONFIGURE YOUR SURGERY ABOVE
+        </button>
+
+        <!-- Active jobs -->
+        <div class="card" style="margin-top:32px">
+            <div class="card-title">YOUR S-SER1ES JOBS</div>
+            <div id="jobsList">
+                <div style="text-align:center;padding:20px;color:var(--text-dim);font-size:10px;">LOADING...</div>
+            </div>
+        </div>
+
+        <!-- Surgery Pipeline Visual -->
+        <div class="card" style="margin-top:24px">
+            <div class="card-title" style="color:var(--red)">NEURAL SURGERY PIPELINE</div>
+            <div style="font-size:10px;line-height:2;">
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+                    <div style="border:2px solid var(--red);padding:12px;">
+                        <div style="color:var(--red);font-size:9px;margin-bottom:8px;">
+                            ① BLAME MAPPING
+                        </div>
+                        <div style="color:var(--text-dim);font-size:9px;">
+                            GRADIENT ANALYSIS (40%) + ACTIVATION PATTERNS (30%) + CONSISTENCY CHECKS (30%).
+                            ASSIGNS A BLAME SCORE TO EVERY PARAMETER.
+                        </div>
+                    </div>
+                    <div style="border:2px solid var(--pink);padding:12px;">
+                        <div style="color:var(--pink);font-size:9px;margin-bottom:8px;">
+                            ② NEURON SELECTION
+                        </div>
+                        <div style="color:var(--text-dim);font-size:9px;">
+                            TOP 1-5% OF BLAMED NEURONS SELECTED FOR SURGERY.
+                            ALL OTHER PARAMS ARE FROZEN (GRADIENT MASK).
+                        </div>
+                    </div>
+                    <div style="border:2px solid var(--green);padding:12px;">
+                        <div style="color:var(--green);font-size:9px;margin-bottom:8px;">
+                            ③ MASKED DPO
+                        </div>
+                        <div style="color:var(--text-dim);font-size:9px;">
+                            SELECTIVE RL — ONLY CHOSEN NEURONS ARE UPDATED.
+                            GPT-4O QUALITY AS TEACHER SIGNAL.
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-top:12px;padding:8px;border:1px solid var(--text-dim);text-align:center;font-size:9px;color:var(--text-dim);">
+                    BLAME = GRADIENT(0.40) + ACTIVATION(0.30) + CONSISTENCY(0.30) | ANTI-FORGETTING: KL + ANCHOR + DISTANCE
+                </div>
+            </div>
+        </div>
+
+        <!-- Surgery Concept Visual -->
+        <div class="card" style="margin-top:24px">
+            <div class="card-title" style="color:var(--red)">THE CONCEPT: SURGICAL PRECISION</div>
+            <div style="font-family:monospace;font-size:10px;line-height:1.3;padding:8px;background:var(--bg2);border:2px solid var(--border);">
+<pre style="color:var(--text-dim);margin:0;">
+  BEFORE SURGERY:
+  ┌─────────────────────────────────────────┐
+  │ ████░░████████████░░░████████████░░████ │
+  │ ████████░░░░████████████░░████████████░ │
+  │ ██<span style="color:var(--red)">▓▓▓▓</span>████████░░░░████<span style="color:var(--red)">▓▓▓▓</span>████████████ │
+  │ ████████████<span style="color:var(--red)">▓▓▓▓▓▓</span>██████████░░░░██████ │
+  └─────────────────────────────────────────┘
+     <span style="color:var(--red)">▓▓ = BLAMED NEURONS (TOP 1-5%)</span>
+
+  AFTER SURGERY:
+  ┌─────────────────────────────────────────┐
+  │ ████░░████████████░░░████████████░░████ │
+  │ ████████░░░░████████████░░████████████░ │
+  │ ██<span style="color:var(--green)">██████</span>████████░░░░████<span style="color:var(--green)">██████</span>████████████ │
+  │ ████████████<span style="color:var(--green)">████████</span>██████████░░░░██████ │
+  └─────────────────────────────────────────┘
+     <span style="color:var(--green)">██ = FIXED NEURONS (DPO RETRAINED)</span>
+</pre>
+                <div style="margin-top:8px;color:var(--red);font-size:9px;text-align:center;">
+                    NEURAL SURGERY — MINIMAL INTERVENTION, MAXIMUM INTELLIGENCE GAIN
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">SER1ES © 2025 — OGENTI · OVISEN · PHIREN · PARHEN · MURHEN · S-SER1ES</div>
+
+    <script src="/platform/app.js"></script>
+    <script>
+        if (!Auth.requireAuth()) {}
+
+        let selectedModel = null;
+        let selectedDataset = null;
+        let modelsData = [];
+        let datasetsData = [];
+        let userBalance = 0;
+
+        async function loadTraining() {
+            try {
+                const [bal, user] = await Promise.all([
+                    api('GET', '/api/billing/balance'),
+                    Auth.fetchUser()
+                ]);
+
+                userBalance = bal.credits;
+
+                modelsData = [
+                    { model: 'qwen2.5-3b', label: 'QWEN2.5-3B', credits_per_episode: 3 },
+                    { model: 'qwen2.5-7b', label: 'QWEN2.5-7B', credits_per_episode: 6 },
+                    { model: 'qwen2.5-14b', label: 'QWEN2.5-14B', credits_per_episode: 12 },
+                    { model: 'llama3.2-3b', label: 'LLAMA 3.2 3B', credits_per_episode: 3 },
+                    { model: 'llama3.2-8b', label: 'LLAMA 3.2 8B', credits_per_episode: 8 },
+                    { model: 'mistral-7b', label: 'MISTRAL 7B', credits_per_episode: 6 },
+                ];
+
+                datasetsData = [
+                    { id: 'blame-attribution', name: 'Blame Attribution (20K)', description: 'GRADIENT + ACTIVATION + CONSISTENCY SCORING', size: '~20,000 samples' },
+                    { id: 'reasoning-surgery', name: 'Reasoning Surgery (15K)', description: 'MATH, LOGIC, AND MULTI-STEP REASONING FIXES', size: '~15,000 samples' },
+                    { id: 'coding-surgery', name: 'Coding Surgery (10K)', description: 'CODE GENERATION AND BUG-FIX PAIRS', size: '~10,000 samples' },
+                    { id: 'knowledge-surgery', name: 'Knowledge Surgery (12K)', description: 'FACTUAL ACCURACY AND HALLUCINATION FIXES', size: '~12,000 samples' },
+                    { id: 'sseries-combined', name: 'S-SER1ES Combined (55K)', description: 'ALL SURGERY SETS MERGED + CURATED', size: '~55,000 samples' },
+                ];
+
+                try {
+                    const pricing = await api('GET', '/api/sseries/adapters/pricing');
+                    if (pricing.pricing) modelsData = pricing.pricing;
+                } catch {}
+
+                try {
+                    const datasets = await api('GET', '/api/sseries/training/datasets');
+                    if (datasets && datasets.length) datasetsData = datasets;
+                } catch {}
+
+                // Render models
+                const grid = document.getElementById('modelGrid');
+                grid.innerHTML = modelsData.map((m, i) => `
+                    <div class="model-card" data-idx="${i}" onclick="selectModel(${i})">
+                        <div class="model-name" style="color:var(--red)">${(m.label || m.model).toUpperCase()}</div>
+                        <div class="model-detail">NEURAL SURGERY TARGET</div>
+                        <div class="model-cost">${m.credits_per_call || m.credits_per_episode || '?'} CR/EPISODE</div>
+                    </div>
+                `).join('');
+
+                // Render datasets
+                const dGrid = document.getElementById('datasetGrid');
+                dGrid.innerHTML = datasetsData.map((d, i) => `
+                    <div class="model-card" data-idx="${i}" onclick="selectDataset(${i})">
+                        <div class="model-name" style="color:var(--pink)">${(d.name || d.id).toUpperCase()}</div>
+                        <div class="model-detail">${d.description}</div>
+                        <div class="model-detail" style="color:var(--red);margin-top:4px;">${d.size}</div>
+                    </div>
+                `).join('');
+
+                loadJobs();
+
+            } catch (err) {
+                showMsg('msg', 'FAILED TO LOAD: ' + err.message, 'error');
+            }
+        }
+
+        function selectModel(idx) {
+            selectedModel = idx;
+            document.querySelectorAll('#modelGrid .model-card').forEach((c, i) => {
+                c.classList.toggle('selected', i === idx);
+            });
+            updateEstimate();
+        }
+
+        function selectDataset(idx) {
+            selectedDataset = idx;
+            document.querySelectorAll('#datasetGrid .model-card').forEach((c, i) => {
+                c.classList.toggle('selected', i === idx);
+            });
+            updateEstimate();
+        }
+
+        function updateEstimate() {
+            const episodes = parseInt(document.getElementById('episodeSlider').value);
+            document.getElementById('episodeValue').textContent = episodes;
+
+            if (selectedModel === null) {
+                document.getElementById('estModel').textContent = '—';
+                document.getElementById('estTotal').textContent = '—';
+                return;
+            }
+
+            const model = modelsData[selectedModel];
+            const dataset = selectedDataset !== null ? datasetsData[selectedDataset] : null;
+            const costPer = model.credits_per_call || model.credits_per_episode || 3;
+            const total = costPer * episodes;
+
+            document.getElementById('estModel').textContent = (model.label || model.model).toUpperCase();
+            document.getElementById('estDataset').textContent = dataset ? (dataset.name || dataset.id).toUpperCase() : '—';
+            document.getElementById('estEpisodes').textContent = episodes;
+            document.getElementById('estCostPer').textContent = costPer + ' CR';
+            document.getElementById('estTotal').textContent = formatCredits(total) + ' CR';
+            document.getElementById('estBalance').textContent = formatCredits(userBalance) + ' CR';
+
+            const hasEnough = userBalance >= total;
+            document.getElementById('estWarning').style.display = hasEnough ? 'none' : 'block';
+
+            const btn = document.getElementById('launchBtn');
+            if (selectedModel !== null && selectedDataset !== null && hasEnough) {
+                btn.disabled = false;
+                btn.textContent = `LAUNCH SURGERY → ${formatCredits(total)} CREDITS`;
+            } else if (!hasEnough) {
+                btn.disabled = true;
+                btn.textContent = 'NOT ENOUGH CREDITS';
+            } else {
+                btn.disabled = true;
+                btn.textContent = 'SELECT MODEL & DATASET';
+            }
+        }
+
+        async function handleLaunch() {
+            if (selectedModel === null || selectedDataset === null) return;
+            const btn = document.getElementById('launchBtn');
+            btn.disabled = true;
+            btn.textContent = 'INITIATING SURGERY...';
+            hideMsg('msg');
+
+            const episodes = parseInt(document.getElementById('episodeSlider').value);
+            const model = modelsData[selectedModel];
+            const dataset = datasetsData[selectedDataset];
+
+            try {
+                const job = await api('POST', '/api/sseries/training/launch', {
+                    model: model.model || model.name,
+                    dataset: dataset.id,
+                    episodes: episodes
+                });
+                const monitorUrl = `/monitor?key=${job.dashboard_key}&product=sseries`;
+                document.getElementById('msg').innerHTML = `
+                    <div style="background:rgba(255,85,85,0.06);border:1px solid var(--red);padding:14px 18px;font-family:monospace;line-height:1.8;">
+                        <div style="color:var(--red);font-size:11px;letter-spacing:.15em;margin-bottom:6px;">▸▸S-SER1ES JOB #${job.job_id} — SURGERY INITIATED</div>
+                        <div style="color:#aaa;font-size:9px;letter-spacing:.1em;margin-bottom:4px;">${formatCredits(job.credits_used)} CREDITS DEDUCTED</div>
+                        <div style="border-top:1px solid rgba(255,85,85,0.15);margin:8px 0;"></div>
+                        <div style="color:#aaa;font-size:9px;letter-spacing:.1em;">DASHBOARD KEY</div>
+                        <div style="color:#fff;font-size:18px;letter-spacing:.25em;font-weight:700;margin:4px 0 10px;">${job.dashboard_key}</div>
+                        <a href="${monitorUrl}" target="_blank" style="display:inline-block;background:var(--red);color:#000;padding:6px 16px;font-size:9px;letter-spacing:.15em;text-decoration:none;font-weight:700;">OPEN MONITOR →</a>
+                        <button onclick="navigator.clipboard.writeText('${job.dashboard_key}')" style="margin-left:8px;background:transparent;border:1px solid rgba(255,85,85,0.3);color:var(--red);padding:6px 12px;font-size:9px;letter-spacing:.1em;cursor:pointer;">COPY KEY</button>
+                    </div>`;
+                document.getElementById('msg').style.display = 'block';
+
+                const bal = await api('GET', '/api/billing/balance');
+                userBalance = bal.credits;
+                await Auth.fetchUser();
+                renderNav('sseries_training');
+                updateEstimate();
+                loadJobs();
+            } catch (err) {
+                showMsg('msg', err.message, 'error');
+                btn.disabled = false;
+                updateEstimate();
+            }
+        }
+
+        async function loadJobs() {
+            try {
+                const jobs = await api('GET', '/api/sseries/training/jobs');
+                const div = document.getElementById('jobsList');
+
+                if (jobs.length === 0) {
+                    div.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-dim);font-size:10px;">NO S-SER1ES JOBS YET — LAUNCH YOUR FIRST SURGERY ABOVE</div>';
+                    return;
+                }
+
+                div.innerHTML = jobs.map(j => {
+                    const statusBadge = {
+                        'queued': 'badge-yellow', 'dispatched': 'badge-yellow',
+                        'running': 'badge-cyan', 'completed': 'badge-green',
+                        'failed': 'badge-red', 'cancelled': 'badge-red'
+                    }[j.status] || 'badge-cyan';
+
+                    return `
+                        <div style="border:2px solid var(--border);padding:16px;margin-bottom:8px;background:var(--bg);">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                                <div>
+                                    <span style="font-size:9px;color:var(--red);">JOB #${j.id}</span>
+                                    <span class="badge ${statusBadge}" style="margin-left:8px">${j.status.toUpperCase()}</span>
+                                    ${j.current_phase ? `<span style="font-size:8px;color:var(--pink);margin-left:8px;">PHASE: ${j.current_phase.toUpperCase()}</span>` : ''}
+                                </div>
+                                <span style="font-size:9px;color:var(--text-dim)">${formatDate(j.created_at)}</span>
+                            </div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:10px;">
+                                <div><div style="color:var(--text-dim);">BASE MODEL</div><div style="color:var(--red)">${j.model_label || j.model}</div></div>
+                                <div><div style="color:var(--text-dim);">DATASET</div><div style="color:var(--pink)">${j.dataset_label || j.dataset}</div></div>
+                                <div><div style="color:var(--text-dim);">EPISODES</div><div>${j.episodes} (${formatCredits(j.credits_used)} CR)</div></div>
+                            </div>
+                            ${j.status === 'completed' ? `
+                                <div style="margin-top:10px;display:flex;gap:12px;font-size:10px;">
+                                    ${j.neuron_efficiency ? `<span style="color:var(--red)">EFFICIENCY: ${(j.neuron_efficiency * 100).toFixed(1)}%</span>` : ''}
+                                    ${j.surgery_precision ? `<span style="color:var(--cyan)">PRECISION: ${(j.surgery_precision * 100).toFixed(1)}%</span>` : ''}
+                                    <span style="color:var(--green)">FORMAT: .SRS</span>
+                                </div>
+                            ` : ''}
+                            ${j.dashboard_key ? `
+                                <div style="margin-top:8px;">
+                                    <a href="/monitor?key=${j.dashboard_key}&product=sseries" target="_blank"
+                                       style="font-size:9px;color:var(--red);text-decoration:underline;">OPEN DASHBOARD →</a>
+                                </div>
+                            ` : ''}
+                        </div>`;
+                }).join('');
+            } catch {
+                document.getElementById('jobsList').innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-dim);font-size:10px;">NO S-SER1ES JOBS YET — LAUNCH YOUR FIRST SURGERY ABOVE</div>';
+            }
+        }
+
+        loadTraining();
+    </script>
+</body>
+</html>

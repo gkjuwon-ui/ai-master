@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SER1ES — MONITOR</title>
+    <link rel="stylesheet" href="/platform/style.css">
+    <style>
+        .monitor-hero {
+            border: 3px solid var(--border); padding: 20px;
+            background: var(--bg); margin-bottom: 20px;
+        }
+        .monitor-status-row {
+            display: flex; align-items: center; gap: 12px;
+            margin-bottom: 10px;
+        }
+        .monitor-job-id {
+            font-family: var(--font-pixel); font-size: 12px; color: var(--pink);
+            letter-spacing: .15em;
+        }
+        .monitor-products {
+            display: flex; gap: 6px; flex-wrap: wrap; margin: 10px 0;
+        }
+        .monitor-product-chip {
+            font-family: var(--font-pixel); font-size: 8px; padding: 3px 8px;
+            border: 2px solid currentColor; letter-spacing: .1em;
+        }
+
+        /* ── Phase Pipeline ── */
+        .phase-pipeline {
+            display: flex; gap: 2px; margin: 16px 0;
+            border: 2px solid var(--border); overflow: hidden;
+        }
+        .phase-step {
+            flex: 1; padding: 10px 8px; text-align: center;
+            background: var(--bg); border-right: 2px solid var(--border);
+            transition: all .3s;
+        }
+        .phase-step:last-child { border-right: none; }
+        .phase-step.active { background: rgba(85,255,255,.12); }
+        .phase-step.done { background: rgba(85,255,85,.08); }
+        .phase-step-label {
+            font-family: var(--font-pixel); font-size: 7px;
+            color: var(--text-dim); letter-spacing: .08em;
+        }
+        .phase-step.active .phase-step-label { color: var(--cyan); }
+        .phase-step.done .phase-step-label { color: var(--green); }
+        .phase-step-icon { font-size: 14px; margin-bottom: 4px; }
+        .phase-step.done .phase-step-icon::after { content: '✓'; color: var(--green); }
+        .phase-step.active .phase-step-icon::after { content: '◆'; color: var(--cyan); }
+        .phase-step:not(.done):not(.active) .phase-step-icon::after { content: '○'; color: var(--text-dim); }
+
+        /* ── Live Metrics ── */
+        .metrics-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px; margin: 16px 0;
+        }
+        .metric-card {
+            border: 2px solid var(--border); padding: 12px; text-align: center;
+            background: var(--bg);
+        }
+        .metric-label {
+            font-size: 7px; color: var(--text-dim); letter-spacing: .1em;
+            margin-bottom: 6px;
+        }
+        .metric-value {
+            font-family: var(--font-pixel); font-size: 16px;
+        }
+        .metric-delta { font-size: 9px; margin-top: 4px; }
+        .metric-delta.up { color: var(--green); }
+        .metric-delta.down { color: var(--red); }
+
+        /* ── Product Training Cards ── */
+        .product-train-card {
+            border: 3px solid var(--border); padding: 16px; margin-bottom: 12px;
+            background: var(--bg);
+        }
+        .product-train-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .product-train-name {
+            font-family: var(--font-pixel); font-size: 10px; letter-spacing: .12em;
+        }
+        .product-train-status {
+            font-size: 8px; letter-spacing: .1em;
+        }
+
+        /* ── Live Log ── */
+        .live-log {
+            border: 3px solid var(--border); background: #000;
+            padding: 14px; max-height: 300px; overflow-y: auto;
+            font-family: 'Courier New', monospace; font-size: 10px;
+            line-height: 1.6; color: var(--text);
+        }
+        .live-log .log-time { color: var(--text-dim); }
+        .live-log .log-info { color: var(--cyan); }
+        .live-log .log-warn { color: var(--yellow); }
+        .live-log .log-error { color: var(--red); }
+        .live-log .log-success { color: var(--green); }
+
+        /* ── Results ── */
+        .result-table {
+            width: 100%; border-collapse: collapse; font-size: 10px;
+        }
+        .result-table th {
+            text-align: left; padding: 8px; border-bottom: 2px solid var(--border);
+            font-family: var(--font-pixel); font-size: 8px; color: var(--text-dim);
+            letter-spacing: .1em;
+        }
+        .result-table td {
+            padding: 8px; border-bottom: 1px solid rgba(255,255,255,.1);
+        }
+
+        /* ── Lookup form ── */
+        .lookup-form {
+            display: flex; gap: 8px; margin-bottom: 20px;
+        }
+        .lookup-input {
+            flex: 1; background: var(--bg); border: 3px solid var(--border);
+            color: var(--text); font-family: var(--font-pixel); font-size: 10px;
+            padding: 10px 14px; letter-spacing: .1em;
+        }
+        .lookup-input::placeholder { color: var(--text-dim); }
+        .lookup-input:focus { outline: none; border-color: var(--cyan); }
+    </style>
+</head>
+<body class="crt" data-page="monitor">
+    <nav id="main-nav" class="nav"></nav>
+
+    <div class="page-wrap">
+        <div class="page-title">MONITOR</div>
+        <div class="page-sub">REAL-TIME ADAPTER TRAINING DASHBOARD</div>
+
+        <div id="msg" class="msg"></div>
+
+        <!-- Lookup -->
+        <div class="lookup-form">
+            <input type="text" class="lookup-input" id="keyInput" placeholder="ENTER DASHBOARD KEY OR JOB ID..." value="">
+            <button class="btn btn-primary" onclick="lookupJob()" style="width:auto;padding:10px 20px;font-size:9px;">LOOKUP</button>
+        </div>
+
+        <!-- Job Dashboard (hidden until loaded) -->
+        <div id="dashboard" style="display:none">
+
+            <!-- Hero -->
+            <div class="monitor-hero" id="heroSection">
+                <!-- filled by JS -->
+            </div>
+
+            <!-- Phase Pipeline -->
+            <div class="card">
+                <div class="card-title">TRAINING PIPELINE</div>
+                <div class="phase-pipeline" id="phasePipeline">
+                    <!-- filled by JS -->
+                </div>
+            </div>
+
+            <!-- Per-Product Status -->
+            <div class="card">
+                <div class="card-title">PRODUCT TRAINING STATUS</div>
+                <div id="productStatus">
+                    <!-- filled by JS -->
+                </div>
+            </div>
+
+            <!-- Live Metrics -->
+            <div class="card">
+                <div class="card-title">LIVE METRICS</div>
+                <div class="metrics-grid" id="metricsGrid">
+                    <!-- filled by JS -->
+                </div>
+            </div>
+
+            <!-- Live Log -->
+            <div class="card">
+                <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;">
+                    <span>LIVE LOG</span>
+                    <span id="logIndicator" style="font-size:8px;color:var(--green);">● LIVE</span>
+                </div>
+                <div class="live-log" id="liveLog">
+                    <div><span class="log-time">[--:--:--]</span> <span class="log-info">WAITING FOR DATA...</span></div>
+                </div>
+            </div>
+
+            <!-- Results (shown when complete) -->
+            <div class="card" id="resultsCard" style="display:none">
+                <div class="card-title">RESULTS</div>
+                <div id="resultsContent"></div>
+            </div>
+        </div>
+
+        <!-- All Jobs List -->
+        <div class="card" style="margin-top:24px">
+            <div class="card-title">ALL TRAINING JOBS</div>
+            <div id="allJobs">
+                <div style="text-align:center;padding:20px;color:var(--text-dim);font-size:10px;">LOADING...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">SER1ES © 2025 — O-SER1ES · P-SER1ES · M-SER1ES · S-SER1ES</div>
+
+    <script src="/platform/app.js"></script>
+    <script>
+        if (!Auth.requireAuth()) {}
+
+        const PRODUCT_COLORS = {
+            ogenti: 'var(--pink)', ovisen: 'var(--cyan)', phiren: 'var(--green)',
+            parhen: 'var(--orange)', murhen: 'var(--yellow)', syrhen: 'var(--red)'
+        };
+        const PRODUCT_NAMES = {
+            ogenti: 'OGENTI', ovisen: 'OVISEN', phiren: 'PHIREN',
+            parhen: 'PARHEN', murhen: 'MURHEN', syrhen: 'SYRHEN'
+        };
+        const PHASES = ['INIT', 'DATA_GEN', 'TRAINING', 'EVAL', 'EXPORT', 'DONE'];
+
+        let currentJob = null;
+        let pollTimer = null;
+
+        // Check URL params
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlKey = urlParams.get('key');
+        const urlProduct = urlParams.get('product');
+        if (urlKey) {
+            document.getElementById('keyInput').value = urlKey;
+            setTimeout(() => lookupJob(), 300);
+        }
+
+        async function lookupJob() {
+            const key = document.getElementById('keyInput').value.trim();
+            if (!key) return;
+            hideMsg('msg');
+
+            try {
+                let job;
+                if (/^\d+$/.test(key)) {
+                    job = await api('GET', '/api/training/jobs/' + key);
+                } else {
+                    job = await api('GET', '/api/training/jobs/by-key/' + key);
+                }
+                currentJob = job;
+                renderDashboard(job);
+                document.getElementById('dashboard').style.display = 'block';
+
+                if (job.status === 'running' || job.status === 'queued') {
+                    startPolling(key);
+                }
+            } catch (err) {
+                showMsg('msg', 'JOB NOT FOUND: ' + err.message, 'error');
+                document.getElementById('dashboard').style.display = 'none';
+            }
+        }
+
+        function renderDashboard(job) {
+            const products = job.products || ['ogenti'];
+            const statusColor = { queued: 'var(--yellow)', running: 'var(--cyan)', completed: 'var(--green)', failed: 'var(--red)' }[job.status];
+
+            // Hero
+            document.getElementById('heroSection').innerHTML = `
+                <div class="monitor-status-row">
+                    <span class="monitor-job-id">JOB #${job.id}</span>
+                    <span class="badge" style="background:${statusColor};color:#000;font-size:8px;padding:3px 8px;">${job.status.toUpperCase()}</span>
+                    <span style="font-size:9px;color:var(--text-dim);margin-left:auto;">${formatDate(job.created_at)}</span>
+                </div>
+                <div class="monitor-products">
+                    ${products.map(p => `<span class="monitor-product-chip" style="color:${PRODUCT_COLORS[p]||'var(--text)'}">${PRODUCT_NAMES[p]||p.toUpperCase()}</span>`).join('<span style="color:var(--text-dim);font-size:10px;display:flex;align-items:center;">+</span>')}
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;font-size:10px;margin-top:10px;">
+                    <div><span style="color:var(--text-dim)">MODEL:</span> <span style="color:var(--cyan)">${job.model || '—'}</span></div>
+                    <div><span style="color:var(--text-dim)">EPISODES:</span> ${job.episodes || '—'}</div>
+                    <div><span style="color:var(--text-dim)">CREDITS:</span> ${formatCredits(job.credits_used)} CR</div>
+                </div>
+                ${job.status === 'running' ? `
+                    <div style="margin-top:14px;">
+                        <div class="progress-wrap"><div class="progress-bar" style="width:${job.progress||0}%"></div><span class="progress-text">${job.progress||0}%</span></div>
+                    </div>` : ''}
+            `;
+
+            // Phase Pipeline
+            const currentPhase = job.current_phase || 'INIT';
+            const currentIdx = PHASES.indexOf(currentPhase.toUpperCase());
+            document.getElementById('phasePipeline').innerHTML = PHASES.map((phase, i) => {
+                let cls = '';
+                if (job.status === 'completed') cls = 'done';
+                else if (i < currentIdx) cls = 'done';
+                else if (i === currentIdx) cls = 'active';
+                return `<div class="phase-step ${cls}">
+                    <div class="phase-step-icon"></div>
+                    <div class="phase-step-label">${phase.replace('_', ' ')}</div>
+                </div>`;
+            }).join('');
+
+            // Per-Product Status
+            const productStatuses = job.product_status || {};
+            document.getElementById('productStatus').innerHTML = products.map(p => {
+                const ps = productStatuses[p] || {};
+                const pStatus = ps.status || (job.status === 'completed' ? 'done' : 'waiting');
+                const pColor = PRODUCT_COLORS[p] || 'var(--text)';
+                const statusLabel = { waiting: 'WAITING', training: 'TRAINING', done: 'DONE', failed: 'FAILED' }[pStatus] || pStatus.toUpperCase();
+                const statusC = { waiting: 'var(--text-dim)', training: 'var(--cyan)', done: 'var(--green)', failed: 'var(--red)' }[pStatus] || 'var(--text)';
+
+                return `<div class="product-train-card">
+                    <div class="product-train-header">
+                        <span class="product-train-name" style="color:${pColor}">${PRODUCT_NAMES[p]||p.toUpperCase()}</span>
+                        <span class="product-train-status" style="color:${statusC}">${statusLabel}</span>
+                    </div>
+                    ${ps.progress !== undefined ? `
+                        <div class="progress-wrap" style="margin-bottom:8px;"><div class="progress-bar" style="width:${ps.progress}%;background:${pColor}"></div><span class="progress-text">${ps.progress}%</span></div>
+                    ` : ''}
+                    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;font-size:9px;">
+                        <div><span style="color:var(--text-dim)">LOSS:</span> ${ps.loss !== undefined ? ps.loss.toFixed(4) : '—'}</div>
+                        <div><span style="color:var(--text-dim)">ACC:</span> ${ps.accuracy !== undefined ? (ps.accuracy*100).toFixed(1)+'%' : '—'}</div>
+                        <div><span style="color:var(--text-dim)">STEP:</span> ${ps.step || '—'}/${ps.total_steps || '—'}</div>
+                        <div><span style="color:var(--text-dim)">ETA:</span> ${ps.eta || '—'}</div>
+                    </div>
+                </div>`;
+            }).join('');
+
+            // Live Metrics
+            const metrics = job.metrics || {};
+            document.getElementById('metricsGrid').innerHTML = `
+                <div class="metric-card">
+                    <div class="metric-label">OVERALL PROGRESS</div>
+                    <div class="metric-value" style="color:var(--cyan)">${job.progress || 0}%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">AVG LOSS</div>
+                    <div class="metric-value" style="color:var(--yellow)">${metrics.avg_loss !== undefined ? metrics.avg_loss.toFixed(4) : '—'}</div>
+                    ${metrics.loss_delta ? `<div class="metric-delta ${metrics.loss_delta < 0 ? 'up' : 'down'}">${metrics.loss_delta > 0 ? '+' : ''}${metrics.loss_delta.toFixed(4)}</div>` : ''}
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">AVG ACCURACY</div>
+                    <div class="metric-value" style="color:var(--green)">${metrics.avg_accuracy !== undefined ? (metrics.avg_accuracy*100).toFixed(1)+'%' : '—'}</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">PRODUCTS DONE</div>
+                    <div class="metric-value" style="color:var(--pink)">${metrics.products_done || 0}/${products.length}</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">ELAPSED</div>
+                    <div class="metric-value" style="color:var(--text)">${metrics.elapsed || '—'}</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">ETA</div>
+                    <div class="metric-value" style="color:var(--text)">${metrics.eta || '—'}</div>
+                </div>
+            `;
+
+            // Log
+            if (job.logs && job.logs.length > 0) {
+                const logDiv = document.getElementById('liveLog');
+                logDiv.innerHTML = job.logs.map(log => {
+                    const cls = log.level === 'error' ? 'log-error' : log.level === 'warn' ? 'log-warn' : log.level === 'success' ? 'log-success' : 'log-info';
+                    return `<div><span class="log-time">[${log.time}]</span> <span class="${cls}">${log.message}</span></div>`;
+                }).join('');
+                logDiv.scrollTop = logDiv.scrollHeight;
+            }
+
+            // Update live indicator
+            document.getElementById('logIndicator').style.color = job.status === 'running' ? 'var(--green)' : 'var(--text-dim)';
+            document.getElementById('logIndicator').textContent = job.status === 'running' ? '● LIVE' : '○ ENDED';
+
+            // Results
+            if (job.status === 'completed' && job.results) {
+                document.getElementById('resultsCard').style.display = 'block';
+                const r = job.results;
+                document.getElementById('resultsContent').innerHTML = `
+                    <table class="result-table">
+                        <thead>
+                            <tr>
+                                <th>PRODUCT</th><th>BASE</th><th>TUNED</th><th>DELTA</th><th>VERDICT</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${products.map(p => {
+                                const pr = (r[p] || {});
+                                const delta = pr.delta || 0;
+                                const dColor = delta > 0 ? 'var(--green)' : delta < 0 ? 'var(--red)' : 'var(--text)';
+                                const verdict = delta > 2 ? 'IMPROVED' : delta < -2 ? 'REGRESSED' : 'NEUTRAL';
+                                const vColor = delta > 2 ? 'var(--green)' : delta < -2 ? 'var(--red)' : 'var(--yellow)';
+                                return `<tr>
+                                    <td style="color:${PRODUCT_COLORS[p]};font-family:var(--font-pixel);font-size:9px;">${PRODUCT_NAMES[p]||p.toUpperCase()}</td>
+                                    <td>${pr.base !== undefined ? pr.base.toFixed(1)+'%' : '—'}</td>
+                                    <td>${pr.tuned !== undefined ? pr.tuned.toFixed(1)+'%' : '—'}</td>
+                                    <td style="color:${dColor}">${delta > 0 ? '+' : ''}${delta.toFixed(1)}%</td>
+                                    <td style="color:${vColor};font-family:var(--font-pixel);font-size:8px;">${verdict}</td>
+                                </tr>`;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                    ${r.adapter_url ? `
+                        <div style="margin-top:16px;text-align:center;">
+                            <a href="${r.adapter_url}" class="btn btn-primary" style="width:auto;display:inline-block;padding:10px 24px;font-size:9px;">
+                                DOWNLOAD ADAPTER →
+                            </a>
+                        </div>
+                    ` : ''}
+                `;
+            }
+        }
+
+        function startPolling(key) {
+            if (pollTimer) clearInterval(pollTimer);
+            pollTimer = setInterval(async () => {
+                try {
+                    let job;
+                    if (/^\d+$/.test(key)) {
+                        job = await api('GET', '/api/training/jobs/' + key);
+                    } else {
+                        job = await api('GET', '/api/training/jobs/by-key/' + key);
+                    }
+                    currentJob = job;
+                    renderDashboard(job);
+                    if (job.status !== 'running' && job.status !== 'queued') {
+                        clearInterval(pollTimer);
+                        pollTimer = null;
+                    }
+                } catch (err) {
+                    console.error('Poll error:', err);
+                }
+            }, 3000);
+        }
+
+        async function loadAllJobs() {
+            try {
+                const jobs = await api('GET', '/api/training/jobs');
+                const div = document.getElementById('allJobs');
+
+                if (jobs.length === 0) {
+                    div.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-dim);font-size:10px;">NO JOBS YET</div>';
+                    return;
+                }
+
+                div.innerHTML = jobs.map(j => {
+                    const products = j.products || ['ogenti'];
+                    const statusBadge = { queued: 'badge-yellow', running: 'badge-cyan', completed: 'badge-green', failed: 'badge-red' }[j.status] || 'badge-cyan';
+
+                    return `<div style="border:2px solid var(--border);padding:12px;margin-bottom:6px;background:var(--bg);cursor:pointer;" onclick="document.getElementById('keyInput').value='${j.dashboard_key||j.id}';lookupJob();">
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <span style="font-family:var(--font-pixel);font-size:9px;color:var(--pink);">JOB #${j.id}</span>
+                            <span class="badge ${statusBadge}" style="font-size:7px;">${j.status.toUpperCase()}</span>
+                            <span style="font-size:9px;color:var(--text-dim);">${products.map(p => PRODUCT_NAMES[p]||p.toUpperCase()).join(' + ')}</span>
+                            <span style="font-size:9px;color:var(--text-dim);margin-left:auto;">${formatDate(j.created_at)}</span>
+                        </div>
+                    </div>`;
+                }).join('');
+            } catch (err) { console.error(err); }
+        }
+
+        loadAllJobs();
+    </script>
+</body>
+</html>

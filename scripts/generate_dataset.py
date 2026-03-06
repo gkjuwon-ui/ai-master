@@ -251,7 +251,7 @@ reasoning_pairs = [
     ("A train leaves Station A at 9:00 AM going 60 mph. Another leaves Station B (300 miles away) at 10:00 AM going 90 mph toward Station A. When and where do they meet?",
      "At 10AM, Train A has covered 60mi (240mi remaining). Combined speed: 150mph. Time to meet: 240/150 = 1.6 hours = 1h36min after 10AM = 11:36 AM. Location: 60 + 60×1.6 = 156 miles from A."),
     ("Three servers: A (99.9% uptime), B (99.95%), C (99.99%). If they're in series (all must work), what's the combined uptime? In parallel (any one works)?",
-     "Series: 0.999 × 0.9995 × 0.9999 = 99.84% (~14 hours downtime/year). Parallel: 1 - (0.001 × 0.0005 × 0.0001) = 99.99999995% (virtually zero downtime). Redundancy massively improves reliability."),
+     "Ser1es: 0.999 × 0.9995 × 0.9999 = 99.84% (~14 hours downtime/year). Parallel: 1 - (0.001 × 0.0005 × 0.0001) = 99.99999995% (virtually zero downtime). Redundancy massively improves reliability."),
     ("A function runs in O(n²) on 1000 items in 1 second. How long will it take on 10000 items? On 1 million?",
      "O(n²): 10× input → 100× time. 10000 items: (10000/1000)² = 100 seconds. 1M items: (1000000/1000)² = 1,000,000 seconds ≈ 11.6 days. This is why O(n²) doesn't scale."),
     ("If a hash table has a load factor of 0.75 with 1000 buckets, how many elements does it hold? At what point should it resize?",

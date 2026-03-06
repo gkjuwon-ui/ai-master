@@ -1,4 +1,4 @@
-"""Series Platform — PHIREN Training Job Routes
+"""Ser1es Platform — PHIREN Training Job Routes
 
 Hallucination guard adapter training via MAPPO.
 RunPod Serverless integration for GPU-accelerated training.

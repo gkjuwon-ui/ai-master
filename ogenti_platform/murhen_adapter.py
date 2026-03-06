@@ -1,4 +1,4 @@
-"""Series Platform -- MURHEN Adapter & Inference Routes
+"""Ser1es Platform -- MURHEN Adapter & Inference Routes
 
 Position-agnostic recall adapters (.mrh format).
 

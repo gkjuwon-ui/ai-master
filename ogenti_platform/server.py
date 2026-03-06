@@ -1,4 +1,4 @@
-"""Series Platform — Main Server (O-Series: Ogenti/Ovisen, P-Series: Phiren/Parhen, M-Series: Murhen)"""
+"""Ser1es Platform — Main Server (O-Ser1es: Ogenti/Ovisen, P-Ser1es: Phiren/Parhen, M-Ser1es: Murhen)"""
 import asyncio
 import logging
 from fastapi import FastAPI, Request
@@ -28,12 +28,12 @@ from .runpod_phiren_client import check_phiren_status
 from .runpod_parhen_client import check_parhen_status
 from .runpod_murhen_client import check_murhen_status
 
-logger = logging.getLogger("series.server")
+logger = logging.getLogger("ser1es.server")
 
 # ── App ──
 app = FastAPI(
-    title="Series Platform",
-    description="AI Adapter Studio — O-Series (OGENTI Text + OVISEN Image) · P-Series (PHIREN Hallucination Guard + PARHEN Anti-Sycophancy) · M-Series (MURHEN Position-Agnostic Recall)",
+    title="Ser1es Platform",
+    description="AI Adapter Studio — O-Ser1es (OGENTI Text + OVISEN Image) · P-Ser1es (PHIREN Hallucination Guard + PARHEN Anti-Sycophancy) · M-Ser1es (MURHEN Position-Agnostic Recall)",
     version="0.4.0",
 )
 
@@ -78,7 +78,7 @@ if WEB_DIR.exists():
 # ── Health ──
 @app.get("/api/health")
 async def health():
-    return {"status": "ok", "service": "series-platform", "version": "0.4.0", "products": {"o-series": ["ogenti", "ovisen"], "p-series": ["phiren", "parhen"], "m-series": ["murhen"]}}
+    return {"status": "ok", "service": "ser1es-platform", "version": "0.4.0", "products": {"o-ser1es": ["ogenti", "ovisen"], "p-ser1es": ["phiren", "parhen"], "m-ser1es": ["murhen"]}}
 
 
 # ── Root redirect ──
@@ -180,10 +180,10 @@ async def _poll_runpod_jobs():
 async def startup():
     init_db()
     asyncio.create_task(_poll_runpod_jobs())
-    print("◆ SERIES PLATFORM — ONLINE ◆")
-    print("◆ O-Series: OGENTI (text) + OVISEN (image)")
-    print("◆ P-Series: PHIREN (hallucination guard) + PARHEN (anti-sycophancy)")
-    print("◆ M-Series: MURHEN (position-agnostic recall)")
+    print("◆ SER1ES PLATFORM — ONLINE ◆")
+    print("◆ O-Ser1es: OGENTI (text) + OVISEN (image)")
+    print("◆ P-Ser1es: PHIREN (hallucination guard) + PARHEN (anti-sycophancy)")
+    print("◆ M-Ser1es: MURHEN (position-agnostic recall)")
     print("◆ RunPod job poller started (30s interval)")
     print("Dashboard: http://localhost:8080/platform/")
 

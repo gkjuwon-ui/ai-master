@@ -1,4 +1,4 @@
-"""Series Platform — Email Service (Resend)"""
+"""Ser1es Platform — Email Service (Resend)"""
 import httpx
 import random
 import string
@@ -66,7 +66,7 @@ def _build_email_html(code: str) -> str:
 </td></tr>
 </table>
 <br/>
-<img src="cid:bottom" alt="OSERIES.IO" style="height:14px;margin-top:16px;" />
+<img src="cid:bottom" alt="OSER1ES.IO" style="height:14px;margin-top:16px;" />
 </td></tr></table>
 </body></html>"""
 
@@ -99,9 +99,9 @@ async def send_verification_email(to_email: str, code: str) -> bool:
     try:
         async with httpx.AsyncClient() as client:
             payload = {
-                "from": f"Series <{FROM_EMAIL}>",
+                "from": f"Ser1es <{FROM_EMAIL}>",
                 "to": [to_email],
-                "subject": f"[SERIES] Verification Code: {code}",
+                "subject": f"[SER1ES] Verification Code: {code}",
                 "html": _build_email_html(code),
                 "attachments": _get_attachments(code),
             }

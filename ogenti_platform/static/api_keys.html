@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SERIES — API KEYS</title>
+    <title>SER1ES ??API KEYS</title>
     <link rel="stylesheet" href="/platform/style.css">
 </head>
 <body class="crt" data-page="api_keys">
@@ -11,18 +11,18 @@
 
     <div class="page-wrap">
         <div class="page-title">API KEYS</div>
-        <div class="page-sub">MANAGE YOUR SERIES API KEYS (MAX 5)</div>
+        <div class="page-sub">MANAGE YOUR SER1ES API KEYS (MAX 5)</div>
 
         <div id="msg" class="msg"></div>
 
         <!-- New API key creation alert -->
         <div id="newKeyAlert" class="msg" style="display:none;">
-            <div style="margin-bottom:8px;font-family:'Press Start 2P',monospace;font-size:9px;">
-                🔑 NEW API KEY CREATED
+            <div style="margin-bottom:8px;font-size:9px;">
+                ?�� NEW API KEY CREATED
             </div>
             <div class="key-display" id="newKeyValue"></div>
             <div class="key-warning">
-                ⚠ COPY THIS KEY NOW — YOU WON'T SEE IT AGAIN
+                ??COPY THIS KEY NOW ??YOU WON'T SEE IT AGAIN
             </div>
             <button onclick="copyKey()" class="btn btn-small btn-green" style="margin-top:10px;margin-right:8px;">
                 COPY KEY
@@ -71,18 +71,18 @@
         <div class="card">
             <div class="card-title">USAGE</div>
             <div style="background:var(--bg);border:2px solid var(--border);padding:16px;font-family:monospace;font-size:12px;color:var(--green);line-height:1.8;">
-                <span style="color:var(--text-dim)"># Install series</span><br>
-                pip install series<br><br>
+                <span style="color:var(--text-dim)"># Install ser1es</span><br>
+                pip install ser1es<br><br>
                 <span style="color:var(--text-dim)"># In your code</span><br>
-                <span style="color:var(--pink)">import</span> series<br>
-                series.api_key = <span style="color:var(--yellow)">"og_your_key_here"</span><br><br>
+                <span style="color:var(--pink)">import</span> ser1es<br>
+                ser1es.api_key = <span style="color:var(--yellow)">"og_your_key_here"</span><br><br>
                 <span style="color:var(--text-dim)"># Attach to your model</span><br>
-                series.attach(your_model, adapter=<span style="color:var(--yellow)">"my_adapter.ogt"</span>)
+                ser1es.attach(your_model, adapter=<span style="color:var(--yellow)">"my_adapter.ogt"</span>)
             </div>
         </div>
     </div>
 
-    <div class="footer">SERIES © 2025 — OGENTI · OVISEN · PHIREN · PARHEN · MURHEN</div>
+    <div class="footer">SER1ES © 2025 ??OGENTI · OVISEN · PHIREN · PARHEN · MURHEN</div>
 
     <script src="/platform/app.js"></script>
     <script>
@@ -109,7 +109,7 @@
                 const body = document.getElementById('keysBody');
 
                 if (keys.length === 0) {
-                    body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-dim);">NO KEYS YET — CREATE ONE ABOVE</td></tr>';
+                    body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-dim);">NO KEYS YET ??CREATE ONE ABOVE</td></tr>';
                     return;
                 }
 
@@ -123,7 +123,7 @@
                             : '<span class="badge badge-red">REVOKED</span>'}</td>
                         <td>${k.active
                             ? `<button onclick="revokeKey(${k.id})" class="btn btn-danger btn-small">REVOKE</button>`
-                            : '—'}</td>
+                            : '??}</td>
                     </tr>
                 `).join('');
             } catch (err) {

@@ -1,4 +1,4 @@
-"""O Series Platform — RunPod OVISEN Client
+"""O Ser1es Platform — RunPod OVISEN Client
 
 Handles dispatching OVISEN (image embedding compression) training jobs
 to a separate RunPod Serverless endpoint for vision model training.

@@ -1,4 +1,4 @@
-"""Series Platform — PHIREN Adapter & Inference Routes
+"""Ser1es Platform — PHIREN Adapter & Inference Routes
 
 Hallucination guard adapters (.phr format).
 

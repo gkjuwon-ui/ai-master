@@ -1,4 +1,4 @@
-"""Series Platform -- PARHEN Training Job Routes
+"""Ser1es Platform -- PARHEN Training Job Routes
 
 Anti-sycophancy adapter training via MAPPO.
 RunPod Serverless integration for GPU-accelerated training.

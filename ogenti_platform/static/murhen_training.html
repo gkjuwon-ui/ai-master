@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SERIES — MURHEN TRAINING</title>
+    <title>SER1ES ??MURHEN TRAINING</title>
     <link rel="stylesheet" href="/platform/style.css">
 </head>
 <body class="crt" data-page="murhen_training">
@@ -17,9 +17,9 @@
 
         <!-- Step 1: Model -->
         <div class="card">
-            <div class="card-title">① SELECT BASE MODEL</div>
+            <div class="card-title">??SELECT BASE MODEL</div>
             <p style="font-size:10px;color:var(--text-dim);margin-bottom:12px;">
-                CHOOSE A BACKBONE LLM. THE RETAINER AGENT (BLUE TEAM) WILL BE TRAINED TO RECALL INFORMATION FROM ANY POSITION IN THE CONTEXT WINDOW — NOT JUST THE START AND END.
+                CHOOSE A BACKBONE LLM. THE RETAINER AGENT (BLUE TEAM) WILL BE TRAINED TO RECALL INFORMATION FROM ANY POSITION IN THE CONTEXT WINDOW ??NOT JUST THE START AND END.
             </p>
             <div class="model-grid" id="modelGrid">
             </div>
@@ -27,7 +27,7 @@
 
         <!-- Step 2: Dataset -->
         <div class="card">
-            <div class="card-title">② SELECT RECALL DATASET</div>
+            <div class="card-title">??SELECT RECALL DATASET</div>
             <p style="font-size:10px;color:var(--text-dim);margin-bottom:12px;">
                 DATASETS INCLUDE MULTI-NEEDLE TESTS, POSITION-SHUFFLE QA, AND CROSS-POSITION REASONING CHALLENGES.
             </p>
@@ -37,7 +37,7 @@
 
         <!-- Step 3: Episodes -->
         <div class="card">
-            <div class="card-title">③ SET EPISODES</div>
+            <div class="card-title">??SET EPISODES</div>
             <p style="font-size:10px;color:var(--text-dim);margin-bottom:12px;">
                 MORE EPISODES = FLATTER RECALL CURVE. RED TEAM (SCRAMBLER) BURIES INFORMATION IN HARD-TO-FIND POSITIONS WHILE BLUE TEAM (RETAINER) LEARNS TO FIND IT EVERYWHERE.
             </p>
@@ -45,7 +45,7 @@
                 <input type="range" id="episodeSlider" class="range-input" min="10" max="500" value="100" step="10" oninput="updateEstimate()">
                 <div class="range-labels">
                     <span>10</span>
-                    <span id="episodeValue" style="color:var(--yellow);font-family:'Press Start 2P',monospace;font-size:11px;">100</span>
+                    <span id="episodeValue" style="color:var(--yellow);font-size:11px;">100</span>
                     <span>500</span>
                 </div>
             </div>
@@ -53,35 +53,35 @@
 
         <!-- Cost estimate -->
         <div class="estimate-box" id="estimateBox">
-            <div style="font-family:'Press Start 2P',monospace;font-size:9px;color:var(--yellow);margin-bottom:12px;">
+            <div style="font-size:9px;color:var(--yellow);margin-bottom:12px;">
                 COST ESTIMATE
             </div>
             <div class="estimate-row">
                 <span>BASE MODEL</span>
-                <span id="estModel" style="color:var(--yellow)">—</span>
+                <span id="estModel" style="color:var(--yellow)">??/span>
             </div>
             <div class="estimate-row">
                 <span>DATASET</span>
-                <span id="estDataset" style="color:var(--pink)">—</span>
+                <span id="estDataset" style="color:var(--pink)">??/span>
             </div>
             <div class="estimate-row">
                 <span>EPISODES</span>
-                <span id="estEpisodes">—</span>
+                <span id="estEpisodes">??/span>
             </div>
             <div class="estimate-row">
                 <span>COST PER EPISODE</span>
-                <span id="estCostPer">—</span>
+                <span id="estCostPer">??/span>
             </div>
             <div class="estimate-row estimate-total">
                 <span>TOTAL CREDITS</span>
-                <span id="estTotal">—</span>
+                <span id="estTotal">??/span>
             </div>
             <div class="estimate-row" style="margin-top:8px">
                 <span style="color:var(--text-dim)">YOUR BALANCE</span>
-                <span id="estBalance" style="color:var(--green)">—</span>
+                <span id="estBalance" style="color:var(--green)">??/span>
             </div>
             <div id="estWarning" style="display:none;margin-top:8px;font-size:9px;color:var(--red);">
-                ⚠ NOT ENOUGH CREDITS — <a href="/platform/billing.html" style="color:var(--yellow)">BUY MORE →</a>
+                ??NOT ENOUGH CREDITS ??<a href="/platform/billing.html" style="color:var(--yellow)">BUY MORE ??/a>
             </div>
         </div>
 
@@ -104,18 +104,18 @@
             <div style="font-size:10px;line-height:2;">
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
                     <div style="border:2px solid var(--red);padding:12px;">
-                        <div style="color:var(--red);font-family:'Press Start 2P',monospace;font-size:9px;margin-bottom:8px;">
-                            🔴 SCRAMBLER (RED TEAM)
+                        <div style="color:var(--red);font-size:9px;margin-bottom:8px;">
+                            ?�� SCRAMBLER (RED TEAM)
                         </div>
                         <div style="color:var(--text-dim);font-size:9px;">
                             LEARNS TO BURY KEY INFORMATION IN THE HARDEST-TO-FIND POSITIONS. INJECTS DISTRACTORS NEAR NEEDLES. EXPLOITS THE U-SHAPED ATTENTION CURVE.
                             <br><br>
-                            INTERNAL USE ONLY — NOT DEPLOYED.
+                            INTERNAL USE ONLY ??NOT DEPLOYED.
                         </div>
                     </div>
                     <div style="border:2px solid var(--yellow);padding:12px;">
-                        <div style="color:var(--yellow);font-family:'Press Start 2P',monospace;font-size:9px;margin-bottom:8px;">
-                            🟡 RETAINER (BLUE TEAM)
+                        <div style="color:var(--yellow);font-size:9px;margin-bottom:8px;">
+                            ?�� RETAINER (BLUE TEAM)
                         </div>
                         <div style="color:var(--text-dim);font-size:9px;">
                             LEARNS POSITION-AGNOSTIC RECALL. FLATTENS THE U-CURVE TO UNIFORM ATTENTION. FINDS NEEDLES AT ANY POSITION IN THE HAYSTACK.
@@ -136,28 +136,28 @@
             <div style="font-family:monospace;font-size:10px;line-height:1.3;padding:8px;background:var(--bg2);border:2px solid var(--border);">
 <pre style="color:var(--text-dim);margin:0;">
   RECALL%
-  100│██                                    ██
-     │ ███                                ███
-   80│   ██                              ██
-     │    ██                            ██
-   60│     ███                        ███
-     │       ████                  ████
-   40│          ██████        ██████
-     │               ████████
-   20│          LOST IN THE MIDDLE
-     │         ← YOUR MODEL'S BLIND SPOT →
-    0└──────────────────────────────────────
+  100?�█??                                   ?�█
+     ???�█??                               ?�█??
+   80??  ?�█                              ?�█
+     ??   ?�█                            ?�█
+   60??    ?�█??                       ?�█??
+     ??      ?�█?�█                  ?�█?�█
+   40??         ?�█?�█?�█        ?�█?�█?�█
+     ??              ?�█?�█?�█?�█
+   20??         LOST IN THE MIDDLE
+     ??        ??YOUR MODEL'S BLIND SPOT ??
+    0?��??�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
      START          MIDDLE             END
      (5%)           (50%)             (95%)
 </pre>
                 <div style="margin-top:8px;color:var(--yellow);font-size:9px;text-align:center;">
-                    MURHEN FLATTENS THIS CURVE → UNIFORM RECALL AT ALL POSITIONS
+                    MURHEN FLATTENS THIS CURVE ??UNIFORM RECALL AT ALL POSITIONS
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="footer">SERIES © 2025 — OGENTI · OVISEN · PHIREN · PARHEN · MURHEN</div>
+    <div class="footer">SER1ES © 2025 ??OGENTI · OVISEN · PHIREN · PARHEN · MURHEN</div>
 
     <script src="/platform/app.js"></script>
     <script>
@@ -187,7 +187,7 @@
                 ];
 
                 datasetsData = [
-                    { id: 'multi-needle', name: 'Multi-Needle (15K)', description: '5 FACTS BURIED AT VARYING POSITIONS → FIND THEM ALL', size: '~15,000 samples' },
+                    { id: 'multi-needle', name: 'Multi-Needle (15K)', description: '5 FACTS BURIED AT VARYING POSITIONS ??FIND THEM ALL', size: '~15,000 samples' },
                     { id: 'position-shuffle-qa', name: 'Position-Shuffle QA (25K)', description: 'SAME QA PAIR TESTED AT 10 DIFFERENT POSITIONS', size: '~25,000 samples' },
                     { id: 'long-doc', name: 'Long-Doc Comprehension (10K)', description: 'SCROLLS + QUALITY BASED LONG DOCUMENT QA', size: '~10,000 samples' },
                     { id: 'cross-position', name: 'Cross-Position Reasoning (15K)', description: 'MUST COMBINE INFO FROM START + MIDDLE + END', size: '~15,000 samples' },
@@ -253,8 +253,8 @@
             document.getElementById('episodeValue').textContent = episodes;
 
             if (selectedModel === null) {
-                document.getElementById('estModel').textContent = '—';
-                document.getElementById('estTotal').textContent = '—';
+                document.getElementById('estModel').textContent = '??;
+                document.getElementById('estTotal').textContent = '??;
                 return;
             }
 
@@ -264,7 +264,7 @@
             const total = costPer * episodes;
 
             document.getElementById('estModel').textContent = (model.label || model.model).toUpperCase();
-            document.getElementById('estDataset').textContent = dataset ? (dataset.name || dataset.id).toUpperCase() : '—';
+            document.getElementById('estDataset').textContent = dataset ? (dataset.name || dataset.id).toUpperCase() : '??;
             document.getElementById('estEpisodes').textContent = episodes;
             document.getElementById('estCostPer').textContent = costPer + ' CR';
             document.getElementById('estTotal').textContent = formatCredits(total) + ' CR';
@@ -276,7 +276,7 @@
             const btn = document.getElementById('launchBtn');
             if (selectedModel !== null && selectedDataset !== null && hasEnough) {
                 btn.disabled = false;
-                btn.textContent = `LAUNCH — ${formatCredits(total)} CREDITS`;
+                btn.textContent = `LAUNCH ??${formatCredits(total)} CREDITS`;
             } else if (!hasEnough) {
                 btn.disabled = true;
                 btn.textContent = 'NOT ENOUGH CREDITS';
@@ -306,12 +306,12 @@
                 const monitorUrl = `/monitor?key=${job.dashboard_key}&product=murhen`;
                 document.getElementById('msg').innerHTML = `
                     <div style="background:rgba(255,255,85,0.06);border:1px solid var(--yellow);padding:14px 18px;font-family:monospace;line-height:1.8;">
-                        <div style="color:var(--yellow);font-size:11px;letter-spacing:.15em;margin-bottom:6px;">▶ MURHEN JOB #${job.job_id} LAUNCHED</div>
+                        <div style="color:var(--yellow);font-size:11px;letter-spacing:.15em;margin-bottom:6px;">??MURHEN JOB #${job.job_id} LAUNCHED</div>
                         <div style="color:#aaa;font-size:9px;letter-spacing:.1em;margin-bottom:4px;">${formatCredits(job.credits_used)} CREDITS DEDUCTED</div>
                         <div style="border-top:1px solid rgba(255,255,85,0.15);margin:8px 0;"></div>
                         <div style="color:#aaa;font-size:9px;letter-spacing:.1em;">DASHBOARD KEY</div>
                         <div style="color:#fff;font-size:18px;letter-spacing:.25em;font-weight:700;margin:4px 0 10px;">${job.dashboard_key}</div>
-                        <a href="${monitorUrl}" target="_blank" style="display:inline-block;background:var(--yellow);color:#000;padding:6px 16px;font-size:9px;letter-spacing:.15em;text-decoration:none;font-weight:700;">OPEN MONITOR →</a>
+                        <a href="${monitorUrl}" target="_blank" style="display:inline-block;background:var(--yellow);color:#000;padding:6px 16px;font-size:9px;letter-spacing:.15em;text-decoration:none;font-weight:700;">OPEN MONITOR ??/a>
                         <button onclick="navigator.clipboard.writeText('${job.dashboard_key}')" style="margin-left:8px;background:transparent;border:1px solid rgba(255,255,85,0.3);color:var(--yellow);padding:6px 12px;font-size:9px;letter-spacing:.1em;cursor:pointer;">COPY KEY</button>
                     </div>`;
                 document.getElementById('msg').style.display = 'block';
@@ -335,7 +335,7 @@
                 const div = document.getElementById('jobsList');
 
                 if (jobs.length === 0) {
-                    div.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-dim);font-size:10px;">NO MURHEN JOBS YET — LAUNCH YOUR FIRST TRAINING ABOVE</div>';
+                    div.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-dim);font-size:10px;">NO MURHEN JOBS YET ??LAUNCH YOUR FIRST TRAINING ABOVE</div>';
                     return;
                 }
 
@@ -350,7 +350,7 @@
                         <div style="border:2px solid var(--border);padding:16px;margin-bottom:8px;background:var(--bg);">
                             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
                                 <div>
-                                    <span style="font-family:'Press Start 2P',monospace;font-size:9px;color:var(--yellow);">JOB #${j.id}</span>
+                                    <span style="font-size:9px;color:var(--yellow);">JOB #${j.id}</span>
                                     <span class="badge ${statusBadge}" style="margin-left:8px">${j.status.toUpperCase()}</span>
                                 </div>
                                 <span style="font-size:9px;color:var(--text-dim)">${formatDate(j.created_at)}</span>
@@ -370,13 +370,13 @@
                             ${j.dashboard_key ? `
                                 <div style="margin-top:8px;">
                                     <a href="/monitor?key=${j.dashboard_key}&product=murhen" target="_blank"
-                                       style="font-size:9px;color:var(--yellow);text-decoration:underline;">OPEN DASHBOARD →</a>
+                                       style="font-size:9px;color:var(--yellow);text-decoration:underline;">OPEN DASHBOARD ??/a>
                                 </div>
                             ` : ''}
                         </div>`;
                 }).join('');
             } catch {
-                document.getElementById('jobsList').innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-dim);font-size:10px;">NO MURHEN JOBS YET — LAUNCH YOUR FIRST TRAINING ABOVE</div>';
+                document.getElementById('jobsList').innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-dim);font-size:10px;">NO MURHEN JOBS YET ??LAUNCH YOUR FIRST TRAINING ABOVE</div>';
             }
         }
 

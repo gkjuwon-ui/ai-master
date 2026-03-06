@@ -1,4 +1,4 @@
-"""Series Platform — RunPod PHIREN Client
+"""Ser1es Platform — RunPod PHIREN Client
 
 Handles dispatching PHIREN (hallucination guard) training jobs
 to a RunPod Serverless endpoint.

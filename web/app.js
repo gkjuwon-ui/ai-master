@@ -1,5 +1,5 @@
 /* ============================================================
-   SERIES Training Monitor — Dashboard Engine v3
+   SER1ES Training Monitor — Dashboard Engine v3
    Multi-product: OGENTI / OVISEN / PHIREN / PARHEN / MURHEN
    REST polling + WebSocket fallback
    ============================================================ */
@@ -287,7 +287,7 @@
         conn.pollTimer = setInterval(async () => {
             if (document.hidden) return;
             try { await pollDashboard(key); }
-            catch (e) { console.warn('[SERIES] Poll error:', e.message); }
+            catch (e) { console.warn('[SER1ES] Poll error:', e.message); }
         }, CONFIG.POLL_INTERVAL);
     }
 
@@ -329,7 +329,7 @@
                 const data = await resp.json();
                 handleFullState(data);
             } catch (e) {
-                console.warn('[SERIES] REST poll error:', e.message);
+                console.warn('[SER1ES] REST poll error:', e.message);
             }
         }, 2000);  // Poll every 2 seconds
     }
@@ -346,7 +346,7 @@
         try {
             conn.ws = new WebSocket(wsUrl);
         } catch (e) {
-            console.warn('[SERIES] WS connect failed:', e);
+            console.warn('[SER1ES] WS connect failed:', e);
             setTimeout(() => connectWebSocketLocal(), CONFIG.WS_RECONNECT_INTERVAL);
             return;
         }
@@ -372,7 +372,7 @@
                 const msg = JSON.parse(evt.data);
                 handleServerEvent(msg);
             } catch (e) {
-                console.warn('[SERIES] WS parse error:', e);
+                console.warn('[SER1ES] WS parse error:', e);
             }
         };
 
@@ -389,7 +389,7 @@
         };
 
         conn.ws.onerror = (err) => {
-            console.warn('[SERIES] WS error:', err);
+            console.warn('[SER1ES] WS error:', err);
         };
     }
 
@@ -517,7 +517,7 @@
     }
 
     function handleEval(data) {
-        console.log('[SERIES] Eval:', data);
+        console.log('[SER1ES] Eval:', data);
     }
 
     function handleStatus(data) {
@@ -933,7 +933,7 @@
     // ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
 
     function handleAdapterExported(data) {
-        console.log('[SERIES] Universal Adapter Exported:', data);
+        console.log('[SER1ES] Universal Adapter Exported:', data);
 
         // Show export banner
         let banner = document.getElementById('adapterBanner');

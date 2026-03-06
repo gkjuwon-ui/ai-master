@@ -1,4 +1,4 @@
-"""Series Platform -- PARHEN Adapter & Inference Routes
+"""Ser1es Platform -- PARHEN Adapter & Inference Routes
 
 Anti-sycophancy adapters (.prh format).
 

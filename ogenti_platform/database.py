@@ -1,4 +1,4 @@
-"""Series Platform — Database Models (O-Series: Ogenti/Ovisen, P-Series: Phiren/Parhen, M-Series: Murhen)"""
+"""Ser1es Platform — Database Models (O-Ser1es: Ogenti/Ovisen, P-Ser1es: Phiren/Parhen, M-Ser1es: Murhen)"""
 from datetime import datetime, timezone
 from sqlalchemy import (
     Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text, LargeBinary, create_engine
@@ -178,7 +178,7 @@ class OVisenAdapter(Base):
 
 
 # ══════════════════════════════════════════════════════════════
-# PHIREN — Hallucination Guard Adapter (P-Series)
+# PHIREN — Hallucination Guard Adapter (P-Ser1es)
 # ══════════════════════════════════════════════════════════════
 
 class PhirenTrainingJob(Base):
@@ -229,7 +229,7 @@ class PhirenAdapter(Base):
 
 
 # ══════════════════════════════════════════════════════════════
-# PARHEN — Anti-Sycophancy Adapter (P-Series)
+# PARHEN — Anti-Sycophancy Adapter (P-Ser1es)
 # ══════════════════════════════════════════════════════════════
 
 class ParhenTrainingJob(Base):
@@ -280,7 +280,7 @@ class ParhenAdapter(Base):
 
 
 # ══════════════════════════════════════════════════════════════
-# MURHEN — Position-Agnostic Recall Adapter (M-Series)
+# MURHEN — Position-Agnostic Recall Adapter (M-Ser1es)
 # ══════════════════════════════════════════════════════════════
 
 class MurhenTrainingJob(Base):

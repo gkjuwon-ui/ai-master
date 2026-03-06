@@ -1,4 +1,4 @@
-"""Series Platform -- MURHEN Training Job Routes
+"""Ser1es Platform -- MURHEN Training Job Routes
 
 Position-agnostic recall (lost-in-the-middle fix) adapter training via MAPPO.
 RunPod Serverless integration for GPU-accelerated training.

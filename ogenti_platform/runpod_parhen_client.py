@@ -1,4 +1,4 @@
-"""Series Platform -- RunPod PARHEN Client
+"""Ser1es Platform -- RunPod PARHEN Client
 
 Handles dispatching PARHEN (anti-sycophancy) training jobs
 to a RunPod Serverless endpoint.

@@ -1,4 +1,4 @@
-"""Series Platform — Auth Routes"""
+"""Ser1es Platform — Auth Routes"""
 import secrets
 import hashlib
 from datetime import datetime, timezone

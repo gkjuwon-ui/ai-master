@@ -27,7 +27,7 @@ cells = []
 cells.append(nbf.v4.new_markdown_cell(
     "# OGENTI Training - Llama 4 Scout on A100 80GB\n"
     "\n"
-    "**O Series Protocol Training Pipeline**\n"
+    "**O Ser1es Protocol Training Pipeline**\n"
     "\n"
     "| Spec | Value |\n"
     "|------|-------|\n"

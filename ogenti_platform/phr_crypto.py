@@ -10,7 +10,7 @@ File structure:
 └──────────────────────────────────────────────┘
 
 Without the server-side key, the file is indistinguishable from random noise.
-Keys NEVER leave the Series server. Inference requires server-side decryption.
+Keys NEVER leave the Ser1es server. Inference requires server-side decryption.
 """
 
 import os

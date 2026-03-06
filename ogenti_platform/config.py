@@ -1,4 +1,4 @@
-"""Series Platform Configuration — O-Series (Ogenti/Ovisen) + P-Series (Phiren)"""
+"""Ser1es Platform Configuration — O-Ser1es (Ogenti/Ovisen) + P-Ser1es (Phiren)"""
 import os
 import secrets
 
@@ -190,10 +190,10 @@ OGE_STORAGE_DIR = os.getenv("OGE_STORAGE_DIR", _default_oge)
 RUNPOD_OVISEN_ENDPOINT_ID = os.getenv("RUNPOD_OVISEN_ENDPOINT_ID", "")
 
 # ════════════════════════════════════════════════════════════════
-# PHIREN — Hallucination Guard Adapter (P-Series)
+# PHIREN — Hallucination Guard Adapter (P-Ser1es)
 # ════════════════════════════════════════════════════════════════
 
-# ── P-Series Model Pricing (credits per episode) ──
+# ── P-Ser1es Model Pricing (credits per episode) ──
 PHIREN_MODEL_COSTS = {
     "qwen2.5-3b":   {"credits_per_episode": 2,  "label": "Qwen2.5-3B",   "vram": "8GB",  "speed": "Fast"},
     "qwen2.5-7b":   {"credits_per_episode": 4,  "label": "Qwen2.5-7B",   "vram": "16GB", "speed": "Medium"},
@@ -203,7 +203,7 @@ PHIREN_MODEL_COSTS = {
     "custom":       {"credits_per_episode": 3,  "label": "Custom (User)", "vram": "Varies","speed": "Varies"},
 }
 
-# ── P-Series Inference Pricing ──
+# ── P-Ser1es Inference Pricing ──
 PHIREN_INFERENCE_COSTS = {
     "qwen2.5-3b":   {"credits_per_call": 2,  "label": "Qwen2.5-3B"},
     "qwen2.5-7b":   {"credits_per_call": 3,  "label": "Qwen2.5-7B"},
@@ -213,7 +213,7 @@ PHIREN_INFERENCE_COSTS = {
     "custom":       {"credits_per_call": 2,  "label": "Custom"},
 }
 
-# ── P-Series Datasets ──
+# ── P-Ser1es Datasets ──
 PHIREN_DATASETS = [
     {"id": "truthfulqa",      "label": "TruthfulQA (817 questions)",        "tasks": 817,   "categories": 38},
     {"id": "fever",           "label": "FEVER Fact Verification (185K)",     "tasks": 185_000,"categories": 3},
@@ -222,7 +222,7 @@ PHIREN_DATASETS = [
     {"id": "custom-upload",   "label": "Custom Upload (JSONL)",              "tasks": 0,      "categories": 0},
 ]
 
-# ── P-Series Dataset → source mapping ──
+# ── P-Ser1es Dataset → source mapping ──
 PHIREN_DATASET_MAP = {
     "truthfulqa":      {"type": "hf", "path": "truthfulqa/truthful_qa"},
     "fever":           {"type": "hf", "path": "fever/fever"},
@@ -231,7 +231,7 @@ PHIREN_DATASET_MAP = {
     "custom-upload":   {"type": "upload"},
 }
 
-# ── P-Series GPU mapping ──
+# ── P-Ser1es GPU mapping ──
 PHIREN_MODEL_GPU_MAP = {
     "qwen2.5-3b":   {"gpu": "NVIDIA RTX A4000", "gpu_count": 1},
     "qwen2.5-7b":   {"gpu": "NVIDIA RTX A5000", "gpu_count": 1},
@@ -249,7 +249,7 @@ PHR_STORAGE_DIR = os.getenv("PHR_STORAGE_DIR", _default_phr)
 RUNPOD_PHIREN_ENDPOINT_ID = os.getenv("RUNPOD_PHIREN_ENDPOINT_ID", "")
 
 # ════════════════════════════════════════════════════════════════
-# PARHEN — Anti-Sycophancy Adapter (P-Series)
+# PARHEN — Anti-Sycophancy Adapter (P-Ser1es)
 # ════════════════════════════════════════════════════════════════
 
 # ── PARHEN Model Pricing (credits per episode) ──
@@ -312,7 +312,7 @@ PRH_STORAGE_DIR = os.getenv("PRH_STORAGE_DIR", _default_prh)
 RUNPOD_PARHEN_ENDPOINT_ID = os.getenv("RUNPOD_PARHEN_ENDPOINT_ID", "")
 
 # ════════════════════════════════════════════════════════════════
-# MURHEN — Position-Agnostic Recall Adapter (M-Series)
+# MURHEN — Position-Agnostic Recall Adapter (M-Ser1es)
 # ════════════════════════════════════════════════════════════════
 
 # ── MURHEN Model Pricing (credits per episode) ──

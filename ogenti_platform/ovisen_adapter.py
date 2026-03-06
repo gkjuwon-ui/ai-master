@@ -1,4 +1,4 @@
-"""O Series Platform — OVISEN Adapter & Inference Routes
+"""O Ser1es Platform — OVISEN Adapter & Inference Routes
 
 Image embedding compression adapters (.oge format).
 

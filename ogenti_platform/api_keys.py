@@ -1,4 +1,4 @@
-"""Series Platform — API Key Management Routes"""
+"""Ser1es Platform — API Key Management Routes"""
 import hashlib
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException

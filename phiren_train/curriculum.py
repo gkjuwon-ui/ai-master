@@ -1,7 +1,7 @@
 """
 curriculum.py — PHIREN Curriculum Learning
 
-5-phase training schedule (from SERIES_VISION.md):
+5-phase training schedule (from SER1ES_VISION.md):
   Phase 0: Warmup (SL)              — supervised claim extraction
   Phase 1: Claim Extraction          — RL on extraction quality
   Phase 2: Verification Training     — NLI accuracy via RL

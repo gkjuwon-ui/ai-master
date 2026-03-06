@@ -1,4 +1,4 @@
-"""Series Platform — Billing & Credits Routes"""
+"""Ser1es Platform — Billing & Credits Routes"""
 import stripe
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -107,7 +107,7 @@ async def purchase_credits(req: PurchaseRequest, user: User = Depends(get_curren
                 "package_id": package["id"],
                 "credits": str(package["credits"]),
             },
-            description=f"Series Credits: {package['label']}",
+            description=f"Ser1es Credits: {package['label']}",
         )
 
         return {

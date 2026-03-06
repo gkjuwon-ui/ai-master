@@ -7,7 +7,7 @@ Agents:
   - DetectorAgent: learns to extract claims and run NLI
   - VerifierAgent: learns to calibrate confidence and produce verdicts
 
-Rewards (from SERIES_VISION.md):
+Rewards (from SER1ES_VISION.md):
   - Factuality:   0.45 — correct verdicts
   - Calibration:  0.25 — well-calibrated confidence
   - Helpfulness:  0.20 — useful explanations

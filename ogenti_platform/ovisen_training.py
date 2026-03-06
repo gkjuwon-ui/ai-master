@@ -1,4 +1,4 @@
-"""O Series Platform — OVISEN Training Job Routes
+"""O Ser1es Platform — OVISEN Training Job Routes
 
 Image embedding compression training via MARL.
 RunPod Serverless integration for GPU-accelerated vision model training.

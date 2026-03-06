@@ -1,4 +1,4 @@
-"""Series Platform -- RunPod MURHEN Client
+"""Ser1es Platform -- RunPod MURHEN Client
 
 Handles dispatching MURHEN (position-agnostic recall / lost-in-the-middle fix)
 training jobs to a RunPod Serverless endpoint.

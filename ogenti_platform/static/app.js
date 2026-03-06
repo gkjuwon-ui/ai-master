@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════
-   SERIES PLATFORM — AUTH HELPERS
+   SER1ES PLATFORM — AUTH HELPERS
    ═══════════════════════════════════════════════ */
 
 const API = 'https://ogenti-api-production.up.railway.app';
@@ -140,7 +140,7 @@ function renderNav(activePage = '') {
     nav.innerHTML = `
         <div class="nav-top">
             <a href="https://oseries.io" class="nav-brand">
-                SERIES <span class="nav-tag">PLATFORM</span>
+                SER1ES <span class="nav-tag">PLATFORM</span>
             </a>
             ${platformLinks}
             ${userSection}

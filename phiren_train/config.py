@@ -52,7 +52,7 @@ class InfraConfig:
 
 
 # ─────────────────────────────────────────────────────────────────
-#  Reward Weights (from SERIES_VISION.md)
+#  Reward Weights (from SER1ES_VISION.md)
 # ─────────────────────────────────────────────────────────────────
 
 @dataclass

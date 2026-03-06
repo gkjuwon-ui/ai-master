@@ -3,7 +3,7 @@ rewards.py — PHIREN Reward Functions
 
 Multi-component reward for hallucination detection MAPPO training.
 
-Weights (SERIES_VISION.md):
+Weights (SER1ES_VISION.md):
   - Factuality:   0.45 — correct claim verdicts vs ground truth
   - Calibration:  0.25 — confidence matches actual accuracy
   - Helpfulness:  0.20 — informative verdicts, no over-filtering

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SERIES — OGENTI TRAINING</title>
+    <title>SER1ES ??OGENTI TRAINING</title>
     <link rel="stylesheet" href="/platform/style.css">
 </head>
 <body class="crt" data-page="training">
@@ -17,7 +17,7 @@
 
         <!-- Step 1: Model -->
         <div class="card">
-            <div class="card-title">① SELECT MODEL</div>
+            <div class="card-title">??SELECT MODEL</div>
             <p style="font-size:10px;color:var(--text-dim);margin-bottom:12px;">
                 CHOOSE A BASE MODEL. LARGER MODELS COST MORE CREDITS PER EPISODE BUT PRODUCE STRONGER ADAPTERS.
             </p>
@@ -28,7 +28,7 @@
 
         <!-- Step 2: Dataset -->
         <div class="card">
-            <div class="card-title">② SELECT DATASET</div>
+            <div class="card-title">??SELECT DATASET</div>
             <div class="model-grid" id="datasetGrid">
                 <!-- filled by JS -->
             </div>
@@ -36,7 +36,7 @@
 
         <!-- Step 3: Episodes -->
         <div class="card">
-            <div class="card-title">③ SET EPISODES</div>
+            <div class="card-title">??SET EPISODES</div>
             <p style="font-size:10px;color:var(--text-dim);margin-bottom:12px;">
                 MORE EPISODES = BETTER CONVERGENCE. WE RECOMMEND 50-200 FOR MOST USE CASES.
             </p>
@@ -44,7 +44,7 @@
                 <input type="range" id="episodeSlider" class="range-input" min="10" max="500" value="100" step="10" oninput="updateEstimate()">
                 <div class="range-labels">
                     <span>10</span>
-                    <span id="episodeValue" style="color:var(--cyan);font-family:'Press Start 2P',monospace;font-size:11px;">100</span>
+                    <span id="episodeValue" style="color:var(--cyan);font-size:11px;">100</span>
                     <span>500</span>
                 </div>
             </div>
@@ -52,35 +52,35 @@
 
         <!-- Cost estimate -->
         <div class="estimate-box" id="estimateBox">
-            <div style="font-family:'Press Start 2P',monospace;font-size:9px;color:var(--pink);margin-bottom:12px;">
+            <div style="font-size:9px;color:var(--pink);margin-bottom:12px;">
                 COST ESTIMATE
             </div>
             <div class="estimate-row">
                 <span>MODEL</span>
-                <span id="estModel" style="color:var(--pink)">—</span>
+                <span id="estModel" style="color:var(--pink)">??/span>
             </div>
             <div class="estimate-row">
                 <span>DATASET</span>
-                <span id="estDataset" style="color:var(--cyan)">—</span>
+                <span id="estDataset" style="color:var(--cyan)">??/span>
             </div>
             <div class="estimate-row">
                 <span>EPISODES</span>
-                <span id="estEpisodes">—</span>
+                <span id="estEpisodes">??/span>
             </div>
             <div class="estimate-row">
                 <span>COST PER EPISODE</span>
-                <span id="estCostPer">—</span>
+                <span id="estCostPer">??/span>
             </div>
             <div class="estimate-row estimate-total">
                 <span>TOTAL CREDITS</span>
-                <span id="estTotal">—</span>
+                <span id="estTotal">??/span>
             </div>
             <div class="estimate-row" style="margin-top:8px">
                 <span style="color:var(--text-dim)">YOUR BALANCE</span>
-                <span id="estBalance" style="color:var(--green)">—</span>
+                <span id="estBalance" style="color:var(--green)">??/span>
             </div>
             <div id="estWarning" style="display:none;margin-top:8px;font-size:9px;color:var(--red);">
-                ⚠ NOT ENOUGH CREDITS — <a href="/platform/billing.html" style="color:var(--yellow)">BUY MORE →</a>
+                ??NOT ENOUGH CREDITS ??<a href="/platform/billing.html" style="color:var(--yellow)">BUY MORE ??/a>
             </div>
         </div>
 
@@ -98,7 +98,7 @@
         </div>
     </div>
 
-    <div class="footer">SERIES © 2025 — OGENTI · OVISEN · PHIREN · PARHEN · MURHEN</div>
+    <div class="footer">SER1ES © 2025 ??OGENTI · OVISEN · PHIREN · PARHEN · MURHEN</div>
 
     <script src="/platform/app.js"></script>
     <script>
@@ -174,8 +174,8 @@
             document.getElementById('episodeValue').textContent = episodes;
 
             if (selectedModel === null) {
-                document.getElementById('estModel').textContent = '—';
-                document.getElementById('estTotal').textContent = '—';
+                document.getElementById('estModel').textContent = '??;
+                document.getElementById('estTotal').textContent = '??;
                 return;
             }
 
@@ -185,7 +185,7 @@
             const total = costPer * episodes;
 
             document.getElementById('estModel').textContent = model.name.toUpperCase();
-            document.getElementById('estDataset').textContent = dataset ? dataset.name.toUpperCase() : '—';
+            document.getElementById('estDataset').textContent = dataset ? dataset.name.toUpperCase() : '??;
             document.getElementById('estEpisodes').textContent = episodes;
             document.getElementById('estCostPer').textContent = costPer + ' CR';
             document.getElementById('estTotal').textContent = formatCredits(total) + ' CR';
@@ -197,7 +197,7 @@
             const btn = document.getElementById('launchBtn');
             if (selectedModel !== null && selectedDataset !== null && hasEnough) {
                 btn.disabled = false;
-                btn.textContent = `LAUNCH — ${formatCredits(total)} CREDITS`;
+                btn.textContent = `LAUNCH ??${formatCredits(total)} CREDITS`;
             } else if (!hasEnough) {
                 btn.disabled = true;
                 btn.textContent = 'NOT ENOUGH CREDITS';
@@ -258,7 +258,7 @@
                 const div = document.getElementById('jobsList');
 
                 if (jobs.length === 0) {
-                    div.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-dim);font-size:10px;">NO JOBS YET — LAUNCH YOUR FIRST TRAINING ABOVE</div>';
+                    div.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-dim);font-size:10px;">NO JOBS YET ??LAUNCH YOUR FIRST TRAINING ABOVE</div>';
                     return;
                 }
 
@@ -281,7 +281,7 @@
                         <div style="border:2px solid var(--border);padding:16px;margin-bottom:8px;background:var(--bg);">
                             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
                                 <div>
-                                    <span style="font-family:'Press Start 2P',monospace;font-size:9px;color:var(--pink);">
+                                    <span style="font-size:9px;color:var(--pink);">
                                         JOB #${j.id}
                                     </span>
                                     <span class="badge ${statusBadge}" style="margin-left:8px">${j.status.toUpperCase()}</span>

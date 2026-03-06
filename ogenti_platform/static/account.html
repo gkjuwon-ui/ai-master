@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SERIES — ACCOUNT</title>
+    <title>SER1ES ??ACCOUNT</title>
     <link rel="stylesheet" href="/platform/style.css">
 </head>
 <body class="crt" data-page="account">
@@ -11,38 +11,38 @@
 
     <div class="page-wrap">
         <div class="page-title">ACCOUNT</div>
-        <div class="page-sub">YOUR SERIES PROFILE & STATS</div>
+        <div class="page-sub">YOUR SER1ES PROFILE & STATS</div>
 
         <!-- First-time API key alert -->
         <div id="firstKeyAlert" class="msg msg-success" style="display:none;">
-            <div style="margin-bottom:8px;font-family:'Press Start 2P',monospace;font-size:9px;">
-                🔑 YOUR FIRST API KEY
+            <div style="margin-bottom:8px;font-size:9px;">
+                ?�� YOUR FIRST API KEY
             </div>
             <div class="key-display" id="firstKeyValue" style="margin:8px 0"></div>
             <div class="key-warning">
-                ⚠ SAVE THIS KEY NOW — YOU WON'T SEE IT AGAIN
+                ??SAVE THIS KEY NOW ??YOU WON'T SEE IT AGAIN
             </div>
             <button onclick="dismissFirstKey()" class="btn btn-small btn-secondary" style="margin-top:10px">
-                I SAVED IT →
+                I SAVED IT ??
             </button>
         </div>
 
         <!-- Stats bar -->
         <div class="stat-bar">
             <div class="stat-item">
-                <div class="stat-number" id="creditBalance">—</div>
+                <div class="stat-number" id="creditBalance">??/div>
                 <div class="stat-label">CREDITS</div>
             </div>
             <div class="stat-item">
-                <div class="stat-number" id="currentTier">—</div>
+                <div class="stat-number" id="currentTier">??/div>
                 <div class="stat-label">TIER</div>
             </div>
             <div class="stat-item">
-                <div class="stat-number" id="totalJobs">—</div>
+                <div class="stat-number" id="totalJobs">??/div>
                 <div class="stat-label">TRAINING JOBS</div>
             </div>
             <div class="stat-item">
-                <div class="stat-number" id="apiKeyCount">—</div>
+                <div class="stat-number" id="apiKeyCount">??/div>
                 <div class="stat-label">API KEYS</div>
             </div>
         </div>
@@ -52,19 +52,19 @@
             <div class="card-title">PROFILE</div>
             <div class="card-row">
                 <span class="card-label">EMAIL</span>
-                <span class="card-value cyan" id="userEmail">—</span>
+                <span class="card-value cyan" id="userEmail">??/span>
             </div>
             <div class="card-row">
                 <span class="card-label">NAME</span>
-                <span class="card-value" id="userName">—</span>
+                <span class="card-value" id="userName">??/span>
             </div>
             <div class="card-row">
                 <span class="card-label">MEMBER SINCE</span>
-                <span class="card-value" id="userSince">—</span>
+                <span class="card-value" id="userSince">??/span>
             </div>
             <div class="card-row">
                 <span class="card-label">EMAIL VERIFIED</span>
-                <span id="userVerified">—</span>
+                <span id="userVerified">??/span>
             </div>
         </div>
 
@@ -85,7 +85,7 @@
         </div>
     </div>
 
-    <div class="footer">SERIES © 2025 — OGENTI · OVISEN · PHIREN · PARHEN · MURHEN</div>
+    <div class="footer">SER1ES © 2025 ??OGENTI · OVISEN · PHIREN · PARHEN · MURHEN</div>
 
     <script src="/platform/app.js"></script>
     <script>
@@ -113,7 +113,7 @@
                 document.getElementById('creditBalance').textContent = formatCredits(user.credits);
                 document.getElementById('currentTier').textContent = (user.tier || 'free').toUpperCase();
                 document.getElementById('userEmail').textContent = user.email;
-                document.getElementById('userName').textContent = user.name || '—';
+                document.getElementById('userName').textContent = user.name || '??;
                 document.getElementById('userSince').textContent = formatDate(user.created_at);
                 document.getElementById('userVerified').innerHTML = user.email_verified
                     ? '<span class="badge badge-green">YES</span>'
@@ -153,7 +153,7 @@
                             </div>
                             <div class="card-row">
                                 <span class="card-label">UPGRADE AT</span>
-                                <span class="card-value yellow">${current.credits_required === 0 ? '—' : '$' + (current.credits_required * 0.005).toFixed(0) + ' spent'}</span>
+                                <span class="card-value yellow">${current.credits_required === 0 ? '?? : '$' + (current.credits_required * 0.005).toFixed(0) + ' spent'}</span>
                             </div>
                         `;
                     }

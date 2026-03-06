@@ -10,6 +10,7 @@ from .auth import get_current_user
 from .config import (
     STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET,
     CREDIT_PACKAGES, MODEL_COSTS, TIERS, OVISEN_MODEL_COSTS,
+    PRODUCT_DATASETS, DATASET_TIERS,
 )
 
 router = APIRouter(prefix="/api/billing", tags=["billing"])
@@ -55,6 +56,27 @@ async def list_vision_models():
     for name, info in OVISEN_MODEL_COSTS.items():
         result.append({"name": name, "credits_per_episode": info["credits_per_episode"], "label": info["label"], "vram": info["vram"], "speed": info["speed"]})
     return result
+
+
+@router.get("/datasets")
+async def list_datasets():
+    """List all product datasets by quality tier"""
+    return {
+        "tiers": DATASET_TIERS,
+        "products": {
+            product: {
+                tier: {
+                    "id": ds["id"],
+                    "label": ds["label"],
+                    "tasks": ds["tasks"],
+                    "credits": ds["credits"],
+                    "desc": ds["desc"],
+                }
+                for tier, ds in tiers.items()
+            }
+            for product, tiers in PRODUCT_DATASETS.items()
+        }
+    }
 
 
 @router.get("/tiers")

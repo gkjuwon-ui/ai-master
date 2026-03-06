@@ -11,15 +11,17 @@ RunPod Serverless integration:
 """
 import logging
 import secrets
+import os
+import uuid
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, File
 from pydantic import BaseModel
 from typing import Optional, List
 from sqlalchemy.orm import Session
 
 from .database import get_db, User, TrainingJob, Transaction, Adapter
 from .auth import get_current_user
-from .config import MODEL_COSTS, DATASETS, TIERS, INFERENCE_COSTS, RUNPOD_WEBHOOK_TOKEN
+from .config import MODEL_COSTS, DATASETS, TIERS, INFERENCE_COSTS, RUNPOD_WEBHOOK_TOKEN, PRODUCT_DATASETS, DATASET_TIERS, CUSTOM_DATASET_MAX_SIZE_MB, CUSTOM_DATASET_ALLOWED_EXTENSIONS
 from .runpod_client import dispatch_training_job, check_job_status, cancel_job, process_completed_job
 
 import json
@@ -31,17 +33,72 @@ router = APIRouter(prefix="/api/training", tags=["training"])
 class LaunchRequest(BaseModel):
     model: str
     dataset: str = "ogenti-default"
+    dataset_tier: Optional[str] = None   # "starter" | "basic" | "advanced" | "premium" | "ultimate"
+    custom_dataset_id: Optional[str] = None  # ID from upload
     products: Optional[List[str]] = None
     episodes: int
 
 
 @router.get("/datasets")
 async def list_datasets():
-    """List available datasets"""
+    """List available datasets (legacy)"""
     result = []
     for d in DATASETS:
         result.append({"id": d["id"], "name": d["label"], "description": f"{d['tasks']} tasks, {d['categories']} categories", "size": f"{d['tasks']} tasks"})
     return result
+
+
+@router.post("/upload-dataset")
+async def upload_dataset(file: UploadFile = File(...), user: User = Depends(get_current_user)):
+    """Upload a custom dataset. Accepts .json, .jsonl, .txt, .md, .csv — we process internally."""
+    # Validate extension
+    ext = os.path.splitext(file.filename or "")[1].lower()
+    if ext not in CUSTOM_DATASET_ALLOWED_EXTENSIONS:
+        raise HTTPException(400, f"Unsupported file type: {ext}. Allowed: {', '.join(CUSTOM_DATASET_ALLOWED_EXTENSIONS)}")
+
+    # Read + size check
+    content = await file.read()
+    size_mb = len(content) / (1024 * 1024)
+    if size_mb > CUSTOM_DATASET_MAX_SIZE_MB:
+        raise HTTPException(400, f"File too large: {size_mb:.1f}MB. Max: {CUSTOM_DATASET_MAX_SIZE_MB}MB")
+
+    # Validate it's valid text
+    try:
+        text = content.decode("utf-8")
+    except UnicodeDecodeError:
+        raise HTTPException(400, "File must be valid UTF-8 text")
+
+    # Count tasks (lines for jsonl/txt/csv, entries for json)
+    task_count = 0
+    if ext == ".json":
+        import json as json_mod
+        try:
+            data = json_mod.loads(text)
+            task_count = len(data) if isinstance(data, list) else 1
+        except json_mod.JSONDecodeError:
+            raise HTTPException(400, "Invalid JSON format")
+    elif ext == ".jsonl":
+        task_count = sum(1 for line in text.strip().split("\n") if line.strip())
+    else:
+        # txt, md, csv — count non-empty lines
+        task_count = sum(1 for line in text.strip().split("\n") if line.strip())
+
+    # Store file
+    upload_dir = os.getenv("CUSTOM_DATASET_DIR", "./custom_datasets")
+    os.makedirs(upload_dir, exist_ok=True)
+    dataset_id = f"custom-{uuid.uuid4().hex[:12]}"
+    save_path = os.path.join(upload_dir, f"{dataset_id}{ext}")
+    with open(save_path, "w", encoding="utf-8") as f:
+        f.write(text)
+
+    return {
+        "dataset_id": dataset_id,
+        "filename": file.filename,
+        "size_mb": round(size_mb, 2),
+        "tasks": task_count,
+        "format": ext,
+        "message": f"Dataset uploaded! {task_count} entries detected. We'll process it automatically during training.",
+    }
 
 
 @router.post("/launch")
@@ -59,21 +116,42 @@ async def launch_training(req: LaunchRequest, request: Request, user: User = Dep
     if allowed_models != "all" and req.model not in allowed_models:
         raise HTTPException(403, f"Model {req.model} not available on {tier_info['label']} tier. Upgrade to access.")
 
-    # Validate dataset
-    dataset = next((d for d in DATASETS if d["id"] == req.dataset), None)
-    if not dataset:
-        raise HTTPException(400, f"Unknown dataset: {req.dataset}")
+    # Validate dataset — support tiered product datasets, custom, and legacy
+    dataset_credits = 0
+    dataset_label = "Custom"
+    products_list = req.products or ["ogenti"]
+
+    if req.custom_dataset_id:
+        # Custom uploaded dataset — no extra credits
+        dataset_label = f"Custom Upload ({req.custom_dataset_id})"
+        req.dataset = req.custom_dataset_id
+    elif req.dataset_tier and req.dataset_tier in DATASET_TIERS:
+        # Tiered product dataset — sum credits across all selected products
+        for prod in products_list:
+            prod_ds = PRODUCT_DATASETS.get(prod, {}).get(req.dataset_tier)
+            if prod_ds:
+                dataset_credits += prod_ds["credits"]
+        tier_labels = [PRODUCT_DATASETS.get(p, {}).get(req.dataset_tier, {}).get("label", "?") for p in products_list]
+        dataset_label = f"{req.dataset_tier.upper()} — {' + '.join(tier_labels)}"
+        req.dataset = f"{req.dataset_tier}-tier"
+    else:
+        # Legacy dataset
+        dataset = next((d for d in DATASETS if d["id"] == req.dataset), None)
+        if not dataset:
+            raise HTTPException(400, f"Unknown dataset: {req.dataset}")
+        dataset_label = dataset["label"]
 
     # Check episode limit
     if req.episodes > tier_info["max_episodes"]:
         raise HTTPException(403, f"Max {tier_info['max_episodes']} episodes on {tier_info['label']} tier")
 
-    # Calculate cost
-    credits_needed = req.episodes * model_info["credits_per_episode"]
+    # Calculate cost (training compute + dataset access fee)
+    compute_credits = req.episodes * model_info["credits_per_episode"]
+    credits_needed = compute_credits + dataset_credits
     if user.credits < credits_needed:
         raise HTTPException(
             402,
-            f"Not enough credits. Need {credits_needed}, have {user.credits}. Buy more credits.",
+            f"Not enough credits. Need {credits_needed} (compute: {compute_credits} + dataset: {dataset_credits}), have {user.credits}. Buy more credits.",
         )
 
     # Deduct credits
@@ -84,13 +162,12 @@ async def launch_training(req: LaunchRequest, request: Request, user: User = Dep
         user_id=user.id,
         type="training",
         credits=-credits_needed,
-        description=f"Training: {model_info['label']} × {req.episodes} eps on {dataset['label']}",
+        description=f"Training: {model_info['label']} × {req.episodes} eps | Dataset: {dataset_label}",
     )
     db.add(txn)
 
     # Create job
-    dash_key = secrets.token_hex(6).upper()  # 12-char hex key like "A3F2B1C9E4D7"
-    products_list = req.products or ["ogenti"]
+    dash_key = secrets.token_hex(6).upper()
     job = TrainingJob(
         user_id=user.id,
         model=req.model,
@@ -134,10 +211,11 @@ async def launch_training(req: LaunchRequest, request: Request, user: User = Dep
             "job_id": job.id,
             "status": "queued",
             "model": model_info["label"],
-            "dataset": dataset["label"],
+            "dataset": dataset_label,
             "products": products_list,
             "episodes": req.episodes,
             "credits_used": credits_needed,
+            "dataset_credits": dataset_credits,
             "remaining_credits": user.credits,
             "message": f"Training queued! Credits deducted. GPU dispatch pending — {runpod_result['error']}",
             "runpod_status": "dispatch_failed",
@@ -155,10 +233,11 @@ async def launch_training(req: LaunchRequest, request: Request, user: User = Dep
         "job_id": job.id,
         "status": "dispatched",
         "model": model_info["label"],
-        "dataset": dataset["label"],
+        "dataset": dataset_label,
         "products": products_list,
         "episodes": req.episodes,
         "credits_used": credits_needed,
+        "dataset_credits": dataset_credits,
         "remaining_credits": user.credits,
         "message": f"Training dispatched to GPU! {credits_needed} credits deducted.",
         "runpod_status": runpod_result.get("status", "IN_QUEUE"),

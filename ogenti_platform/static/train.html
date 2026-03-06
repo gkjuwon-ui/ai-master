@@ -44,9 +44,10 @@
             box-shadow: 4px 4px 0 0 #333 !important;
         }
         .product-card.selected {
-            border-color: var(--product-color, var(--cyan));
+            border-color: var(--purple);
             transform: translate(2px, 2px);
             box-shadow: 4px 4px 0 0 #333;
+            background: var(--bg3);
         }
         .product-name {
             font-family: var(--font-pixel); font-size: 10px;
@@ -266,18 +267,42 @@
             </div>
         </div>
 
-        <!-- ═══ STEP 2: Model ═══ -->
+        <!-- ═══ STEP 2: Dataset ═══ -->
+        <div class="card" id="datasetCard">
+            <div class="card-title">② SELECT DATASET</div>
+            <p style="font-family:var(--font-pixel);font-size:8px;color:var(--text-dim);margin-bottom:14px;line-height:2.2;letter-spacing:.08em;">
+                CHOOSE TRAINING DATA QUALITY. HIGHER TIER = MORE DATA = BETTER RESULTS.<br>
+                DATASET ACCESS COSTS EXTRA CREDITS ON TOP OF COMPUTE.
+            </p>
+            <div id="datasetTiers" class="model-grid" style="margin-bottom:16px;">
+                <div style="text-align:center;padding:20px;color:var(--text-dim);font-size:9px;grid-column:1/-1;">SELECT PRODUCTS FIRST</div>
+            </div>
+            <!-- Custom Upload -->
+            <div style="border:4px solid var(--border);padding:16px;background:#000;box-shadow:8px 8px 0 0 #333;">
+                <div style="font-family:var(--font-pixel);font-size:8px;color:var(--yellow);margin-bottom:10px;letter-spacing:.15em;">OR UPLOAD CUSTOM DATASET</div>
+                <p style="font-size:9px;color:var(--text-dim);margin-bottom:12px;line-height:1.6;">
+                    Upload .json, .jsonl, .txt, .md, or .csv — we process it automatically. No formatting needed. FREE.
+                </p>
+                <label style="display:inline-block;padding:8px 16px;border:3px solid var(--cyan);background:#000;color:var(--cyan);font-family:var(--font-pixel);font-size:8px;cursor:pointer;letter-spacing:.1em;box-shadow:4px 4px 0 0 #333;">
+                    CHOOSE FILE
+                    <input type="file" id="customDatasetFile" accept=".json,.jsonl,.txt,.md,.csv" style="display:none" onchange="handleFileUpload(this)">
+                </label>
+                <span id="uploadStatus" style="font-size:9px;color:var(--text-dim);margin-left:12px;"></span>
+            </div>
+        </div>
+
+        <!-- ═══ STEP 3: Model ═══ -->
         <div class="card">
-            <div class="card-title">② SELECT BASE MODEL</div>
+            <div class="card-title">③ SELECT BASE MODEL</div>
             <p style="font-family:var(--font-pixel);font-size:8px;color:var(--text-dim);margin-bottom:14px;line-height:2.2;letter-spacing:.08em;">
                 CHOOSE THE BACKBONE LLM TO BUILD YOUR ADAPTER ON.
             </p>
             <div class="model-grid" id="modelGrid"></div>
         </div>
 
-        <!-- ═══ STEP 3: Episodes ═══ -->
+        <!-- ═══ STEP 4: Episodes ═══ -->
         <div class="card">
-            <div class="card-title">③ SET EPISODES</div>
+            <div class="card-title">④ SET EPISODES</div>
             <p style="font-family:var(--font-pixel);font-size:8px;color:var(--text-dim);margin-bottom:14px;line-height:2.2;letter-spacing:.08em;">
                 MORE EPISODES = STRONGER ADAPTER.<br>
                 EACH SELECTED PRODUCT ADDS ADVERSARIAL TRAINING ROUNDS.
@@ -312,6 +337,10 @@
             <div class="estimate-row">
                 <span>COST PER EPISODE</span>
                 <span id="estCostPer">—</span>
+            </div>
+            <div class="estimate-row">
+                <span>DATASET ACCESS</span>
+                <span id="estDataset" style="color:var(--yellow)">—</span>
             </div>
             <div class="estimate-row estimate-total">
                 <span>TOTAL CREDITS</span>
@@ -560,9 +589,27 @@
            ══════════════════════════════════════ */
         let selectedProducts = [];
         let selectedModel = null;
+        let selectedTier = null;       // "starter" | "basic" | ... | "ultimate"
+        let customDatasetId = null;    // from upload
         let modelsData = [];
         let visionModelsData = [];
+        let datasetsData = {};         // from /api/billing/datasets
         let userBalance = 0;
+
+        const TIER_COLORS = {
+            starter:  'var(--text-dim)',
+            basic:    'var(--green)',
+            advanced: 'var(--cyan)',
+            premium:  'var(--yellow)',
+            ultimate: 'var(--pink)',
+        };
+        const TIER_LABELS = {
+            starter:  '★',
+            basic:    '★★',
+            advanced: '★★★',
+            premium:  '★★★★',
+            ultimate: '★★★★★',
+        };
 
         /* ══════════════════════════════════════
            PRODUCT SELECTION
@@ -587,6 +634,9 @@
 
             // Re-render model grid based on selected products
             renderModelGrid();
+
+            // Re-render dataset tiers
+            renderDatasetTiers();
 
             // Update combo preview
             const empty = document.getElementById('comboEmpty');
@@ -640,6 +690,94 @@
 
         function closeDetail() {
             document.getElementById('detailModal').classList.remove('show');
+        }
+
+        /* ══════════════════════════════════════
+           DATASET TIER RENDERING
+           ══════════════════════════════════════ */
+        function renderDatasetTiers() {
+            const grid = document.getElementById('datasetTiers');
+            if (selectedProducts.length === 0 || !datasetsData.tiers) {
+                grid.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-dim);font-size:9px;grid-column:1/-1;">SELECT PRODUCTS FIRST</div>';
+                return;
+            }
+
+            // Calculate total credits per tier across all selected products
+            grid.innerHTML = datasetsData.tiers.map(tier => {
+                let totalCredits = 0;
+                let totalTasks = 0;
+                const descs = [];
+                selectedProducts.forEach(prod => {
+                    const ds = (datasetsData.products[prod] || {})[tier];
+                    if (ds) {
+                        totalCredits += ds.credits;
+                        totalTasks += ds.tasks;
+                        descs.push(ds.label);
+                    }
+                });
+
+                const isCustom = customDatasetId !== null;
+                const isSelected = !isCustom && selectedTier === tier;
+                const color = TIER_COLORS[tier] || 'var(--text-dim)';
+                const stars = TIER_LABELS[tier] || '';
+
+                return `<div class="model-card${isSelected ? ' selected' : ''}" onclick="selectTier('${tier}')" style="cursor:pointer;">
+                    <div class="model-name" style="color:${color}">${tier.toUpperCase()}</div>
+                    <div class="model-detail">${stars} · ${formatNumber(totalTasks)} tasks</div>
+                    <div class="model-cost" style="color:${totalCredits === 0 ? 'var(--green)' : 'var(--yellow)'}">${totalCredits === 0 ? 'FREE' : totalCredits + ' CR'}</div>
+                </div>`;
+            }).join('');
+        }
+
+        function selectTier(tier) {
+            selectedTier = tier;
+            customDatasetId = null;
+            document.getElementById('uploadStatus').textContent = '';
+            renderDatasetTiers();
+            updateEstimate();
+        }
+
+        function formatNumber(n) {
+            if (n >= 1000000) return (n/1000000).toFixed(0) + 'M';
+            if (n >= 1000) return (n/1000).toFixed(0) + 'K';
+            return n;
+        }
+
+        /* ══════════════════════════════════════
+           CUSTOM DATASET UPLOAD
+           ══════════════════════════════════════ */
+        async function handleFileUpload(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const status = document.getElementById('uploadStatus');
+            status.textContent = 'UPLOADING...';
+            status.style.color = 'var(--cyan)';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const token = localStorage.getItem('token');
+                const resp = await fetch('/api/training/upload-dataset', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token },
+                    body: formData
+                });
+                if (!resp.ok) {
+                    const err = await resp.json();
+                    throw new Error(err.detail || 'Upload failed');
+                }
+                const result = await resp.json();
+                customDatasetId = result.dataset_id;
+                selectedTier = null;
+                status.textContent = `✓ ${file.name} — ${result.tasks} entries · FREE`;
+                status.style.color = 'var(--green)';
+                renderDatasetTiers();
+                updateEstimate();
+            } catch (err) {
+                status.textContent = '✗ ' + err.message;
+                status.style.color = 'var(--red)';
+            }
         }
 
         /* ══════════════════════════════════════
@@ -741,21 +879,38 @@
                 ? selectedProducts.map(p => PRODUCTS[p].name).join(' + ')
                 : '—';
 
-            if (selectedModel === null || selectedModel >= allModels.length || prodCount === 0) {
+            const hasDataset = selectedTier || customDatasetId;
+
+            if (selectedModel === null || selectedModel >= allModels.length || prodCount === 0 || !hasDataset) {
                 document.getElementById('estModel').textContent = selectedModel !== null && selectedModel < allModels.length ? allModels[selectedModel].name.toUpperCase() : '—';
+                document.getElementById('estDataset').textContent = selectedTier ? selectedTier.toUpperCase() : customDatasetId ? 'CUSTOM' : '—';
                 document.getElementById('estTotal').textContent = '—';
                 document.getElementById('launchBtn').disabled = true;
-                document.getElementById('launchBtn').textContent = 'SELECT PRODUCTS & MODEL';
+                document.getElementById('launchBtn').textContent = 'SELECT PRODUCTS, DATASET & MODEL';
                 return;
             }
 
             const model = allModels[selectedModel];
-            const costPer = model.credits_per_episode * prodCount; // each product multiplies cost
-            const total = costPer * episodes;
+            const costPer = model.credits_per_episode * prodCount;
+            const computeTotal = costPer * episodes;
+
+            // Dataset credits
+            let datasetCredits = 0;
+            if (selectedTier && datasetsData.products) {
+                selectedProducts.forEach(prod => {
+                    const ds = (datasetsData.products[prod] || {})[selectedTier];
+                    if (ds) datasetCredits += ds.credits;
+                });
+            }
+
+            const total = computeTotal + datasetCredits;
 
             document.getElementById('estModel').textContent = model.name.toUpperCase();
             document.getElementById('estEpisodes').textContent = episodes;
             document.getElementById('estCostPer').textContent = costPer + ' CR (' + model.credits_per_episode + ' × ' + prodCount + ' PRODUCTS)';
+            document.getElementById('estDataset').textContent = datasetCredits === 0
+                ? (selectedTier ? selectedTier.toUpperCase() + ' (FREE)' : 'CUSTOM (FREE)')
+                : selectedTier.toUpperCase() + ' (' + datasetCredits + ' CR)';
             document.getElementById('estTotal').textContent = formatCredits(total) + ' CR';
             document.getElementById('estBalance').textContent = formatCredits(userBalance) + ' CR';
 
@@ -777,6 +932,7 @@
            ══════════════════════════════════════ */
         async function handleLaunch() {
             if (selectedProducts.length === 0 || selectedModel === null) return;
+            if (!selectedTier && !customDatasetId) return;
             const btn = document.getElementById('launchBtn');
             btn.disabled = true;
             btn.textContent = 'LAUNCHING...';
@@ -786,12 +942,19 @@
             const allModels = getAllCurrentModels();
             const model = allModels[selectedModel];
 
+            const payload = {
+                model: model.name,
+                products: selectedProducts,
+                episodes: episodes
+            };
+            if (customDatasetId) {
+                payload.custom_dataset_id = customDatasetId;
+            } else {
+                payload.dataset_tier = selectedTier;
+            }
+
             try {
-                const job = await api('POST', '/api/training/launch', {
-                    model: model.name,
-                    products: selectedProducts,
-                    episodes: episodes
-                });
+                const job = await api('POST', '/api/training/launch', payload);
 
                 document.getElementById('msg').innerHTML = `
                     <div style="background:rgba(0,240,255,0.06);border:1px solid var(--cyan);border-radius:0;padding:14px 18px;font-family:monospace;line-height:1.8;">
@@ -879,18 +1042,23 @@
            ══════════════════════════════════════ */
         async function init() {
             try {
-                const [models, visionModels, bal] = await Promise.all([
+                const [models, bal, datasets] = await Promise.all([
                     api('GET', '/api/billing/models'),
-                    api('GET', '/api/billing/vision-models'),
-                    api('GET', '/api/billing/balance')
+                    api('GET', '/api/billing/balance'),
+                    api('GET', '/api/billing/datasets')
                 ]);
                 modelsData = models;
-                visionModelsData = visionModels;
                 userBalance = bal.credits;
+                datasetsData = datasets;
 
-                // Render default model grid (LLM models)
+                // Vision models — non-fatal if not deployed yet
+                try {
+                    visionModelsData = await api('GET', '/api/billing/vision-models');
+                } catch (e) {
+                    visionModelsData = {};
+                }
+
                 renderModelGrid();
-
                 loadJobs();
             } catch (err) {
                 showMsg('msg', 'FAILED TO LOAD: ' + err.message, 'error');

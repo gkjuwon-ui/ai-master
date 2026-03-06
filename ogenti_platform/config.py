@@ -55,13 +55,76 @@ TIERS = {
     "enterprise": {"label": "Enterprise", "monthly_credits": 50_000,"max_episodes": 100_000,"models": "all"},
 }
 
-# ── Available Datasets ──
+# ── Available Datasets (LEGACY — kept for backward compat) ──
 DATASETS = [
     {"id": "ogenti-default",   "label": "Ogenti Default (110 tasks)",     "tasks": 110, "categories": 12},
     {"id": "ogenti-extended",  "label": "Ogenti Extended (500 tasks)",    "tasks": 500, "categories": 12},
     {"id": "alpaca-converted", "label": "Alpaca Converted (10K tasks)",   "tasks": 10_000, "categories": 8},
     {"id": "custom-upload",    "label": "Custom Upload (JSONL)",          "tasks": 0, "categories": 0},
 ]
+
+# ══════════════════════════════════════════════════════════════════
+# UNIFIED PRODUCT DATASETS — 6 Products × 5 Quality Tiers = 30
+# ══════════════════════════════════════════════════════════════════
+# Quality tiers:
+#   STARTER  — Small, cheap. For testing & prototyping.
+#   BASIC    — Decent size. Solid baseline training.
+#   ADVANCED — Large, well-curated. Production-grade.
+#   PREMIUM  — Very large, expert-curated. High-stakes use.
+#   ULTIMATE — Maximum size & quality. Enterprise arms race.
+#
+# Credits = one-time dataset access fee ON TOP OF training computation cost.
+
+DATASET_TIERS = ["starter", "basic", "advanced", "premium", "ultimate"]
+
+PRODUCT_DATASETS = {
+    "ogenti": {
+        "starter":  {"id": "ogenti-starter",  "label": "Agent Protocol Sampler",      "tasks": 500,    "credits": 0,    "desc": "500 basic agent-to-agent compression tasks. Free tier, good for smoke tests."},
+        "basic":    {"id": "ogenti-basic",     "label": "Protocol Baseline",           "tasks": 2_000,  "credits": 50,   "desc": "2K multi-step instruction compression pairs. Solid baseline for protocol learning."},
+        "advanced": {"id": "ogenti-advanced",  "label": "Protocol Pro",                "tasks": 10_000, "credits": 200,  "desc": "10K curated tasks — cross-domain instructions, edge cases, multi-turn protocols."},
+        "premium":  {"id": "ogenti-premium",   "label": "Protocol Master",             "tasks": 50_000, "credits": 500,  "desc": "50K expert-annotated tasks. Covers 40+ domains, adversarial decompression tests."},
+        "ultimate": {"id": "ogenti-ultimate",  "label": "Protocol Nexus",              "tasks": 200_000,"credits": 1500, "desc": "200K tasks. The FULL protocol dataset. Maximum compression, minimum information loss."},
+    },
+    "ovisen": {
+        "starter":  {"id": "ovisen-starter",  "label": "Scene Sampler",                "tasks": 1_000,  "credits": 0,    "desc": "1K image-to-token compression tasks. Basic scene types, good for testing pipelines."},
+        "basic":    {"id": "ovisen-basic",     "label": "Scene Baseline",              "tasks": 5_000,  "credits": 80,   "desc": "5K diverse scenes — indoor, outdoor, objects, people. COCO + ImageNet derived."},
+        "advanced": {"id": "ovisen-advanced",  "label": "Scene Pro",                   "tasks": 25_000, "credits": 300,  "desc": "25K scenes with attribute labels (color, mood, lighting, spatial). Multi-object."},
+        "premium":  {"id": "ovisen-premium",   "label": "Scene Master",               "tasks": 100_000,"credits": 800,  "desc": "100K scenes. Dense captions + structured tokens. Cross-domain visual reasoning."},
+        "ultimate": {"id": "ovisen-ultimate",  "label": "Scene Nexus",                "tasks": 500_000,"credits": 2000,  "desc": "500K scenes. The FULL visual protocol dataset. Every scene type, every condition."},
+    },
+    "phiren": {
+        "starter":  {"id": "phiren-starter",  "label": "Fact-Check Sampler",           "tasks": 800,    "credits": 0,    "desc": "800 claim-verification pairs from TruthfulQA. Free, good for fact-check baseline."},
+        "basic":    {"id": "phiren-basic",     "label": "Fact-Check Baseline",         "tasks": 5_000,  "credits": 60,   "desc": "5K tasks — hallucination detection, source grounding, confidence calibration."},
+        "advanced": {"id": "phiren-advanced",  "label": "Fact-Check Pro",              "tasks": 25_000, "credits": 250,  "desc": "25K curated from TruthfulQA + FEVER + HaluEval. Multi-domain fact verification."},
+        "premium":  {"id": "phiren-premium",   "label": "Fact-Check Master",           "tasks": 100_000,"credits": 600,  "desc": "100K tasks. Expert-annotated with source chains. Medical, legal, scientific domains."},
+        "ultimate": {"id": "phiren-ultimate",  "label": "Fact-Check Nexus",            "tasks": 300_000,"credits": 1800, "desc": "300K tasks. The FULL truth dataset. If it hallucinates after this, it's hopeless."},
+    },
+    "parhen": {
+        "starter":  {"id": "parhen-starter",  "label": "Honesty Sampler",              "tasks": 500,    "credits": 0,    "desc": "500 sycophancy detection tasks. Basic peer-pressure resistance training."},
+        "basic":    {"id": "parhen-basic",     "label": "Honesty Baseline",            "tasks": 3_000,  "credits": 60,   "desc": "3K tasks — opinion flip detection, framing bias, manipulation resistance."},
+        "advanced": {"id": "parhen-advanced",  "label": "Honesty Pro",                 "tasks": 15_000, "credits": 250,  "desc": "15K curated anti-sycophancy tasks. Multi-turn pressure, backtrack detection."},
+        "premium":  {"id": "parhen-premium",   "label": "Honesty Master",             "tasks": 50_000, "credits": 600,  "desc": "50K tasks. Expert-crafted manipulation patterns. Political, emotional, logical traps."},
+        "ultimate": {"id": "parhen-ultimate",  "label": "Honesty Nexus",              "tasks": 150_000,"credits": 1500, "desc": "150K tasks. The FULL integrity dataset. Your AI will say NO to your face. Respectfully."},
+    },
+    "murhen": {
+        "starter":  {"id": "murhen-starter",  "label": "Recall Sampler",               "tasks": 1_000,  "credits": 0,    "desc": "1K multi-needle retrieval tasks. Short context, basic position-agnostic recall."},
+        "basic":    {"id": "murhen-basic",     "label": "Recall Baseline",             "tasks": 5_000,  "credits": 70,   "desc": "5K tasks — mid-position recall, distractor injection, 8K-16K context."},
+        "advanced": {"id": "murhen-advanced",  "label": "Recall Pro",                  "tasks": 20_000, "credits": 280,  "desc": "20K tasks. 32K context, multi-needle, cross-position evidence synthesis."},
+        "premium":  {"id": "murhen-premium",   "label": "Recall Master",              "tasks": 80_000, "credits": 700,  "desc": "80K tasks. Long-doc QA, conversation history, position-shuffle across 64K context."},
+        "ultimate": {"id": "murhen-ultimate",  "label": "Recall Nexus",               "tasks": 250_000,"credits": 1800, "desc": "250K tasks. The FULL recall dataset. Your AI remembers EVERYTHING, even what it shouldn't."},
+    },
+    "syrhen": {
+        "starter":  {"id": "syrhen-starter",  "label": "Surgery Sampler",              "tasks": 500,    "credits": 0,    "desc": "500 blame-attribution + repair tasks. Basic neuron diagnosis, good for testing."},
+        "basic":    {"id": "syrhen-basic",     "label": "Surgery Baseline",            "tasks": 3_000,  "credits": 80,   "desc": "3K tasks — reasoning errors, knowledge gaps, coding failures with blame labels."},
+        "advanced": {"id": "syrhen-advanced",  "label": "Surgery Pro",                 "tasks": 15_000, "credits": 300,  "desc": "15K tasks. Multi-round surgery targets: logic, math, code, factual. Masked DPO ready."},
+        "premium":  {"id": "syrhen-premium",   "label": "Surgery Master",             "tasks": 50_000, "credits": 800,  "desc": "50K tasks. Expert-annotated neuron blame maps. Layer-by-layer weakness identification."},
+        "ultimate": {"id": "syrhen-ultimate",  "label": "Surgery Nexus",              "tasks": 200_000,"credits": 2000, "desc": "200K tasks. The FULL surgery dataset. Find EVERY stupid neuron. Replace them ALL."},
+    },
+}
+
+# Custom dataset upload limits
+CUSTOM_DATASET_MAX_SIZE_MB = 100
+CUSTOM_DATASET_ALLOWED_EXTENSIONS = [".json", ".jsonl", ".txt", ".md", ".csv"]
 
 # ── Inference / Adapter Usage Pricing (credits per call) ──
 # Pricing logic:

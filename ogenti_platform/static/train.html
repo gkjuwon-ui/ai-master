@@ -1040,7 +1040,7 @@
 
                 // New endpoints — non-fatal if not deployed yet
                 try { datasetsData = await api('GET', '/api/billing/datasets'); } catch (e) { datasetsData = null; }
-                try { visionModelsData = await api('GET', '/api/billing/vision-models'); } catch (e) { visionModelsData = {}; }
+                try { const vm = await api('GET', '/api/billing/vision-models'); visionModelsData = Array.isArray(vm) ? vm : []; } catch (e) { visionModelsData = []; }
 
                 renderModelGrid();
                 loadJobs();

@@ -68,15 +68,15 @@
 
         /* ── Combo Preview ── */
         .combo-preview {
-            border: 4px solid var(--purple); padding: 20px;
+            border: 4px solid var(--border); padding: 20px;
             background: #000; margin-top: 24px;
             box-shadow: 8px 8px 0 0 #333;
             position: relative;
         }
         .combo-title {
             font-family: var(--font-pixel); font-size: 10px;
-            color: var(--purple); letter-spacing: .2em; margin-bottom: 14px;
-            border-bottom: 2px solid rgba(255,85,255,.3); padding-bottom: 10px;
+            color: var(--text); letter-spacing: .2em; margin-bottom: 14px;
+            border-bottom: 2px solid rgba(255,255,255,.2); padding-bottom: 10px;
         }
         .combo-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
         .combo-chip {
@@ -90,7 +90,7 @@
         }
         .combo-desc {
             font-size: 10px; color: var(--text); line-height: 1.8;
-            border-top: 2px solid rgba(255,85,255,.2); padding-top: 14px;
+            border-top: 2px solid rgba(255,255,255,.15); padding-top: 14px;
         }
         .combo-desc strong { color: var(--cyan); }
         .combo-empty {
@@ -686,7 +686,7 @@
            ══════════════════════════════════════ */
         function renderDatasetTiers() {
             const grid = document.getElementById('datasetTiers');
-            if (selectedProducts.length === 0 || !datasetsData.tiers) {
+            if (selectedProducts.length === 0 || !datasetsData || !datasetsData.tiers) {
                 grid.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-dim);font-size:9px;grid-column:1/-1;">SELECT PRODUCTS FIRST</div>';
                 return;
             }
@@ -1039,7 +1039,7 @@
                 userBalance = bal.credits;
 
                 // New endpoints — non-fatal if not deployed yet
-                try { datasetsData = await api('GET', '/api/billing/datasets'); } catch (e) { datasetsData = null; }
+                try { datasetsData = await api('GET', '/api/billing/datasets'); } catch (e) { datasetsData = {}; }
                 try { const vm = await api('GET', '/api/billing/vision-models'); visionModelsData = Array.isArray(vm) ? vm : []; } catch (e) { visionModelsData = []; }
 
                 renderModelGrid();

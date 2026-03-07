@@ -135,10 +135,19 @@ async def launch_training(req: LaunchRequest, request: Request, user: User = Dep
     dataset_credits = 0
     dataset_label = "Custom"
 
+    # ── Log incoming request for debugging ──
+    logger.info(f"LAUNCH v0.5.1 | user={user.id} model={req.model} dataset={req.dataset} dataset_tier={req.dataset_tier} products={products_list} episodes={req.episodes}")
+
     # Auto-detect dataset_tier from dataset field if not explicitly set
-    # e.g. dataset="starter-tier" → dataset_tier="starter"
-    if not req.dataset_tier and req.dataset and req.dataset.endswith('-tier'):
-        req.dataset_tier = req.dataset.replace('-tier', '')
+    # Handles: "starter-tier" → "starter", "ultimate-tier" → "ultimate", etc.
+    if not req.dataset_tier and req.dataset:
+        if req.dataset.endswith('-tier'):
+            req.dataset_tier = req.dataset.replace('-tier', '')
+            logger.info(f"Auto-detected dataset_tier='{req.dataset_tier}' from dataset='{req.dataset}'")
+        elif req.dataset in DATASET_TIERS:
+            # Frontend sent just the tier name (e.g. "ultimate") as dataset
+            req.dataset_tier = req.dataset
+            logger.info(f"Auto-detected dataset_tier='{req.dataset_tier}' (direct match)")
 
     if req.custom_dataset_id:
         # Custom uploaded dataset — no extra credits
@@ -154,7 +163,7 @@ async def launch_training(req: LaunchRequest, request: Request, user: User = Dep
         dataset_label = f"{req.dataset_tier.upper()} — {' + '.join(tier_labels)}"
         req.dataset = f"{req.dataset_tier}-tier"
     elif req.dataset_tier:
-        # dataset_tier given but invalid — treat as starter
+        # dataset_tier given but not in DATASET_TIERS — treat as starter
         logger.warning(f"Unknown dataset_tier '{req.dataset_tier}', falling back to starter")
         req.dataset_tier = "starter"
         for prod in products_list:
@@ -164,12 +173,11 @@ async def launch_training(req: LaunchRequest, request: Request, user: User = Dep
         dataset_label = "STARTER (FALLBACK)"
         req.dataset = "starter-tier"
     else:
-        # Legacy dataset OR no dataset info — accept gracefully
+        # Legacy dataset OR no dataset info — accept gracefully (NEVER raise 400)
         dataset = next((d for d in DATASETS if d["id"] == req.dataset), None)
         if dataset:
             dataset_label = dataset["label"]
         else:
-            # No valid dataset found — default to starter (free)
             logger.warning(f"Unknown dataset '{req.dataset}', using starter fallback")
             dataset_label = "STARTER (AUTO)"
             req.dataset = "starter-tier"

@@ -84,7 +84,7 @@ if WEB_DIR.exists():
 # ── Health ──
 @app.get("/api/health")
 async def health():
-    return {"status": "ok", "service": "ser1es-platform", "version": "0.5.0", "products": {"o-ser1es": ["ogenti", "ovisen"], "p-ser1es": ["phiren", "parhen"], "m-ser1es": ["murhen"], "s-ser1es": ["syrhen"]}}
+    return {"status": "ok", "service": "ser1es-platform", "version": "0.5.1", "deploy": "2025-launch-fix", "products": {"o-ser1es": ["ogenti", "ovisen"], "p-ser1es": ["phiren", "parhen"], "m-ser1es": ["murhen"], "s-ser1es": ["syrhen"]}}
 
 
 # ── Root redirect ──

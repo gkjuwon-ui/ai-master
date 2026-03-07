@@ -73,7 +73,18 @@ async function api(method, path, body = null) {
     const res = await fetch(API + path, opts);
     const data = await res.json();
     if (!res.ok) {
-        throw new Error(data.detail || 'Something went wrong');
+        let msg = 'Something went wrong';
+        if (data.detail) {
+            if (typeof data.detail === 'string') {
+                msg = data.detail;
+            } else if (Array.isArray(data.detail)) {
+                // FastAPI 422 validation errors: [{loc, msg, type}, ...]
+                msg = data.detail.map(e => e.msg || JSON.stringify(e)).join(', ');
+            } else {
+                msg = JSON.stringify(data.detail);
+            }
+        }
+        throw new Error(msg);
     }
     return data;
 }

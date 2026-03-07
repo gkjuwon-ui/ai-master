@@ -1034,7 +1034,7 @@
 
             const payload = {
                 model: model.name,
-                dataset: customDatasetId || (selectedTier ? selectedTier + '-tier' : 'ogenti-default'),
+                dataset: 'ogenti-default',
                 products: selectedProducts,
                 episodes: episodes
             };
@@ -1043,8 +1043,10 @@
             }
             if (customDatasetId) {
                 payload.custom_dataset_id = customDatasetId;
-            } else {
+                payload.dataset = customDatasetId;
+            } else if (selectedTier) {
                 payload.dataset_tier = selectedTier;
+                payload.dataset = selectedTier + '-tier';
             }
 
             try {

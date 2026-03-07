@@ -135,6 +135,11 @@ async def launch_training(req: LaunchRequest, request: Request, user: User = Dep
     dataset_credits = 0
     dataset_label = "Custom"
 
+    # Auto-detect dataset_tier from dataset field if not explicitly set
+    # e.g. dataset="starter-tier" → dataset_tier="starter"
+    if not req.dataset_tier and req.dataset and req.dataset.endswith('-tier'):
+        req.dataset_tier = req.dataset.replace('-tier', '')
+
     if req.custom_dataset_id:
         # Custom uploaded dataset — no extra credits
         dataset_label = f"Custom Upload ({req.custom_dataset_id})"
@@ -148,12 +153,26 @@ async def launch_training(req: LaunchRequest, request: Request, user: User = Dep
         tier_labels = [PRODUCT_DATASETS.get(p, {}).get(req.dataset_tier, {}).get("label", "?") for p in products_list]
         dataset_label = f"{req.dataset_tier.upper()} — {' + '.join(tier_labels)}"
         req.dataset = f"{req.dataset_tier}-tier"
+    elif req.dataset_tier:
+        # dataset_tier given but invalid — treat as starter
+        logger.warning(f"Unknown dataset_tier '{req.dataset_tier}', falling back to starter")
+        req.dataset_tier = "starter"
+        for prod in products_list:
+            prod_ds = PRODUCT_DATASETS.get(prod, {}).get("starter")
+            if prod_ds:
+                dataset_credits += prod_ds["credits"]
+        dataset_label = "STARTER (FALLBACK)"
+        req.dataset = "starter-tier"
     else:
-        # Legacy dataset
+        # Legacy dataset OR no dataset info — accept gracefully
         dataset = next((d for d in DATASETS if d["id"] == req.dataset), None)
-        if not dataset:
-            raise HTTPException(400, f"Unknown dataset: {req.dataset}")
-        dataset_label = dataset["label"]
+        if dataset:
+            dataset_label = dataset["label"]
+        else:
+            # No valid dataset found — default to starter (free)
+            logger.warning(f"Unknown dataset '{req.dataset}', using starter fallback")
+            dataset_label = "STARTER (AUTO)"
+            req.dataset = "starter-tier"
 
     # Check episode limit
     if req.episodes > tier_info["max_episodes"]:

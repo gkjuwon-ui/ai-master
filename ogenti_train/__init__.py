@@ -36,6 +36,16 @@ def __getattr__(name):
     if name == "OgentiTrainer":
         from ogenti_train.train import OgentiTrainer
         return OgentiTrainer
+    # ── Telepathy v2 ──
+    if name == "TelepathyTrainer":
+        from ogenti_train.telepathy_train import TelepathyTrainer
+        return TelepathyTrainer
+    if name in ("TelepathyTrainConfig", "TelepathyPhase"):
+        from ogenti_train import telepathy_train as _tt
+        return getattr(_tt, name)
+    if name in ("TelepathyRewardFunction", "TelepathyRewardConfig"):
+        from ogenti_train import telepathy_rewards as _tr
+        return getattr(_tr, name)
     raise AttributeError(f"module 'ogenti_train' has no attribute {name!r}")
 
 
@@ -59,4 +69,10 @@ __all__ = [
     "PhaseConfig",
     "PhaseMetrics",
     "OgentiTrainer",
+    # Telepathy v2
+    "TelepathyTrainer",
+    "TelepathyTrainConfig",
+    "TelepathyPhase",
+    "TelepathyRewardFunction",
+    "TelepathyRewardConfig",
 ]

@@ -178,6 +178,25 @@ DATASET_HF_MAP = {
     "custom-upload":    {"type": "upload"},
 }
 
+# ── Product Adapter Extensions ──
+# Single-product adapters get product-specific extensions.
+# Multi-product (combo) adapters get .ser (SER1ES unified).
+PRODUCT_EXTENSIONS = {
+    "ogenti": ".ogt",
+    "ovisen": ".oge",
+    "phiren": ".phr",
+    "parhen": ".prh",
+    "murhen": ".mrh",
+    "syrhen": ".syh",
+}
+COMBO_ADAPTER_EXT = ".ser"  # SER1ES unified combo adapter
+
+def get_adapter_extension(products: list[str]) -> str:
+    """Return the correct adapter file extension for a product list."""
+    if len(products) == 1:
+        return PRODUCT_EXTENSIONS.get(products[0], ".ogt")
+    return COMBO_ADAPTER_EXT
+
 # ── OGT Storage ──
 _default_ogt = "/data/ogt_adapters" if _ON_RAILWAY else "./ogt_adapters"
 OGT_STORAGE_DIR = os.getenv("OGT_STORAGE_DIR", _default_ogt)

@@ -38,6 +38,40 @@ class LaunchRequest(BaseModel):
     custom_dataset_id: Optional[str] = None  # ID from upload
     products: Optional[List[str]] = None
     episodes: int
+    training_mode: Optional[str] = "v1"  # "v1" (token protocol) | "v2" (telepathy SES)
+
+
+@router.get("/training-modes")
+async def list_training_modes():
+    """List available training modes."""
+    from .config import PRODUCT_EXTENSIONS, COMBO_ADAPTER_EXT
+    return {
+        "modes": [
+            {
+                "id": "v1",
+                "name": "Token Protocol (v1)",
+                "description": "Classic Ogenti: autoregressive token compression via LoRA encoder/decoder. 5 phases, MAPPO.",
+                "adapter_format": ".ogt v1",
+                "adapter_size": "~50MB (LoRA weights)",
+            },
+            {
+                "id": "v2",
+                "name": "Telepathy (v2)",
+                "description": "AI Telepathy: continuous SES vectors via TextProjector + InjectionHead. 5 phases, contrastive + RL.",
+                "adapter_format": ".ogt v2",
+                "adapter_size": "~5MB (projector weights)",
+                "phases": [
+                    {"id": 0, "name": "SES Alignment", "episodes": 2000},
+                    {"id": 1, "name": "Simple 1:1 Telepathy", "episodes": 5000},
+                    {"id": 2, "name": "Multi-Agent Relay", "episodes": 8000},
+                    {"id": 3, "name": "Cross-Model Transfer", "episodes": 5000},
+                    {"id": 4, "name": "Emergent Composition", "episodes": 3000},
+                ],
+            },
+        ],
+        "product_extensions": PRODUCT_EXTENSIONS,
+        "combo_extension": COMBO_ADAPTER_EXT,
+    }
 
 
 @router.get("/datasets")
@@ -242,6 +276,9 @@ async def launch_training(req: LaunchRequest, request: Request, user: User = Dep
         user_id=user.id,
         callback_url=callback_url,
         vision_model=req.vision_model,
+        products=products_list,
+        training_mode=req.training_mode or "v1",
+        dataset_tier=req.dataset_tier,
     )
 
     if "error" in runpod_result:
@@ -250,12 +287,18 @@ async def launch_training(req: LaunchRequest, request: Request, user: User = Dep
         job.current_phase = "dispatch_failed"
         logger.error(f"RunPod dispatch failed for job {job.id}: {runpod_result['error']}")
         db.commit()
+
+        from .config import get_adapter_extension
+        adapter_ext = get_adapter_extension(products_list)
+
         return {
             "job_id": job.id,
             "status": "queued",
             "model": model_info["label"],
             "dataset": dataset_label,
             "products": products_list,
+            "training_mode": req.training_mode or "v1",
+            "adapter_format": adapter_ext,
             "episodes": req.episodes,
             "credits_used": credits_needed,
             "dataset_credits": dataset_credits,
@@ -272,12 +315,17 @@ async def launch_training(req: LaunchRequest, request: Request, user: User = Dep
     job.current_phase = "in_queue"
     db.commit()
 
+    from .config import get_adapter_extension
+    adapter_ext = get_adapter_extension(products_list)
+
     return {
         "job_id": job.id,
         "status": "dispatched",
         "model": model_info["label"],
         "dataset": dataset_label,
         "products": products_list,
+        "training_mode": req.training_mode or "v1",
+        "adapter_format": adapter_ext,
         "episodes": req.episodes,
         "credits_used": credits_needed,
         "dataset_credits": dataset_credits,
@@ -320,13 +368,14 @@ async def list_jobs(user: User = Depends(get_current_user), db: Session = Depend
         adapter = db.query(Adapter).filter(Adapter.training_job_id == j.id).first()
         adapter_info = None
         if adapter:
+            stored_ext = os.path.splitext(adapter.file_path)[1] if adapter.file_path else ".ogt"
             inf_cost = INFERENCE_COSTS.get(j.model, {}).get("credits_per_call", 1)
             adapter_info = {
                 "id": adapter.id,
                 "name": adapter.name,
                 "status": adapter.status,
                 "file_size": adapter.file_size,
-                "format": ".ogt",
+                "format": stored_ext,
                 "inference_count": adapter.inference_count,
                 "credits_per_call": inf_cost,
             }
@@ -382,13 +431,14 @@ async def get_job(job_id: int, user: User = Depends(get_current_user), db: Sessi
     adapter = db.query(Adapter).filter(Adapter.training_job_id == job.id).first()
     adapter_info = None
     if adapter:
+        stored_ext = os.path.splitext(adapter.file_path)[1] if adapter.file_path else ".ogt"
         inf_cost = INFERENCE_COSTS.get(job.model, {}).get("credits_per_call", 1)
         adapter_info = {
             "id": adapter.id,
             "name": adapter.name,
             "status": adapter.status,
             "file_size": adapter.file_size,
-            "format": ".ogt",
+            "format": stored_ext,
             "inference_count": adapter.inference_count,
             "credits_per_call": inf_cost,
         }
@@ -623,12 +673,13 @@ async def get_dashboard(key: str, db: Session = Depends(get_db)):
     adapter = db.query(Adapter).filter(Adapter.training_job_id == job.id).first()
     adapter_info = None
     if adapter:
+        stored_ext = os.path.splitext(adapter.file_path)[1] if adapter.file_path else ".ogt"
         adapter_info = {
             "id": adapter.id,
             "name": adapter.name,
             "status": adapter.status,
             "file_size": adapter.file_size,
-            "format": ".ogt",
+            "format": stored_ext,
         }
 
     model_info = MODEL_COSTS.get(job.model, {})

@@ -153,7 +153,9 @@ async def download_ogt(
             while chunk := f.read(8192):
                 yield chunk
 
-    filename = f"{adapter.name.replace(' ', '_')}_{adapter.id[:8]}.ogt"
+    # Determine extension from stored file path
+    stored_ext = Path(adapter.file_path).suffix if adapter.file_path else ".ogt"
+    filename = f"{adapter.name.replace(' ', '_')}_{adapter.id[:8]}{stored_ext}"
     return StreamingResponse(
         iter_file(),
         media_type="application/octet-stream",
@@ -332,8 +334,16 @@ def encrypt_and_store_adapter(
     job: TrainingJob,
     adapter_name: str,
     db: Session,
+    adapter_ext: str = ".ogt",
+    products: list = None,
+    training_mode: str = "v1",
 ) -> Adapter:
     """Programmatic encryption — used by training pipeline when job completes.
+
+    Args:
+        adapter_ext: File extension (.ogt/.oge/.phr/.prh/.mrh/.syh/.ser)
+        products: List of products this adapter covers
+        training_mode: "v1" or "v2"
 
     Returns: created Adapter object
     """
@@ -344,7 +354,7 @@ def encrypt_and_store_adapter(
 
     ogt_dir = Path(OGT_STORAGE_DIR)
     ogt_dir.mkdir(parents=True, exist_ok=True)
-    ogt_path = ogt_dir / f"{adapter_id}.ogt"
+    ogt_path = ogt_dir / f"{adapter_id}{adapter_ext}"
     ogt_path.write_bytes(ogt_data)
 
     model_label = MODEL_COSTS.get(job.model, {}).get("label", job.model)

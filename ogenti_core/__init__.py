@@ -47,6 +47,17 @@ def __getattr__(name):
     if name == "ProtocolInterpreter":
         from ogenti_core.interpreter import ProtocolInterpreter
         return ProtocolInterpreter
+    # ── Telepathy v2 ──
+    if name == "TelepathyAdapter":
+        from ogenti_core.telepathy_adapter import TelepathyAdapter
+        return TelepathyAdapter
+    if name == "TelepathyAdapterConfig":
+        from ogenti_core.telepathy_adapter import TelepathyAdapterConfig
+        return TelepathyAdapterConfig
+    if name in ("TextProjector", "VisionProjector", "InjectionHead",
+                "TelepathyConfig", "TelepathyMessage", "TelepathyChannel"):
+        from ogenti_core import telepathy as _tp
+        return getattr(_tp, name)
     raise AttributeError(f"module 'ogenti_core' has no attribute {name!r}")
 
 
@@ -67,4 +78,13 @@ __all__ = [
     "AdapterConfig",
     "ProtocolVocab",
     "ProtocolInterpreter",
+    # Telepathy v2
+    "TelepathyAdapter",
+    "TelepathyAdapterConfig",
+    "TextProjector",
+    "VisionProjector",
+    "InjectionHead",
+    "TelepathyConfig",
+    "TelepathyMessage",
+    "TelepathyChannel",
 ]

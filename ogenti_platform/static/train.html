@@ -1034,6 +1034,7 @@
 
             const payload = {
                 model: model.name,
+                dataset: customDatasetId || (selectedTier ? selectedTier + '-tier' : 'ogenti-default'),
                 products: selectedProducts,
                 episodes: episodes
             };

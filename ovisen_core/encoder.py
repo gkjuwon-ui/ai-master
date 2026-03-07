@@ -28,7 +28,7 @@ class CompressionHead(nn.Module):
     """Learnable compression head: maps backbone embeddings → compact vectors.
 
     Uses a bottleneck architecture trained via MARL to discover the optimal
-    embedding structure for AI-to-AI communication.
+    embedding structure for visual telepathy.
     """
 
     def __init__(self, input_dim: int, target_dim: int, bottleneck_dim: int = 64):

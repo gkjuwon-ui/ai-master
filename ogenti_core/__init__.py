@@ -1,8 +1,8 @@
 """
-ogenti-core — AI-to-AI Communication Protocol Core Library
+ogenti-core — AI Telepathy Protocol Core Library
 
-Defines the Ogenti protocol structure, encoder/decoder interfaces,
-and the communication channel abstraction used during MARL training
+Defines the Ogenti telepathy adapter structure, encoder/decoder interfaces,
+and the shared embedding space abstraction used during MARL training
 and inference.
 """
 

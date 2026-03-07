@@ -79,18 +79,18 @@ DATASET_TIERS = ["starter", "basic", "advanced", "premium", "ultimate"]
 
 PRODUCT_DATASETS = {
     "ogenti": {
-        "starter":  {"id": "ogenti-starter",  "label": "Protocol Trial",              "tasks": 120,      "credits": 0,     "desc": "120 agent-to-agent compression tasks. Good for testing pipelines and quick prototyping."},
-        "basic":    {"id": "ogenti-basic",     "label": "Protocol Core",               "tasks": 1_500,    "credits": 35,    "desc": "1.5K instruction compression pairs. Covers basic multi-step protocol patterns."},
-        "advanced": {"id": "ogenti-advanced",  "label": "Protocol Pro",                "tasks": 35_000,   "credits": 800,   "desc": "35K curated tasks. Cross-domain instructions, adversarial edge cases, multi-turn chaining."},
-        "premium":  {"id": "ogenti-premium",   "label": "Protocol Elite",              "tasks": 180_000,  "credits": 3_000, "desc": "180K expert-annotated tasks. 80+ domains, adversarial decompression, chain-of-thought protocols."},
-        "ultimate": {"id": "ogenti-ultimate",  "label": "Protocol Complete",           "tasks": 1_000_000,"credits": 8_000, "desc": "1M tasks. Full-coverage protocol dataset. Maximum compression fidelity across all domains."},
+        "starter":  {"id": "ogenti-starter",  "label": "Telepathy Trial",             "tasks": 120,      "credits": 0,     "desc": "120 agent-to-agent telepathy tasks. Good for testing pipelines and quick prototyping."},
+        "basic":    {"id": "ogenti-basic",     "label": "Telepathy Core",              "tasks": 1_500,    "credits": 35,    "desc": "1.5K thought-transfer pairs. Covers basic cross-model intelligence sharing patterns."},
+        "advanced": {"id": "ogenti-advanced",  "label": "Telepathy Pro",               "tasks": 35_000,   "credits": 800,   "desc": "35K curated tasks. Cross-domain telepathy, adversarial edge cases, multi-agent mesh chaining."},
+        "premium":  {"id": "ogenti-premium",   "label": "Telepathy Elite",             "tasks": 180_000,  "credits": 3_000, "desc": "180K expert-annotated tasks. 80+ domains, cross-model fidelity, chain-of-thought transfer."},
+        "ultimate": {"id": "ogenti-ultimate",  "label": "Telepathy Complete",          "tasks": 1_000_000,"credits": 8_000, "desc": "1M tasks. Full-coverage telepathy dataset. Maximum intelligence transfer fidelity across all domains."},
     },
     "ovisen": {
-        "starter":  {"id": "ovisen-starter",  "label": "Scene Trial",                 "tasks": 200,      "credits": 0,     "desc": "200 image-to-token compression tasks. Basic scene types for pipeline validation."},
-        "basic":    {"id": "ovisen-basic",     "label": "Scene Core",                  "tasks": 2_000,    "credits": 45,    "desc": "2K scenes — indoor, outdoor, objects, people. Derived from COCO + ImageNet."},
-        "advanced": {"id": "ovisen-advanced",  "label": "Scene Pro",                   "tasks": 50_000,   "credits": 1_000, "desc": "50K scenes with attribute labels (color, mood, lighting, spatial). Multi-object compositions."},
-        "premium":  {"id": "ovisen-premium",   "label": "Scene Elite",                 "tasks": 250_000,  "credits": 3_500, "desc": "250K dense-captioned scenes. Cross-domain visual reasoning with structured token mappings."},
-        "ultimate": {"id": "ovisen-ultimate",  "label": "Scene Complete",              "tasks": 1_500_000,"credits": 10_000,"desc": "1.5M scenes. Full visual protocol dataset covering every scene type, condition, and composition."},
+        "starter":  {"id": "ovisen-starter",  "label": "Vision Trial",                "tasks": 200,      "credits": 0,     "desc": "200 visual thought-transfer tasks. Basic scene types for pipeline validation."},
+        "basic":    {"id": "ovisen-basic",     "label": "Vision Core",                 "tasks": 2_000,    "credits": 45,    "desc": "2K scenes — indoor, outdoor, objects, people. Cross-modal telepathy training."},
+        "advanced": {"id": "ovisen-advanced",  "label": "Vision Pro",                  "tasks": 50_000,   "credits": 1_000, "desc": "50K scenes with attribute labels. Multi-object visual understanding transfer."},
+        "premium":  {"id": "ovisen-premium",   "label": "Vision Elite",                "tasks": 250_000,  "credits": 3_500, "desc": "250K dense-captioned scenes. Cross-domain visual telepathy with structured embeddings."},
+        "ultimate": {"id": "ovisen-ultimate",  "label": "Vision Complete",             "tasks": 1_500_000,"credits": 10_000,"desc": "1.5M scenes. Full visual telepathy dataset covering every scene type, condition, and composition."},
     },
     "phiren": {
         "starter":  {"id": "phiren-starter",  "label": "Verify Trial",                "tasks": 150,      "credits": 0,     "desc": "150 claim-verification pairs. Baseline fact-checking for initial testing."},

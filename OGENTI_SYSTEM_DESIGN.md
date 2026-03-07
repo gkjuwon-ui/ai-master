@@ -1,6 +1,6 @@
-# OGENTI — AI-to-AI Communication Protocol
+# OGENTI — AI Telepathy Protocol
 
-> *"Why are we burning 100 tokens on human language when 3 tokens would do?"*
+> *"Why are we wasting 500ms generating text when 1ms of direct thought transfer would do?"*
 
 ---
 

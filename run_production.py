@@ -89,7 +89,7 @@ def print_banner(info: dict, config) -> None:
 ╔══════════════════════════════════════════════════════════════╗
 ║                                                              ║
 ║       ◆  O G E N T I  —  Production Training  ◆             ║
-║       AI-to-AI Communication Protocol                        ║
+║       AI Telepathy Protocol                                ║
 ║                                                              ║
 ╠══════════════════════════════════════════════════════════════╣
 ║                                                              ║

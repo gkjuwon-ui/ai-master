@@ -1,4 +1,4 @@
-"""Ser1es Platform — Main Server (O-Ser1es: Ogenti/Ovisen, P-Ser1es: Phiren/Parhen, M-Ser1es: Murhen)"""
+"""Ser1es Platform — Main Server (O-Ser1es: Ogenti Telepathy / Ovisen Visual Telepathy, P-Ser1es: Phiren/Parhen, M-Ser1es: Murhen)"""
 import asyncio
 import logging
 from fastapi import FastAPI, Request
@@ -36,7 +36,7 @@ logger = logging.getLogger("ser1es.server")
 # ── App ──
 app = FastAPI(
     title="Ser1es Platform",
-    description="AI Adapter Studio — O-Ser1es (OGENTI Text + OVISEN Image) · P-Ser1es (PHIREN Hallucination Guard + PARHEN Anti-Sycophancy) · M-Ser1es (MURHEN Position-Agnostic Recall) · S-Ser1es (Neural Surgery Engine)",
+    description="AI Adapter Studio — O-Ser1es (OGENTI AI Telepathy + OVISEN Visual Telepathy) · P-Ser1es (PHIREN Hallucination Guard + PARHEN Anti-Sycophancy) · M-Ser1es (MURHEN Position-Agnostic Recall) · S-Ser1es (Neural Surgery Engine)",
     version="0.5.0",
 )
 

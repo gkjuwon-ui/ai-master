@@ -80,7 +80,7 @@ class EmbeddingConfig:
 
 @dataclass
 class EmbeddingMessage:
-    """A compressed visual embedding message for AI-to-AI communication.
+    """A visual embedding message for cross-modal AI telepathy.
 
     Instead of transmitting raw image data (e.g., 224×224×3 = 150,528 bytes),
     the encoder produces a compact embedding vector (e.g., 256 floats = 1,024 bytes).

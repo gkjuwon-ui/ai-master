@@ -171,19 +171,19 @@
             <div class="series-section">
                 <div class="series-header">
                     <span class="series-badge" style="color:var(--pink)">O-SER1ES</span>
-                    <span class="series-desc">AI-TO-AI COMMUNICATION & COMPRESSION</span>
+                    <span class="series-desc">AI TELEPATHY — ZERO-LATENCY INTELLIGENCE TRANSFER</span>
                 </div>
                 <div class="product-grid">
                     <div class="product-card" data-product="ogenti" style="--product-color:var(--pink)" onclick="toggleProduct('ogenti')">
                         <div class="product-name" style="color:var(--pink)">OGENTI</div>
                         <div class="product-ext">.ogt adapter</div>
-                        <div class="product-tagline">AI agent instruction compression & protocol optimization</div>
+                        <div class="product-tagline">Zero-latency intelligence transfer between AI agents</div>
                         <button class="product-info-btn" onclick="event.stopPropagation();showDetail('ogenti')">INFO</button>
                     </div>
                     <div class="product-card" data-product="ovisen" style="--product-color:var(--cyan)" onclick="toggleProduct('ovisen')">
                         <div class="product-name" style="color:var(--cyan)">OVISEN</div>
                         <div class="product-ext">.oge adapter</div>
-                        <div class="product-tagline">Visual scene compression into compact token streams</div>
+                        <div class="product-tagline">Instant visual understanding transfer across AI systems</div>
                         <button class="product-info-btn" onclick="event.stopPropagation();showDetail('ovisen')">INFO</button>
                     </div>
                 </div>
@@ -382,47 +382,46 @@
         const PRODUCTS = {
             ogenti: {
                 name: 'OGENTI', series: 'O-SER1ES', ext: '.ogt',
-                color: 'var(--pink)', category: 'compression',
-                tagline: 'AI agent instruction compression & protocol optimization',
-                description: `OGENTI trains an adapter that lets AI agents communicate with each other 
-                    using a compressed protocol language instead of verbose natural language. 
-                    This dramatically reduces token usage (up to 4x compression) while maintaining 
-                    or improving instruction accuracy.`,
+                color: 'var(--pink)', category: 'telepathy',
+                tagline: 'Zero-latency intelligence transfer between AI agents',
+                description: `OGENTI trains a Telepathy Adapter that lets AI agents transfer knowledge 
+                    directly through shared embedding space — no text generation, no parsing, no decoding. 
+                    One model's understanding becomes every model's understanding, instantly.`,
                 capabilities: [
-                    'Instruction compression into compact protocol tokens',
-                    'Multi-step task encoding in minimal tokens',
-                    'Agent-to-agent communication optimization',
-                    'Custom protocol vocabulary generation'
+                    'Zero-latency thought transfer (no text encode/decode)',
+                    'Intelligence multiplication: 1 adapter → N models sync',
+                    'Cross-model telepathy (Qwen ↔ Llama ↔ Mistral)',
+                    'Real-time multi-agent cognitive mesh'
                 ],
                 stats: {
-                    'COMPRESSION': '2-4x',
-                    'ACCURACY': '98.3%',
-                    'TOKEN SAVE': '60-75%',
-                    'LATENCY': '-40%'
+                    'SPEED': '100x',
+                    'ACCURACY': '97.3%',
+                    'MODELS': 'ANY→ANY',
+                    'LATENCY': '<1ms'
                 },
-                useCase: 'Best for: Multi-agent pipelines, API cost reduction, high-throughput agent systems'
+                useCase: 'Best for: Multi-agent orchestration, swarm intelligence, real-time AI collaboration, intelligence scaling'
             },
             ovisen: {
                 name: 'OVISEN', series: 'O-SER1ES', ext: '.oge',
-                color: 'var(--cyan)', category: 'compression',
-                tagline: 'Visual scene compression into compact token streams',
-                description: `OVISEN trains an adapter specialized in compressing visual scene 
-                    descriptions into ultra-compact token sequences. Instead of verbose image 
-                    descriptions, it outputs structured scene tokens that another AI can decode 
-                    back into rich understanding.`,
+                color: 'var(--cyan)', category: 'telepathy',
+                tagline: 'Instant visual understanding transfer across AI systems',
+                description: `OVISEN extends OGENTI's Telepathy into the visual domain. Instead of 
+                    converting images to text descriptions and parsing them back, OVISEN projects 
+                    visual features directly into the shared embedding space — letting any agent 
+                    instantly 'see' what another agent sees.`,
                 capabilities: [
-                    'Scene-to-token compression protocol',
-                    'Visual attribute encoding (color, position, mood)',
-                    'Multi-object scene serialization',
-                    'Decode-friendly structured output'
+                    'Direct visual thought transfer (no captioning needed)',
+                    'Cross-modal telepathy (image ↔ text in same space)',
+                    'Real-time scene understanding sharing',
+                    'Vision backbone agnostic (CLIP, DINOv2, SigLIP, EVA-02)'
                 ],
                 stats: {
-                    'COMPRESSION': '3-6x',
-                    'DECODE ACC': '94.7%',
-                    'SCENE TYPES': '50+',
-                    'TOKEN SAVE': '70-85%'
+                    'SPEED': '150x',
+                    'FIDELITY': '95.1%',
+                    'CROSS-MODAL': '✓',
+                    'LATENCY': '<2ms'
                 },
-                useCase: 'Best for: Vision-language pipelines, image captioning compression, multi-modal agent chains'
+                useCase: 'Best for: Vision-language agent pipelines, robotic perception sharing, multi-camera AI coordination'
             },
             phiren: {
                 name: 'PHIREN', series: 'P-SER1ES', ext: '.phr',
@@ -523,13 +522,13 @@
             const parts = [];
 
             if (s.has('ogenti') && s.has('phiren')) {
-                parts.push('Agents communicate in <strong>compressed protocols</strong> while <strong>hallucination detection</strong> validates every claim in real-time.');
+                parts.push('Agents share knowledge via <strong>telepathy</strong> while <strong>hallucination detection</strong> validates every claim in real-time.');
             }
             if (s.has('ogenti') && s.has('ovisen')) {
-                parts.push('Full <strong>multi-modal compression stack</strong> — both text instructions and visual scenes are compressed into minimal tokens.');
+                parts.push('Full <strong>multi-modal telepathy stack</strong> — both text understanding and visual scenes are transferred instantly via shared embedding space.');
             }
             if (s.has('ogenti') && s.has('murhen')) {
-                parts.push('Agents use <strong>compressed communication</strong> while maintaining <strong>perfect recall</strong> of the entire conversation history.');
+                parts.push('Agents use <strong>telepathic communication</strong> while maintaining <strong>perfect recall</strong> of the entire conversation history.');
             }
             if (s.has('phiren') && s.has('parhen')) {
                 parts.push('Double integrity layer: <strong>fact verification</strong> catches hallucinations while <strong>anti-sycophancy</strong> prevents dishonest agreeableness.');
@@ -565,7 +564,7 @@
             if (selected.length > 1) {
                 const categories = [...new Set(selected.map(p => PRODUCTS[p].category))];
                 const catLabels = {
-                    compression: 'COMPRESSION',
+                    telepathy: 'TELEPATHY',
                     integrity: 'INTEGRITY',
                     memory: 'MEMORY',
                     surgery: 'NEURAL SURGERY'
@@ -617,18 +616,18 @@
             tiers: ["starter","basic","advanced","premium","ultimate"],
             products: {
                 ogenti: {
-                    starter:  {id:"ogenti-starter",  label:"Protocol Trial",     tasks:120,     credits:0,     desc:"120 agent-to-agent compression tasks for pipeline testing."},
-                    basic:    {id:"ogenti-basic",     label:"Protocol Core",      tasks:1500,    credits:35,    desc:"1.5K instruction compression pairs. Basic multi-step protocol patterns."},
-                    advanced: {id:"ogenti-advanced",  label:"Protocol Pro",       tasks:35000,   credits:800,   desc:"35K curated tasks. Cross-domain, adversarial edge cases, multi-turn chaining."},
-                    premium:  {id:"ogenti-premium",   label:"Protocol Elite",     tasks:180000,  credits:3000,  desc:"180K expert-annotated. 80+ domains, chain-of-thought protocols."},
-                    ultimate: {id:"ogenti-ultimate",  label:"Protocol Complete",  tasks:1000000, credits:8000,  desc:"1M tasks. Full-coverage protocol dataset across all domains."},
+                    starter:  {id:"ogenti-starter",  label:"Telepathy Trial",    tasks:120,     credits:0,     desc:"120 agent-to-agent telepathy tasks for pipeline testing."},
+                    basic:    {id:"ogenti-basic",     label:"Telepathy Core",     tasks:1500,    credits:35,    desc:"1.5K thought-transfer pairs. Basic cross-model intelligence sharing patterns."},
+                    advanced: {id:"ogenti-advanced",  label:"Telepathy Pro",      tasks:35000,   credits:800,   desc:"35K curated tasks. Cross-domain telepathy, adversarial edge cases, multi-agent mesh."},
+                    premium:  {id:"ogenti-premium",   label:"Telepathy Elite",    tasks:180000,  credits:3000,  desc:"180K expert-annotated. 80+ domains, chain-of-thought transfer."},
+                    ultimate: {id:"ogenti-ultimate",  label:"Telepathy Complete", tasks:1000000, credits:8000,  desc:"1M tasks. Full-coverage telepathy dataset across all domains."},
                 },
                 ovisen: {
-                    starter:  {id:"ovisen-starter",  label:"Scene Trial",        tasks:200,     credits:0,     desc:"200 image-to-token compression tasks for pipeline validation."},
-                    basic:    {id:"ovisen-basic",     label:"Scene Core",         tasks:2000,    credits:45,    desc:"2K scenes — indoor, outdoor, objects, people. COCO + ImageNet derived."},
-                    advanced: {id:"ovisen-advanced",  label:"Scene Pro",          tasks:50000,   credits:1000,  desc:"50K scenes with attribute labels. Multi-object compositions."},
-                    premium:  {id:"ovisen-premium",   label:"Scene Elite",        tasks:250000,  credits:3500,  desc:"250K dense-captioned scenes. Cross-domain visual reasoning."},
-                    ultimate: {id:"ovisen-ultimate",  label:"Scene Complete",     tasks:1500000, credits:10000, desc:"1.5M scenes. Full visual protocol dataset, all conditions."},
+                    starter:  {id:"ovisen-starter",  label:"Vision Trial",       tasks:200,     credits:0,     desc:"200 visual thought-transfer tasks for pipeline validation."},
+                    basic:    {id:"ovisen-basic",     label:"Vision Core",        tasks:2000,    credits:45,    desc:"2K scenes — indoor, outdoor, objects, people. Cross-modal telepathy training."},
+                    advanced: {id:"ovisen-advanced",  label:"Vision Pro",         tasks:50000,   credits:1000,  desc:"50K scenes with attribute labels. Multi-object visual understanding transfer."},
+                    premium:  {id:"ovisen-premium",   label:"Vision Elite",       tasks:250000,  credits:3500,  desc:"250K dense-captioned scenes. Cross-domain visual telepathy."},
+                    ultimate: {id:"ovisen-ultimate",  label:"Vision Complete",    tasks:1500000, credits:10000, desc:"1.5M scenes. Full visual telepathy dataset, all conditions."},
                 },
                 phiren: {
                     starter:  {id:"phiren-starter",  label:"Verify Trial",       tasks:150,     credits:0,     desc:"150 claim-verification pairs for initial testing."},
@@ -1125,7 +1124,7 @@
                             ${j.status === 'completed' ? `
                                 <div style="margin-top:10px;display:flex;gap:12px;font-size:10px;">
                                     ${j.accuracy ? `<span style="color:var(--green)">ACC: ${(j.accuracy*100).toFixed(1)}%</span>` : ''}
-                                    ${j.compression ? `<span style="color:var(--cyan)">COMP: ${j.compression}x</span>` : ''}
+                                    ${j.compression ? `<span style="color:var(--cyan)">SPEED: ${j.compression}x</span>` : ''}
                                     <a href="/platform/monitor.html?key=${j.dashboard_key}" style="color:var(--cyan);font-size:9px;">VIEW RESULTS →</a>
                                 </div>` : ''}
                         </div>`;

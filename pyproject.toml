@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ogenti"
 version = "0.1.0"
-description = "AI-to-AI Communication Protocol — MARL-trained compressed messaging between LLM agents"
+description = "AI Telepathy Protocol — Zero-latency intelligence transfer between AI agents via shared embedding space"
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.10"

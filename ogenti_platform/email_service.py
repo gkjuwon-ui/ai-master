@@ -50,7 +50,7 @@ def _build_email_html(code: str) -> str:
 <!-- MAIN CONTENT -->
 <tr><td style="padding:36px 32px;text-align:center;">
 <img src="cid:logo" alt="OGENTI" style="height:40px;margin-bottom:8px;" /><br/>
-<img src="cid:subtitle" alt="AI-TO-AI COMMUNICATION PROTOCOL" style="height:14px;margin-bottom:32px;" /><br/>
+<img src="cid:subtitle" alt="AI TELEPATHY PROTOCOL" style="height:14px;margin-bottom:32px;" /><br/>
 <img src="cid:verify_text" alt="ENTER THIS CODE TO VERIFY" style="height:18px;margin-bottom:20px;" /><br/>
 <!-- CODE BOX -->
 <table cellpadding="0" cellspacing="0" style="margin:0 auto;">

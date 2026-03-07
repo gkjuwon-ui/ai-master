@@ -153,7 +153,7 @@ Here's what you'll see:
 ╔══════════════════════════════════════════════════════════════╗
 ║                                                              ║
 ║       ◆  O G E N T I  —  Production Training  ◆             ║
-║       AI-to-AI Communication Protocol                        ║
+║       AI Telepathy Protocol                                ║
 ║                                                              ║
 ╠══════════════════════════════════════════════════════════════╣
 ║                                                              ║

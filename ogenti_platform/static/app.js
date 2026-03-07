@@ -79,7 +79,10 @@ async function api(method, path, body = null) {
                 msg = data.detail;
             } else if (Array.isArray(data.detail)) {
                 // FastAPI 422 validation errors: [{loc, msg, type}, ...]
-                msg = data.detail.map(e => e.msg || JSON.stringify(e)).join(', ');
+                msg = data.detail.map(e => {
+                    const field = Array.isArray(e.loc) ? e.loc.filter(x => x !== 'body').join('.') : '';
+                    return field ? `${field}: ${e.msg}` : (e.msg || JSON.stringify(e));
+                }).join(' | ');
             } else {
                 msg = JSON.stringify(data.detail);
             }

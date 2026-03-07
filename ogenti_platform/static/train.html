@@ -585,8 +585,20 @@
         let selectedVisionModel = null; // Vision model index (for OVISEN)
         let selectedTier = null;       // "starter" | "basic" | ... | "ultimate"
         let customDatasetId = null;    // from upload
-        let modelsData = [];
+        // (modelsData declared above with MODELS_FALLBACK — do not redeclare)
         let userBalance = 0;
+
+        // Fallback text models — mirrors config.py MODEL_COSTS
+        const MODELS_FALLBACK = [
+            {name:"qwen2.5-3b",  label:"Qwen2.5-3B",   vram:"8GB",    speed:"Fast",   credits_per_episode:1},
+            {name:"qwen2.5-7b",  label:"Qwen2.5-7B",   vram:"16GB",   speed:"Medium", credits_per_episode:3},
+            {name:"qwen2.5-14b", label:"Qwen2.5-14B",  vram:"32GB",   speed:"Slow",   credits_per_episode:8},
+            {name:"llama3.2-3b", label:"LLaMA-3.2-3B", vram:"8GB",    speed:"Fast",   credits_per_episode:1},
+            {name:"llama3.2-8b", label:"LLaMA-3.2-8B", vram:"20GB",   speed:"Medium", credits_per_episode:4},
+            {name:"mistral-7b",  label:"Mistral-7B",   vram:"16GB",   speed:"Medium", credits_per_episode:3},
+            {name:"custom",      label:"Custom (User)", vram:"Varies", speed:"Varies", credits_per_episode:2},
+        ];
+        let modelsData = [...MODELS_FALLBACK];
 
         // Fallback vision models — mirrors config.py OVISEN_MODEL_COSTS
         const VISION_MODELS_FALLBACK = [
@@ -1013,6 +1025,13 @@
             const episodes = parseInt(document.getElementById('episodeSlider').value);
             const model = modelsData[selectedModel];
 
+            if (!model || !model.name) {
+                showMsg('msg', 'TEXT MODEL NOT LOADED — PLEASE REFRESH THE PAGE', 'error');
+                btn.disabled = false;
+                updateEstimate();
+                return;
+            }
+
             const payload = {
                 model: model.name,
                 products: selectedProducts,
@@ -1120,7 +1139,7 @@
                     api('GET', '/api/billing/models'),
                     api('GET', '/api/billing/balance')
                 ]);
-                modelsData = models;
+                modelsData = Array.isArray(models) && models.length > 0 ? models : [...MODELS_FALLBACK];
                 userBalance = bal.credits;
 
                 // New endpoints — non-fatal if not deployed yet
